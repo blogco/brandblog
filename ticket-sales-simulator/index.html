@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ticket Sales Simulator — Luyện nghiệp vụ bán vé máy bay</title>
+<meta name="description" content="Game mô phỏng quầy vé máy bay: tiếp nhận yêu cầu, tra cứu chuyến bay, tạo PNR, chọn loại giá, tính thuế phí, chọn ghế, xuất vé, thanh toán và xử lý sau bán.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23006C53'/%3E%3Cpath d='M7 12h9l6-5h3l-3 5h4l2-2h2l-1.6 4L7 20z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+/* ---------------------------------------------------------------
+   Design tokens — mirrors tailwind.config.js (Sembcorp-inspired)
+   --------------------------------------------------------------- */
+:root{
+  --green:#006C53;
+  --green-dark:#005B48;
+  --wash:#E6F1EE;
+  --blue:#0095FF;
+  --orange:#FF6400;
+  --ink:#1A1A1A;
+  --body:#464646;
+  --surface:#FFFFFF;
+  --mist:#F5F6F5;
+
+  --ok:#0B7A5A;
+  --ok-bg:#E6F1EE;
+  --warn:#9A5B00;
+  --warn-bg:#FFF4E5;
+  --err:#B42318;
+  --err-bg:#FDECEA;
+  --line:#E2E7E4;
+  --line-strong:#CFD8D3;
+
+  --shadow-sm:0 1px 2px rgba(16,24,20,.06);
+  --shadow:0 1px 2px rgba(16,24,20,.05), 0 10px 28px -16px rgba(16,24,20,.35);
+  --radius:14px;
+  --radius-sm:9px;
+  --font: Frutiger, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  font-family:var(--font);
+  color:var(--body);
+  background:var(--mist);
+  line-height:1.55;
+  font-size:16px;
+}
+h1,h2,h3,h4{color:var(--ink);line-height:1.25;margin:0}
+p{margin:0 0 .75em}
+p:last-child{margin-bottom:0}
+small{font-size:.82rem}
+strong{color:var(--ink)}
+ul{margin:.35em 0 .85em;padding-left:1.15em}
+li{margin:.2em 0}
+
+.skip{
+  position:absolute;left:-9999px;top:0;z-index:99;
+  background:var(--green);color:#fff;padding:.6rem 1rem;border-radius:0 0 var(--radius-sm) 0;
+}
+.skip:focus{left:0}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+/* ----------------------------- header ----------------------------- */
+.topbar{
+  background:linear-gradient(135deg,var(--green-dark) 0%, var(--green) 58%, #0A7F63 100%);
+  color:#fff;
+  padding:22px 0 26px;
+  border-bottom:4px solid var(--wash);
+}
+.topbar__in{display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between}
+.brand{display:flex;gap:14px;align-items:center;min-width:0}
+.brand__mark{
+  flex:0 0 auto;width:46px;height:46px;border-radius:12px;
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.28);
+  display:grid;place-items:center;
+}
+.brand__mark svg{display:block}
+.brand__eyebrow{
+  margin:0;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:#BFE3D8;font-weight:700;
+}
+.brand__title{margin:.1em 0 0;font-size:clamp(1.35rem,3.4vw,1.9rem);color:#fff;letter-spacing:-.01em}
+.brand__sub{margin:.25em 0 0;font-size:.85rem;color:#CBE7DE}
+
+.hud{display:flex;gap:10px;flex-wrap:wrap}
+.hud__item{
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:var(--radius-sm);
+  padding:7px 13px;min-width:104px;
+}
+.hud__k{display:block;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:#BFE3D8;font-weight:700}
+.hud__v{display:block;font-size:1.05rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+
+/* ----------------------------- stepper ----------------------------- */
+.stepper{
+  display:grid;grid-template-columns:repeat(8,1fr);gap:6px;
+  margin:22px 0 8px;
+}
+.step{min-width:0;text-align:center}
+.step__dot{
+  display:grid;place-items:center;width:30px;height:30px;margin:0 auto 6px;
+  border-radius:50%;font-size:.8rem;font-weight:700;
+  background:var(--surface);border:1.5px solid var(--line-strong);color:#7C8A84;
+  transition:background .2s ease,color .2s ease,border-color .2s ease;
+}
+.step__label{
+  display:block;font-size:.68rem;letter-spacing:.02em;color:#7C8A84;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.step.active .step__dot{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 0 0 4px var(--wash)}
+.step.active .step__label{color:var(--green-dark);font-weight:700}
+.step.done .step__dot{background:var(--wash);border-color:var(--green);color:var(--green-dark)}
+.step.done .step__label{color:var(--green-dark)}
+
+.progress{height:6px;border-radius:99px;background:#E2E7E4;overflow:hidden;margin:4px 0 22px}
+.progress__bar{height:100%;width:0;background:linear-gradient(90deg,var(--green),#12A07C);border-radius:99px;transition:width .35s ease}
+
+/* ----------------------------- stage ----------------------------- */
+.stage{display:block}
+.phase{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  animation:fadeUp .5s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.phase{animation:none}.progress__bar{transition:none}}
+
+.phase__head{
+  padding:20px 24px;
+  background:linear-gradient(180deg,var(--wash),#F3F9F7);
+  border-bottom:1px solid var(--line);
+  display:flex;gap:14px;align-items:flex-start;
+}
+.phase__num{
+  flex:0 0 auto;font-family:var(--mono);font-size:.76rem;font-weight:700;
+  background:var(--green);color:#fff;border-radius:8px;padding:5px 9px;letter-spacing:.06em;
+  white-space:nowrap;
+}
+.phase__title{margin:0;font-size:clamp(1.15rem,2.6vw,1.5rem)}
+.phase__vi{margin:.15em 0 0;font-size:.8rem;color:var(--green-dark);font-weight:600}
+.phase__body{padding:22px 24px 26px}
+
+.lead{font-size:1.02rem;color:var(--body)}
+.lead strong{color:var(--ink)}
+
+/* ----------------------------- cards & bits ----------------------------- */
+.card{
+  background:var(--mist);
+  border:1px solid var(--line);
+  border-radius:var(--radius-sm);
+  padding:16px 18px;margin:0 0 18px;
+}
+.card__title{
+  margin:0 0 10px;font-size:.74rem;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--green-dark);font-weight:700;
+}
+.card--accent{border-left:4px solid var(--green)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px 22px;margin:0}
+.kv__row{display:flex;flex-direction:column;gap:1px;min-width:0}
+.kv__k{font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:#7C8A84;font-weight:700}
+.kv__v{color:var(--ink);font-size:.93rem;font-weight:600}
+.kv__v small{display:block;font-weight:400;color:var(--body)}
+
+.callout{
+  border-left:4px solid var(--orange);
+  background:var(--warn-bg);
+  border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  padding:12px 16px;margin:0 0 18px;font-size:.92rem;
+}
+.callout strong{color:var(--warn)}
+.callout--info{border-left-color:var(--blue);background:#EAF4FF}
+.callout--info strong{color:#0A5FA8}
+.callout--ok{border-left-color:var(--green);background:var(--ok-bg)}
+.callout--ok strong{color:var(--green-dark)}
+
+table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
+.tbl th,.tbl td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:#7C8A84;background:#FAFBFA}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td strong{color:var(--ink)}
+.tbl--num td{font-variant-numeric:tabular-nums}
+.tbl--num td:last-child{text-align:right;white-space:nowrap}
+
+.term{
+  border-bottom:1px dashed var(--line-strong);
+  cursor:help;position:relative;color:inherit;font-weight:600;
+}
+.term:hover::after,.term:focus::after{
+  content:attr(data-tip);
+  position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);
+  background:var(--ink);color:#fff;font-size:.74rem;font-weight:500;line-height:1.3;
+  padding:6px 9px;border-radius:7px;white-space:nowrap;z-index:20;
+  box-shadow:var(--shadow-sm);
+}
+.term:focus{outline-offset:3px}
+
+/* ----------------------------- questions ----------------------------- */
+.q{border:0;border-top:1px dashed var(--line-strong);margin:0;padding:20px 0 4px}
+.q:first-of-type{border-top:0;padding-top:4px}
+.q__legend{display:flex;gap:11px;align-items:baseline;padding:0;margin:0 0 4px;width:100%}
+.q__badge{
+  flex:0 0 auto;width:24px;height:24px;border-radius:50%;
+  background:var(--wash);color:var(--green-dark);
+  display:grid;place-items:center;font-size:.76rem;font-weight:700;
+}
+.q__prompt{font-weight:700;color:var(--ink);font-size:1rem}
+.q__vi{margin:0 0 4px 35px;font-size:.8rem;color:var(--green-dark);font-style:italic}
+.q__hint{margin:0 0 8px 35px;font-size:.8rem;color:#7C8A84;font-style:italic}
+.q__opts{display:grid;gap:8px;margin:12px 0 14px}
+.opt{
+  display:flex;gap:12px;align-items:flex-start;text-align:left;
+  width:100%;cursor:pointer;
+  font:inherit;font-size:.92rem;color:var(--body);
+  background:var(--surface);
+  border:1.5px solid var(--line-strong);
+  border-radius:var(--radius-sm);
+  padding:12px 14px;
+  transition:border-color .15s ease,background .15s ease,transform .15s ease;
+}
+.opt:hover:not(:disabled){border-color:var(--green);background:#F8FCFA;transform:translateX(2px)}
+.opt:disabled{cursor:default}
+.opt__key{
+  flex:0 0 auto;width:24px;height:24px;border-radius:6px;
+  background:var(--mist);border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:.75rem;font-weight:700;color:#6C7A74;
+}
+.opt__txt{min-width:0}
+.opt__label{display:block;color:var(--ink);font-weight:600}
+.opt__detail{display:block;color:var(--body);font-size:.84rem;margin-top:2px}
+.opt.is-selected{border-color:var(--green);background:var(--wash)}
+.opt.is-selected .opt__key{background:var(--green);border-color:var(--green);color:#fff}
+.opt.is-correct{border-color:var(--ok);background:var(--ok-bg)}
+.opt.is-correct .opt__key{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.is-wrong{border-color:var(--err);background:var(--err-bg)}
+.opt.is-wrong .opt__key{background:var(--err);border-color:var(--err);color:#fff}
+
+.q__actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.q__pts{margin-left:auto;font-size:.76rem;color:#7C8A84;font-variant-numeric:tabular-nums}
+
+/* ----------------------------- buttons ----------------------------- */
+.btn{
+  font:inherit;font-size:.9rem;font-weight:700;
+  border-radius:99px;padding:10px 20px;cursor:pointer;
+  border:1.5px solid transparent;
+  transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease;
+}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn--primary{background:var(--green);color:#fff}
+.btn--primary:hover:not(:disabled){background:var(--green-dark)}
+.btn--ghost{background:var(--surface);color:var(--green-dark);border-color:var(--line-strong)}
+.btn--ghost:hover:not(:disabled){border-color:var(--green);background:var(--wash)}
+.btn--link{background:none;color:var(--green-dark);padding:6px 4px;text-decoration:underline}
+.btn--sm{padding:8px 15px;font-size:.84rem}
+
+/* ----------------------------- feedback ----------------------------- */
+.fb{
+  border-radius:var(--radius-sm);
+  padding:13px 16px;margin:14px 0 2px;
+  font-size:.9rem;
+  border:1px solid var(--line);
+  background:var(--mist);
+  border-left-width:4px;
+  animation:fadeUp .3s ease both;
+}
+.fb__title{margin:0 0 6px;font-weight:700;color:var(--ink);font-size:.93rem;display:flex;gap:8px;align-items:center}
+.fb__tag{
+  font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+  border-radius:99px;padding:2px 8px;
+}
+.fb--ok{border-left-color:var(--ok);background:var(--ok-bg)}
+.fb--ok .fb__tag{background:var(--ok);color:#fff}
+.fb--no{border-left-color:var(--err);background:var(--err-bg)}
+.fb--no .fb__tag{background:var(--err);color:#fff}
+.fb--info{border-left-color:var(--blue);background:#EAF4FF}
+.fb--info .fb__tag{background:var(--blue);color:#fff}
+.fb__why{margin:.5em 0 0;font-size:.86rem}
+.fb__why strong{color:var(--ink)}
+.fb__pts{margin:.5em 0 0;font-size:.8rem;font-weight:700;color:var(--green-dark)}
+
+/* ----------------------------- widgets ----------------------------- */
+.sectionlabel{
+  display:flex;align-items:center;gap:10px;margin:0 0 10px;
+  font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;
+  font-weight:700;color:var(--green-dark);
+}
+.sectionlabel::after{content:"";flex:1 1 auto;height:1px;background:var(--line)}
+.sectionlabel__count{
+  margin-left:auto;flex:0 0 auto;font-size:.72rem;font-weight:700;letter-spacing:.02em;
+  text-transform:none;color:#7C8A84;
+}
+.sectionlabel + .q{border-top:0;padding-top:0}
+
+.locked{border-top:1px dashed var(--line-strong);padding-top:16px;margin-top:20px}
+.q + .locked{border-top:0}
+.locked__note{
+  display:flex;gap:9px;align-items:center;margin:0 0 14px;
+  background:var(--warn-bg);border:1px dashed #E7C79A;border-radius:var(--radius-sm);
+  padding:11px 14px;font-size:.86rem;color:var(--warn);font-weight:600;
+}
+.locked__inner{opacity:.45;pointer-events:none;filter:saturate(.35)}
+.locked__inner .q{padding-top:0;border-top:0}
+
+.finding{
+  border-left:4px solid var(--line-strong);
+  background:var(--mist);border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+  padding:11px 15px;margin:0 0 9px;font-size:.88rem;
+  animation:fadeUp .3s ease both;
+}
+.finding__head{display:flex;gap:9px;align-items:center;margin:0 0 4px;font-weight:700;color:var(--ink);font-size:.88rem}
+.finding--ok{border-left-color:var(--ok);background:var(--ok-bg)}
+.finding--warn{border-left-color:var(--orange);background:var(--warn-bg)}
+.finding--err{border-left-color:var(--err);background:var(--err-bg)}
+
+/* calculator */
+.calc{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 4px}
+.calc input{
+  font:inherit;font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--ink);
+  padding:10px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--line-strong);
+  background:var(--surface);min-width:180px;flex:1 1 180px;
+}
+.calc input:focus{outline:3px solid var(--blue);outline-offset:1px}
+.calc input:disabled{background:var(--wash);border-color:var(--green);color:var(--green-dark)}
+.calc__unit{font-size:.8rem;color:#7C8A84;font-weight:700}
+
+/* seat map */
+.cabin{display:grid;gap:6px;margin:0 0 12px;max-width:430px}
+.seatrow{display:flex;align-items:center;gap:6px}
+.seatrow__n{width:22px;flex:0 0 auto;text-align:center;font-size:.72rem;font-weight:700;color:#7C8A84}
+.seatrow__aisle{width:16px;flex:0 0 auto}
+.seat{
+  flex:1 1 0;min-width:0;height:34px;border-radius:8px;
+  border:1.5px solid var(--line-strong);background:var(--surface);
+  font:inherit;font-size:.78rem;font-weight:700;color:var(--body);cursor:pointer;
+  transition:background .15s ease,border-color .15s ease,color .15s ease;
+}
+.seat:hover:not(:disabled){border-color:var(--green);background:#F8FCFA}
+.seat.is-taken{background:#EEF0EF;border-color:var(--line);color:#B9C1BD;cursor:not-allowed}
+.seat.is-exit{border-color:#E7C79A;background:#FFF8EC;color:var(--warn)}
+.seat.is-picked{background:var(--green);border-color:var(--green);color:#fff}
+.seat:disabled{opacity:1}
+.cabinlegend{display:flex;gap:16px;flex-wrap:wrap;font-size:.74rem;color:#7C8A84;margin:0 0 12px}
+.cabinlegend span{display:inline-flex;align-items:center;gap:6px}
+.swatch{display:inline-block;width:12px;height:12px;border-radius:4px;border:1.5px solid var(--line-strong)}
+.swatch--exit{background:#FFF8EC;border-color:#E7C79A}
+.swatch--taken{background:#EEF0EF;border-color:var(--line)}
+.swatch--pick{background:var(--green);border-color:var(--green)}
+
+.hidden{display:none !important}
+
+/* ----------------------------- nav ----------------------------- */
+.nav{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  margin:20px 0 8px;
+}
+.nav__hint{flex:1 1 200px;font-size:.82rem;color:#7C8A84;text-align:center}
+.nav__hint strong{color:var(--green-dark)}
+
+/* ----------------------------- results ----------------------------- */
+.score-big{
+  display:flex;gap:22px;align-items:baseline;flex-wrap:wrap;margin:0 0 6px;
+}
+.score-big__n{font-size:clamp(2.2rem,7vw,3.2rem);font-weight:700;color:var(--green);line-height:1;font-variant-numeric:tabular-nums}
+.score-big__d{font-size:1rem;color:#7C8A84}
+.rank{
+  display:inline-flex;gap:8px;align-items:center;
+  background:var(--wash);color:var(--green-dark);font-weight:700;
+  border-radius:99px;padding:7px 16px;font-size:.92rem;margin:0 0 18px;
+}
+.results .tbl td:first-child{width:48%}
+
+/* ----------------------------- footer ----------------------------- */
+.foot{
+  margin:36px 0 0;padding:22px 0 34px;
+  font-size:.78rem;color:#7C8A84;text-align:center;
+}
+.foot strong{color:var(--body)}
+
+/* ----------------------------- responsive ----------------------------- */
+@media (max-width:760px){
+  .phase__head{padding:16px 16px}
+  .phase__body{padding:18px 16px 22px}
+  .brand__mark{width:40px;height:40px}
+  .hud__item{min-width:88px;padding:6px 10px}
+  .step__label{display:none}
+  .stepper{gap:4px}
+  .step__dot{width:26px;height:26px;font-size:.74rem}
+  .opt{padding:11px 12px;font-size:.88rem}
+  .nav{flex-direction:column-reverse}
+  .nav .btn{width:100%}
+  .nav__hint{order:3}
+  .cabin{max-width:100%}
+  .seat{height:32px;font-size:.74rem}
+}
+@media (max-width:420px){
+  .kv{grid-template-columns:1fr}
+  .q__pts{width:100%;margin-left:0}
+  .tbl{font-size:.82rem}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#stage">Chuyển tới phần chơi</a>
+
+<header class="topbar">
+  <div class="wrap topbar__in">
+    <div class="brand">
+      <span class="brand__mark" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M3.2 10.6h8.1l5.6-4.7h2.9l-2.8 4.7h3.6l1.9-1.9h1.6l-1.4 4.3-19 3.1z" fill="#fff"/>
+          <path d="M2.6 18.4h18.8v1.6H2.6z" fill="#fff" opacity=".6"/>
+        </svg>
+      </span>
+      <div>
+        <p class="brand__eyebrow">Luyện nghiệp vụ bán vé máy bay</p>
+        <h1 class="brand__title">Ticket Sales Simulator</h1>
+        <p class="brand__sub">Một hồ sơ khách lẻ, từ lúc tiếp nhận yêu cầu đến chăm sóc sau bán — Hà Nội → TP.HCM.</p>
+      </div>
+    </div>
+    <div class="hud" aria-live="off">
+      <div class="hud__item"><span class="hud__k">Giai đoạn</span><span class="hud__v" id="hudPhase">1 / 8</span></div>
+      <div class="hud__item"><span class="hud__k">Điểm</span><span class="hud__v" id="hudScore">0 / 0</span></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="stepper" id="stepper" aria-hidden="true"></div>
+  <div class="progress" role="progressbar" aria-label="Tiến trình" aria-valuemin="0" aria-valuemax="8" aria-valuenow="1" id="progressWrap">
+    <div class="progress__bar" id="progressBar"></div>
+  </div>
+
+  <section class="stage" id="stage" aria-live="polite"></section>
+
+  <nav class="nav" id="nav">
+    <button type="button" class="btn btn--ghost" id="prevBtn">← Giai đoạn trước</button>
+    <span class="nav__hint" id="navHint"></span>
+    <button type="button" class="btn btn--primary" id="nextBtn" disabled>Giai đoạn tiếp theo →</button>
+  </nav>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p><strong>Ticket Sales Simulator</strong> — sản phẩm học tập, phi thương mại.
+    Hãng hàng không, số hiệu chuyến bay, giá vé và nhân vật trong game đều là hư cấu và đã được đơn giản hoá cho mục đích giảng dạy.
+    Không liên kết với bất kỳ hãng hàng không hay đại lý nào.</p>
+    <p id="backlink" class="hidden" style="margin-top:14px">
+      <a class="btn btn--ghost btn--sm" href="./../">← Về BrandBlog</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+     0. Tiện ích
+     ============================================================ */
+  const $  = (sel, root) => (root || document).querySelector(sel);
+  const $$ = (sel, root) => Array.prototype.slice.call((root || document).querySelectorAll(sel));
+  const fmt = n => String(Math.round(Number(n))).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const dong = n => fmt(n) + ' đ';
+
+  /* Thuật ngữ tiếng Anh — nhãn hiển thị là tiếng Việt/từ viết tắt, tooltip là tiếng Anh đầy đủ */
+  const TERMS = {
+    pnr:  ['PNR', 'Passenger Name Record — hồ sơ đặt chỗ'],
+    ttl:  ['TTL', 'Ticketing Time Limit — hạn xuất vé'],
+    dob:  ['DOB', 'Date of Birth — ngày sinh của hành khách'],
+    ssr:  ['SSR', 'Special Service Request — yêu cầu dịch vụ đặc biệt'],
+    osi:  ['OSI', 'Other Service Information — thông tin nội bộ, không phải yêu cầu dịch vụ'],
+    chml: ['CHML', 'Child Meal — suất ăn dành cho trẻ em'],
+    fop:  ['FOP', 'Form of Payment — hình thức thanh toán'],
+    etkt: ['E-ticket', 'Vé điện tử (electronic ticket)'],
+    vat:  ['VAT', 'Value Added Tax — thuế giá trị gia tăng (GTGT)'],
+    noShow: ['No-show', 'Khách không đến bay và không báo trước'],
+    involuntary: ['Involuntary change', 'Thay đổi ngoài ý muốn của khách — do phía hãng'],
+    voluntary: ['Voluntary change', 'Thay đổi tự nguyện — do khách yêu cầu'],
+    apis: ['APIS', 'Advance Passenger Information — thông tin hành khách trước chuyến'],
+    gds:  ['GDS/CRS', 'Global Distribution System — hệ thống phân phối/đặt chỗ'],
+    cls:  ['Booking class', 'Hạng đặt chỗ — ký hiệu chữ cái quy định giá và quyền lợi'],
+    fareBasis: ['Fare basis', 'Mã điều kiện giá gắn với từng loại giá'],
+    exitRow: ['Exit row', 'Hàng ghế cạnh cửa thoát hiểm'],
+    refund: ['Refund', 'Hoàn tiền vé'],
+    reissue: ['Reissue', 'Xuất lại vé sau khi đổi'],
+    voucher: ['EMD', 'Electronic Miscellaneous Document — chứng từ cho dịch vụ bổ trợ']
+  };
+  function term(key, label) {
+    const t = TERMS[key];
+    if (!t) return label || key;
+    return '<span class="term" tabindex="0" data-tip="' + t[1] + '">' + (label || t[0]) + '</span>';
+  }
+
+  /* ============================================================
+     1. Hồ sơ khách hàng (hư cấu, nhưng có thật về mặt nghiệp vụ)
+     ============================================================ */
+  const PAX = {
+    desk: 'Quầy vé Hưng Hà Airways — Chi nhánh Hà Nội',
+    pnr: 'HH-7Q4K2',
+    route: 'HAN → SGN · khứ hồi',
+    dates: '15NOV: HAN 06:00 → SGN 08:15 · 18NOV: SGN → HAN',
+    adults: 'Nguyễn Văn Minh (1985) · Nguyễn Thị Lan (1987)',
+    child: 'Nguyễn Gia Bảo (2019) — 6 tuổi',
+    contact: '0912 345 678 · lan.nguyen@example.com',
+    childFare: 1935000,
+    fareTotal: 7095000,
+    grandTotal: 8412600
+  };
+
+  /* ============================================================
+     2. Trạng thái + tính điểm
+     ============================================================ */
+  const state = {
+    phase: 0,
+    finished: false,
+    answers: {}   // id -> { attempts, points, correct }
+  };
+
+  function rec(id) {
+    if (!state.answers[id]) state.answers[id] = { attempts: 0, points: 0, correct: false };
+    return state.answers[id];
+  }
+  const score = () => Object.keys(state.answers).reduce((a, k) => a + (state.answers[k].points || 0), 0);
+  const isDone = id => !!(state.answers[id] && state.answers[id].correct);
+
+  /* ============================================================
+     3. Mô hình câu hỏi + hiển thị
+     ============================================================ */
+  function Q(id, prompt, options, correct, explain, points, vi) {
+    return {
+      id: id,
+      prompt: prompt,
+      options: options,
+      correct: correct,
+      explain: explain,
+      points: points,
+      vi: vi || '',
+      multi: Array.isArray(correct)
+    };
+  }
+
+  function qHTML(q, num) {
+    const solved = isDone(q.id);
+    return '' +
+      '<fieldset class="q' + (solved ? ' is-locked' : '') + '" data-qid="' + q.id + '" role="group">' +
+        '<div class="q__legend">' +
+          '<span class="q__badge" aria-hidden="true">' + num + '</span>' +
+          '<span class="q__prompt">' + q.prompt + '</span>' +
+        '</div>' +
+        (q.vi ? '<p class="q__vi">' + q.vi + '</p>' : '') +
+        (q.multi ? '<p class="q__hint">Chọn tất cả đáp án đúng, rồi bấm “Kiểm tra đáp án”.</p>' : '') +
+        '<div class="q__opts">' +
+          q.options.map(function (o, i) {
+            return '<button type="button" class="opt" data-opt="' + i + '" aria-pressed="false">' +
+              '<span class="opt__key">' + String.fromCharCode(65 + i) + '</span>' +
+              '<span class="opt__txt">' +
+                '<span class="opt__label">' + o.label + '</span>' +
+                (o.detail ? '<span class="opt__detail">' + o.detail + '</span>' : '') +
+              '</span>' +
+            '</button>';
+          }).join('') +
+        '</div>' +
+        '<div class="q__actions">' +
+          '<button type="button" class="btn btn--primary btn--check btn--sm" disabled>Kiểm tra đáp án</button>' +
+          '<span class="q__pts">' + q.points + ' điểm</span>' +
+        '</div>' +
+        '<div class="fb" hidden></div>' +
+      '</fieldset>';
+  }
+
+  function sameSet(set, arr) {
+    if (set.size !== arr.length) return false;
+    for (let i = 0; i < arr.length; i++) if (!set.has(arr[i])) return false;
+    return true;
+  }
+  const isRight = (q, i) => q.multi ? q.correct.indexOf(i) > -1 : q.correct === i;
+
+  let runtime = { required: [], done: new Set(), labels: {} };
+
+  function taskDone(id) {
+    runtime.done.add(id);
+    const all = runtime.required.every(function (r) { return runtime.done.has(r); });
+    setNextEnabled(all);
+    updateNavHint();
+    updateChrome();
+  }
+
+  /* Nói rõ còn thiếu gì, để nút “Giai đoạn tiếp theo” không bao giờ bị khoá một cách vô cớ. */
+  function updateNavHint() {
+    const p = PHASES[state.phase];
+    if (!p) return;
+    const pending = p.required.filter(function (id) { return !runtime.done.has(id); });
+    if (!pending.length) {
+      setHint('<strong>Đã hoàn thành giai đoạn</strong> — bấm “Giai đoạn tiếp theo” để đi tiếp.');
+      return;
+    }
+    const names = pending.map(function (id) {
+      return (runtime.labels && runtime.labels[id]) || (p.labels && p.labels[id]) || 'các việc của giai đoạn này';
+    });
+    setHint('Còn phải làm: <strong>' + names.join('</strong>, <strong>') + '</strong>');
+  }
+
+  function wireMCQ(scope, q) {
+    const field = $(('[data-qid="' + q.id + '"]'), scope);
+    if (!field) return;
+    const opts = $$('.opt', field);
+    const check = $('.btn--check', field);
+    const fb = $('.fb', field);
+    const r = rec(q.id);
+    let selected = q.multi ? new Set() : null;
+
+    function paint() {
+      opts.forEach(function (b, i) {
+        const on = q.multi ? selected.has(i) : selected === i;
+        b.classList.toggle('is-selected', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      check.disabled = q.multi ? selected.size === 0 : selected === null;
+    }
+
+    function lockAndReveal(attempts, pts) {
+      field.classList.add('is-locked');
+      opts.forEach(function (b, i) {
+        if (isRight(q, i)) b.classList.add('is-correct');
+        b.disabled = true;
+      });
+      check.disabled = true;
+      fb.hidden = false;
+      fb.className = 'fb fb--ok';
+      fb.innerHTML =
+        '<p class="fb__title"><span class="fb__tag">Chính xác</span>Đã kiểm tra đáp án</p>' +
+        q.explain +
+        (pts > 0
+          ? '<p class="fb__pts">+' + pts + ' điểm' + (attempts > 1 ? ' (làm lại chỉ được nửa số điểm).' : '.') + '</p>'
+          : '<p class="fb__pts">Lần này không có điểm — hãy đọc phần giải thích trước khi đi tiếp.</p>');
+    }
+
+    if (r.correct) {
+      // Khôi phục câu đã trả lời khi khách quay lại giai đoạn trước.
+      opts.forEach(function (b, i) { if (isRight(q, i)) b.classList.add('is-correct'); });
+      check.classList.add('hidden');
+      fb.hidden = false;
+      fb.className = 'fb fb--ok';
+      fb.innerHTML = '<p class="fb__title"><span class="fb__tag">Đã làm</span>' + (r.points > 0 ? '+' + r.points + ' điểm' : 'Xem lại') + '</p>' + q.explain;
+      return;
+    }
+
+    opts.forEach(function (b, i) {
+      b.addEventListener('click', function () {
+        if (field.classList.contains('is-locked')) return;
+        if (q.multi) { selected.has(i) ? selected.delete(i) : selected.add(i); }
+        else { selected = i; }
+        b.classList.remove('is-wrong');
+        paint();
+      });
+    });
+
+    check.addEventListener('click', function () {
+      const ok = q.multi ? sameSet(selected, q.correct) : selected === q.correct;
+      r.attempts++;
+
+      if (ok) {
+        const pts = r.attempts === 1 ? q.points : Math.round(q.points / 2);
+        r.points = Math.max(r.points, pts);
+        r.correct = true;
+        lockAndReveal(r.attempts, pts);
+        if (typeof q.onSolve === 'function') q.onSolve();
+        taskDone(q.id);
+        return;
+      }
+
+      // Trả lời sai
+      fb.hidden = false;
+      fb.className = 'fb fb--no';
+      const picked = q.multi ? Array.from(selected) : [selected];
+      const why = picked
+        .filter(function (i) { return i !== null && !isRight(q, i); })
+        .map(function (i) { return '<p class="fb__why">' + q.options[i].why + '</p>'; })
+        .join('');
+      $$('.opt', field).forEach(function (b, i) {
+        if (picked.indexOf(i) > -1 && !isRight(q, i)) b.classList.add('is-wrong');
+        else b.classList.remove('is-wrong');
+      });
+
+      if (r.attempts >= 3) {
+        // “Van an toàn”: không bao giờ để người chơi bị kẹt.
+        lockAndReveal(r.attempts, 0);
+        fb.className = 'fb fb--info';
+        fb.innerHTML = '<p class="fb__title"><span class="fb__tag">Xem lại</span>Đáp án đúng đã được tô sáng</p>' + q.explain;
+        if (typeof q.onSolve === 'function') q.onSolve();
+        taskDone(q.id);
+        return;
+      }
+
+      fb.innerHTML = '<p class="fb__title"><span class="fb__tag">Chưa đúng</span>Hãy nghĩ tới hậu quả nghiệp vụ</p>' +
+        why +
+        '<p class="fb__why">Đọc lại dữ kiện trong giai đoạn này rồi thử lại — làm lại đúng vẫn được nửa số điểm.</p>' +
+        '<p class="fb__pts">Số lần đã thử: ' + r.attempts + ' / 3</p>';
+
+      // Câu chọn nhiều đáp án phải được làm lại từ đầu, nếu không các ô sai
+      // còn tick sẽ khiến không bao giờ chọn được tổ hợp đúng.
+      if (q.multi) { selected.clear(); paint(); }
+    });
+  }
+
+  /* ============================================================
+     4. Khối nội dung dùng chung
+     ============================================================ */
+  function block(parent, html) { parent.insertAdjacentHTML('beforeend', html); }
+  function addQ(parent, q, num) { block(parent, qHTML(q, num)); }
+
+  function findingHTML(f) {
+    return '<div class="finding finding--' + f.tone + '">' +
+      '<p class="finding__head">' + f.head + '</p><p>' + f.body + '</p></div>';
+  }
+
+  /* ============================================================
+     5. Các giai đoạn
+     ============================================================ */
+  const PHASES = [
+
+  /* ---------------------------------------------------------- 1 */
+  {
+    short: 'Tra cứu',
+    title: 'Tiếp nhận yêu cầu &amp; tra cứu chuyến bay',
+    vi: 'Enquiry &amp; flight availability',
+    required: ['q1-1', 'q1-2'],
+    labels: { 'q1-1': 'chọn chuyến bay và hạng đặt chỗ', 'q1-2': 'giải thích giá cho khách' },
+    render: function (body) {
+      block(body,
+        '<p class="lead">10:15, ' + PAX.desk + '. Chị Nguyễn Thị Lan gọi đến đặt vé cho gia đình 3 người đi Hà Nội – TP. Hồ Chí Minh: ' +
+        '<strong>2 người lớn và 1 bé trai 6 tuổi</strong>, đi 15NOV và về 18NOV. Gia đình mang theo hành lý ký gửi khoảng 20–23 kg/người, ' +
+        'và phải có mặt ở TP.HCM <strong>trước 15:00</strong> vì có cuộc họp. Ngân sách có hạn.</p>' +
+
+        '<div class="card card--accent">' +
+          '<p class="card__title">Tình trạng chỗ · 15NOV · HAN → SGN</p>' +
+          '<table class="tbl">' +
+            '<thead><tr><th>Chuyến</th><th>Giờ bay</th><th>Hạng còn chỗ</th><th>Giá thấp nhất còn bán</th></tr></thead>' +
+            '<tbody>' +
+              '<tr><td><strong>HH 231</strong></td><td>06:00 → 08:15</td><td>Y4 · M9 · B9 · K9</td><td>890.000 đ</td></tr>' +
+              '<tr><td><strong>HH 235</strong></td><td>09:20 → 11:35</td><td>Y0 · M2 · B0 · K0</td><td>1.290.000 đ</td></tr>' +
+              '<tr><td><strong>HH 241</strong></td><td>14:45 → 17:00</td><td>Y9 · M9 · B9 · K9</td><td>890.000 đ</td></tr>' +
+              '<tr><td><strong>HH 249</strong></td><td>19:30 → 21:45</td><td>Y0 · M0 · B0 · K4</td><td>890.000 đ</td></tr>' +
+            '</tbody>' +
+          '</table>' +
+          '<p style="margin-top:10px"><small><strong>Cách đọc bảng:</strong> mỗi ký tự là một ' + term('cls') + ' — <strong>Y</strong> = Flex, ' +
+          '<strong>M / B</strong> = Standard, <strong>K</strong> = Light; con số bên cạnh là số chỗ còn lại. ' +
+          'Số 0 nghĩa là hạng đó đã đóng, không bán được nữa.</small></p>' +
+        '</div>' +
+
+        '<div class="card">' +
+          '<p class="card__title">Quyền lợi theo loại giá (1 chặng HAN–SGN)</p>' +
+          '<table class="tbl">' +
+            '<thead><tr><th>Loại giá</th><th>Hạng</th><th>Hành lý ký gửi</th><th>Đổi ngày</th><th>Hoàn vé</th></tr></thead>' +
+            '<tbody>' +
+              '<tr><td><strong>Light</strong></td><td>K</td><td>Không</td><td>Không cho phép</td><td>Không hoàn</td></tr>' +
+              '<tr><td><strong>Standard</strong></td><td>M / B</td><td>23 kg</td><td>Phí 350.000 đ</td><td>Không hoàn</td></tr>' +
+              '<tr><td><strong>Flex</strong></td><td>Y</td><td>23 kg</td><td>Miễn phí</td><td>Hoàn 70%</td></tr>' +
+            '</tbody>' +
+          '</table>' +
+        '</div>'
+
+      );
+      addQ(body, this.questions[0], 1);
+      addQ(body, this.questions[1], 2);
+    },
+    questions: [
+      Q('q1-1',
+        'Bạn báo chuyến nào và hạng đặt chỗ nào cho gia đình 3 người?',
+        [
+          { label: 'HH 231 · hạng M (Standard)',
+            detail: '06:00 → 08:15, còn 9 chỗ hạng M và 9 chỗ hạng B.',
+            why: '' },
+          { label: 'HH 235 · hạng M (Standard)',
+            detail: '09:20 → 11:35, giờ bay dễ chịu hơn và giá thấp nhất còn bán là 1.290.000 đ.',
+            why: '<strong>HH 235 chỉ còn đúng 2 chỗ hạng M (M2) và hạng B đã đóng (B0).</strong> Gia đình có 3 khách, nên hạng này không đủ chỗ: nếu cố bán, hệ thống sẽ tách đoàn khách sang nhiều hạng hoặc báo lỗi ngay ở bước xuất vé.' },
+          { label: 'HH 249 · hạng K (Light)',
+            detail: '19:30 → 21:45, giá chỉ 890.000 đ, rẻ nhất trong ngày.',
+            why: '<strong>Hạng K là Light: không có hành lý ký gửi.</strong> Khách mang 20–23 kg/người nên sẽ phải mua thêm hành lý ở mức cao hơn phần chênh lệch, mà chuyến lại đến 21:45 — trễ hơn 6 tiếng so với nhu cầu.' },
+          { label: 'HH 241 · hạng Y (Flex)',
+            detail: '14:45 → 17:00, linh hoạt nhất, đổi ngày miễn phí.',
+            why: '<strong>HH 241 đến 17:00, trễ hơn cuộc họp 15:00 và muộn hơn nhu cầu của khách.</strong> Hạng Y lại đắt hơn hạng M 1.160.000 đ/chặng/khách — trả thêm hơn 7 triệu cho cả gia đình để lấy quyền lợi khách không cần.' }
+        ],
+        0,
+        '<p><strong>HH 231, hạng M (Standard).</strong> Đây là chuyến duy nhất hội đủ cả bốn điều kiện: khởi hành buổi sáng, đến SGN 08:15 (trước cuộc họp 15:00), ' +
+        'còn đủ 3 chỗ trong một hạng còn mở (M9 / B9), và hạng M có 23 kg hành lý ký gửi với giá thấp.</p>' +
+        '<p>Bán vé luôn phải kiểm tra <strong>cả ba yếu tố cùng lúc</strong>: nhu cầu của khách (giờ bay, hành lý, ngân sách), ' +
+        'số chỗ theo từng hạng đặt chỗ, và quyền lợi của loại giá. Bỏ qua một yếu tố là tới lúc xuất vé mới phát hiện không đủ chỗ — lúc đó chỉ còn cách xin lỗi khách.</p>',
+        10,
+        'Nên bán chuyến nào, hạng đặt chỗ nào?'),
+
+      Q('q1-2',
+        'Khách nói: “Trên web em thấy chuyến HH 235 có giá 890.000 đ, sao em báo cao hơn?” — Cách giải thích nào đúng?',
+        [
+          { label: 'Mức 890.000 đ thuộc hạng K và hạng K của HH 235 đã đóng (K0); hệ thống chỉ bán được hạng còn chỗ nên giá thấp nhất còn bán cao hơn.',
+            detail: 'Giá là thuộc tính của hạng đặt chỗ, không phải của chuyến bay.',
+            why: '' },
+          { label: 'Đại lý được phép cộng thêm hoa hồng vào giá vé nên báo cao hơn giá web.',
+            detail: 'Hoa hồng cộng vào giá bán.',
+            why: '<strong>Đại lý nhận hoa hồng từ hãng, không được tự cộng vào giá vé bán cho khách.</strong> Tự nâng giá là vi phạm thoả thuận đại lý và quy định giá bán, có thể bị thu hồi quyền bán.' },
+          { label: 'Giá web chưa gồm thuế, phí còn giá bạn báo đã gồm thuế, phí.',
+            detail: 'Chênh lệch do thuế và phí.',
+            why: '<strong>Thuế và phí được cộng thêm trên cả hai kênh bán.</strong> Không phải nguyên nhân của khoản chênh lệch này, và nói như vậy với khách là giải thích sai quy tắc giá.' },
+          { label: 'Khách không mang hành lý ký gửi thì mới được giá 890.000 đ.',
+            detail: 'Giá thấp gắn với điều kiện hành lý.',
+            why: '<strong>Giá vé và hành lý là hai cấu phần riêng.</strong> Hạng K đúng là không có hành lý ký gửi, nhưng giá thấp nhất bị quyết định trước hết bởi hạng đặt chỗ còn chỗ hay đã đóng.' }
+        ],
+        0,
+        '<p><strong>Giá vé là thuộc tính của hạng đặt chỗ, và hạng đặt chỗ có số chỗ giới hạn.</strong> Hãng đưa ra một “giá từ” — đó là giá của hạng thấp nhất khi còn chỗ. ' +
+        'Khi hạng K đóng (K0) hoặc hết chỗ, giá thấp nhất còn bán được là giá của hạng mở thấp nhất kế tiếp.</p>' +
+        '<p>Trên dòng HH 235: Y0 · M2 · B0 · K0. Chỉ hạng M còn mở, nên giá thấp nhất còn bán là 1.290.000 đ — không phải 890.000 đ như quảng cáo. ' +
+        'Giải thích bằng cơ chế hạng đặt chỗ giúp khách hiểu vì sao giá thay đổi theo ngày, và giữ được lòng tin thay vì tranh cãi về “giá web”.</p>',
+        10,
+        'Giải thích cho khách vì sao giá báo cao hơn giá trên web?')
+    ]
+  },
+
+  /* ---------------------------------------------------------- 2 */
+  {
+    short: 'Tạo PNR',
+    title: 'Tạo hồ sơ đặt chỗ (PNR)',
+    vi: 'Passenger Name Record — tên hành khách &amp; thông tin liên hệ',
+    required: ['q2-1', 'q2-2'],
+    labels: { 'q2-1': 'định dạng tên hành khách', 'q2-2': 'thông tin của bé 6 tuổi' },
+    render: function (body) {
+      block(body,
+        '<p class="lead">Khách chốt <strong>HH 231, hạng M, cả chặng đi và chặng về</strong>. Bạn tạo ' + term('pnr') + '. ' +
+        'Đây là dữ liệu khách cung cấp — hãy nhập đúng ngay từ đầu, vì sau khi xuất vé gần như không sửa được.</p>' +
+
+        '<div class="card card--accent">' +
+          '<p class="card__title">Thông tin khách cung cấp</p>' +
+          '<table class="tbl">' +
+            '<thead><tr><th>Hành khách</th><th>Giấy tờ</th><th>Ghi chú</th></tr></thead>' +
+            '<tbody>' +
+              '<tr><td><strong>Nguyễn Văn Minh</strong><br><small>sinh 12/03/1985 (nam)</small></td><td>Hộ chiếu B1234567</td><td>Chồng</td></tr>' +
+              '<tr><td><strong>Nguyễn Thị Lan</strong><br><small>sinh 27/08/1987 (nữ)</small></td><td>Hộ chiếu B7654321</td><td>Người đặt vé</td></tr>' +
+              '<tr><td><strong>Nguyễn Gia Bảo</strong><br><small>sinh 05/06/2019 (nam) · 6 tuổi</small></td><td>Chưa có hộ chiếu</td><td>Con, bay nội địa cùng bố mẹ</td></tr>' +
+            '</tbody>' +
+          '</table>' +
+          '<div class="kv" style="margin-top:12px">' +
+            '<div class="kv__row"><span class="kv__k">Liên hệ</span><span class="kv__v">' + PAX.contact + '</span></div>' +
+            '<div class="kv__row"><span class="kv__k">Hành trình</span><span class="kv__v">' + PAX.dates + '</span></div>' +
+          '</div>' +
+        '</div>'
+
+      );
+      addQ(body, this.questions[0], 1);
+      addQ(body, this.questions[1], 2);
+    },
+    questions: [
+      Q('q2-1',
+        'Trường tên hành khách của ông Nguyễn Văn Minh phải nhập thế nào?',
+        [
+          { label: 'NGUYEN/VAN MINH',
+            detail: 'Họ trước, tên và đệm sau, viết hoa, không dấu — đúng như hộ chiếu.',
+            why: '' },
+          { label: 'MINH/NGUYEN VAN',
+            detail: 'Tên trước, họ sau.',
+            why: '<strong>Đây là tên bị đảo.</strong> Hộ chiếu ghi Surname = NGUYEN, Given names = VAN MINH. Trường tên trên vé phải theo hộ chiếu: họ trước tên sau. Nhập ngược khiến tên trên vé không khớp giấy tờ và khách có thể bị từ chối làm thủ tục.' },
+          { label: 'Nguyen Van Minh (Mr)',
+            detail: 'Có chức danh, chữ thường, có dấu.',
+            why: '<strong>Trường tên không nhận chức danh, chữ thường hay dấu tiếng Việt.</strong> Tên trên vé phải in hoa, không dấu và khớp từng ký tự với giấy tờ tuỳ thân; chức danh (MR/MS) là trường riêng, không nằm trong tên.' },
+          { label: 'NGUYEN/V. MINH',
+            detail: 'Viết tắt tên đệm.',
+            why: '<strong>Không được viết tắt tên đệm.</strong> Tên đệm là một phần của Given names và phải ghi đủ; viết tắt làm sai lệch họ tên so với hộ chiếu.' }
+        ],
+        0,
+        '<p><strong>NGUYEN/VAN MINH.</strong> Quy tắc đặt tên trên vé: <strong>họ trước, dấu gạch chéo, rồi tên và đệm</strong>; viết hoa, không dấu, không chức danh, ' +
+        'và khớp chính xác với giấy tờ tuỳ thân của hành khách.</p>' +
+        '<p>Tên sai là lỗi tốn kém nhất trong bán vé: vé không được chuyển nhượng nên đổi tên thường phải huỷ và xuất lại, mất phí và có thể mất cả giá vé. ' +
+        'Nhập đúng ngay từ đầu luôn rẻ hơn sửa.</p>',
+        10,
+        'Định dạng tên hành khách trên PNR như thế nào?'),
+
+      Q('q2-2',
+        'Đối với bé Gia Bảo (6 tuổi) bay nội địa cùng bố mẹ, trên PNR cần ghi những gì?',
+        [
+          { label: 'Tên, ngày sinh (' + term('dob') + ') và giới tính; ghi chú bé đi cùng bố mẹ. Bay nội địa nên trẻ em dùng giấy khai sinh, không bắt buộc số hộ chiếu.',
+            detail: 'Đủ dữ liệu để tính đúng giá và đối chiếu giấy tờ khi làm thủ tục.',
+            why: '' },
+          { label: 'Chỉ cần tên bé, vì bé đi cùng bố mẹ nên không cần thêm thông tin gì.',
+            detail: 'Bố mẹ đã có trong PNR.',
+            why: '<strong>Thiếu ngày sinh là lỗi nặng.</strong> Ngày sinh quyết định loại hành khách (trẻ em 2–11 tuổi được 75% giá) và là dữ liệu bắt buộc để đối chiếu giấy tờ khi làm thủ tục. Nhập thiếu có thể làm sai giá vé hoặc khiến khách bị giữ lại ở sân bay.' },
+          { label: 'Bắt buộc số hộ chiếu của cả 3 người, kể cả bé.',
+            detail: 'Hộ chiếu là giấy tờ bắt buộc.',
+            why: '<strong>Bay nội địa, trẻ em chưa có hộ chiếu thì dùng giấy khai sinh (hoặc giấy tờ định danh trẻ em).</strong> Yêu cầu khách bổ sung hộ chiếu cho bé là thủ tục không cần thiết và làm chậm việc bán vé.' },
+          { label: 'Ghi bé thành người lớn cho đơn giản, giá vé cũng dễ tính.',
+            detail: 'Một loại giá cho cả ba khách.',
+            why: '<strong>Sai giá và sai quyền lợi của khách.</strong> Trẻ 6 tuổi được 75% giá người lớn; ghi thành người lớn là thu thừa tiền của khách, đồng thời làm sai dữ liệu hành khách dùng cho ' + term('apis') + ' và danh sách chuyến bay.' }
+        ],
+        0,
+        '<p><strong>Tên, ngày sinh, giới tính — và ghi chú quan hệ đi cùng.</strong> Ba trường này làm nên “danh tính hành khách” trên hệ thống: ' +
+        'ngày sinh quyết định loại giá (trẻ em 2–11 tuổi: 75%), giới tính và tên dùng cho danh sách và thủ tục, ghi chú giúp nhân viên mặt đất biết bé đi cùng ai.</p>' +
+        '<p>Với chuyến bay nội địa, trẻ em dùng giấy khai sinh nên không bắt buộc số hộ chiếu. Với chuyến quốc tế thì ngược lại — hộ chiếu và thị thực là bắt buộc, ' +
+        'và phải kiểm tra hiệu lực hộ chiếu trước khi bán.</p>',
+        10,
+        'Cần ghi những thông tin gì cho hành khách nhí?')
+    ]
+  },
+
+  /* ---------------------------------------------------------- 3 */
+  {
+    short: 'Loại giá',
+    title: 'Chọn loại giá &amp; điều kiện vé',
+    vi: 'Fare family &amp; fare rules',
+    required: ['q3-1', 'q3-2'],
+    labels: { 'q3-1': 'chọn loại giá', 'q3-2': 'điều kiện hoàn vé' },
+    render: function (body) {
+      block(body,
+        '<p class="lead">Chọn xong chuyến và hạng đặt chỗ, bước tiếp theo là <strong>chọn loại giá</strong>. ' +
+        'Đây là lúc giải thích cho khách: loại giá nào vừa đủ dùng, vừa không trả tiền cho quyền lợi khách không có nhu cầu.</p>' +
+
+        '<div class="card card--accent">' +
+          '<p class="card__title">Các loại giá · HAN → SGN · 1 chặng</p>' +
+          '<table class="tbl tbl--num">' +
+            '<thead><tr><th>Loại giá</th><th>Hạng</th><th>Hành lý ký gửi</th><th>Đổi ngày</th><th>Hoàn vé</th><th style="text-align:right">Giá/khách</th></tr></thead>' +
+            '<tbody>' +
+              '<tr><td><strong>Light</strong></td><td>K</td><td>Không</td><td>Không cho phép</td><td>Không hoàn</td><td>890.000 đ</td></tr>' +
+              '<tr><td><strong>Standard</strong></td><td>M</td><td>23 kg</td><td>Phí 350.000 đ</td><td>Không hoàn</td><td>1.290.000 đ</td></tr>' +
+              '<tr><td><strong>Flex</strong></td><td>Y</td><td>23 kg</td><td>Miễn phí</td><td>Hoàn 70%</td><td>2.450.000 đ</td></tr>' +
+            '</tbody>' +
+          '</table>' +
+          '<p style="margin-top:10px"><small>Nếu đã mua <strong>Light</strong>, khách có thể mua thêm 23 kg hành lý ký gửi với giá <strong>400.000 đ/chặng</strong>. ' +
+          'Hành lý mua thêm không làm thay đổi điều kiện đổi/hoàn của loại giá ban đầu.</small></p>' +
+        '</div>' +
+
+        '<div class="callout callout--info"><strong>Nhu cầu của khách:</strong> cần 23 kg hành lý ký gửi cho mỗi người; ' +
+        'có thể phải dời ngày bay vì bố bé chưa xin xong nghỉ phép; ngân sách có hạn.</div>'
+
+      );
+      addQ(body, this.questions[0], 1);
+      addQ(body, this.questions[1], 2);
+    },
+    questions: [
+      Q('q3-1',
+        'Bạn tư vấn loại giá nào cho gia đình?',
+        [
+          { label: 'Light (K) — rẻ nhất, tiết kiệm 400.000 đ/khách/chặng',
+            detail: '890.000 đ thay vì 1.290.000 đ.',
+            why: '<strong>Light không có hành lý ký gửi và không cho đổi ngày.</strong> Khách mang 20–23 kg/người nên sẽ phải mua thêm hành lý 400.000 đ/chặng — vừa tốn thêm, vừa vẫn bị khoá cứng ngày bay.' },
+          { label: 'Standard (M) — 23 kg hành lý, đổi ngày có phí 350.000 đ',
+            detail: '1.290.000 đ/khách/chặng, không hoàn vé.',
+            why: '' },
+          { label: 'Flex (Y) — linh hoạt nhất, đổi ngày miễn phí và hoàn 70%',
+            detail: '2.450.000 đ/khách/chặng.',
+            why: '<strong>Flex đắt hơn Standard 1.160.000 đ/khách/chặng.</strong> Với 3 khách khứ hồi, khoản chênh đó lên tới gần 7 triệu đồng — trả rất nhiều chỉ để giảm một khoản phí đổi 350.000 đ mà khách có thể không dùng đến.' },
+          { label: 'Light (K) + mua thêm 23 kg hành lý',
+            detail: '890.000 đ + 400.000 đ = 1.290.000 đ/chặng.',
+            why: '<strong>Cộng lại đúng bằng giá Standard nhưng mất quyền đổi ngày.</strong> Cùng một số tiền, Standard vẫn hơn: có 23 kg hành lý và được đổi ngày khi cần. Đây là lựa chọn “trông rẻ” nhưng thực chất kém hơn.' }
+        ],
+        1,
+        '<p><strong>Standard (M) là lựa chọn đúng.</strong> Nó vừa đủ theo đúng nhu cầu: 23 kg hành lý ký gửi và quyền đổi ngày với phí 350.000 đ.</p>' +
+        '<p>Bài học nghiệp vụ: <strong>so sánh loại giá theo tổng chi phí cho nhu cầu thật của khách, không theo con số nhỏ nhất trên bảng giá.</strong> ' +
+        'Light + hành lý mua thêm = đúng bằng Standard nhưng thiếu quyền đổi ngày; Flex thì đắt hơn gần 7 triệu cho cả gia đình. ' +
+        'Tư vấn đúng loại giá là cách giữ khách quay lại, vì khách sẽ tự so sánh lại sau chuyến bay.</p>',
+        10,
+        'Nên bán loại giá nào cho gia đình?'),
+
+      Q('q3-2',
+        'Khách hỏi: “Nếu nhà em không bay được và cũng không đổi ngày thì có được hoàn tiền không?” — Trả lời đúng theo điều kiện vé hạng Standard là gì?',
+        [
+          { label: 'Hạng Standard không hoàn phần giá vé; chỉ có thể hoàn phần thuế, phí sân bay chưa sử dụng (nếu quy định cho phép), sau khi trừ phí hủy.',
+            detail: 'Hoàn phần thuế, phí — không hoàn giá vé.',
+            why: '' },
+          { label: 'Được hoàn 100% nếu báo trước ít nhất 24 giờ.',
+            detail: 'Báo sớm thì hoàn đủ.',
+            why: '<strong>Hạng Standard không hoàn giá vé, và mốc 24 giờ không tạo ra quyền hoàn.</strong> Mốc thời gian không biến một loại giá không hoàn thành có hoàn — quyền lợi do loại giá quyết định, không do thời điểm báo.' },
+          { label: 'Không hoàn bất cứ khoản nào, kể cả thuế và phí sân bay.',
+            detail: 'Mất toàn bộ số tiền đã trả.',
+            why: '<strong>Thuế và phí chưa sử dụng thường được hoàn theo quy định.</strong> Nói với khách rằng mất tất cả là trả lời sai quyền lợi và dễ dẫn tới khiếu nại.' },
+          { label: 'Đổi tên cho người khác đi thay là được.',
+            detail: 'Chuyển vé cho người nhà.',
+            why: '<strong>Vé máy bay không được chuyển nhượng.</strong> Đổi tên thường bị cấm hoặc phải hoàn vé rồi xuất lại từ đầu — nói với khách như vậy sẽ tạo kỳ vọng sai.' }
+        ],
+        0,
+        '<p><strong>Không hoàn phần giá vé; chỉ xét hoàn thuế, phí chưa sử dụng.</strong> Điều kiện của hạng Standard là “không hoàn” — nhưng khoản thuế, phí sân bay gắn với ' +
+        'một chuyến bay không thực hiện có thể được hoàn theo quy định, sau khi trừ phí hủy.</p>' +
+        '<p>Với khách, đây là lúc nên nói rõ ngay từ lúc bán: “Vé anh/chị không hoàn được phần giá vé, đổi ngày mất 350.000 đ/khách”. ' +
+        'Giải thích điều kiện vé trước khi thu tiền giúp tránh tranh chấp về sau — đó cũng là lý do ' + term('fareBasis') + ' phải được ghi rõ trong hồ sơ.</p>',
+        10,
+        'Điều kiện hoàn vé của hạng Standard là gì?')
+    ]
+  },
+
+  /* ---------------------------------------------------------- 4 */
+  {
+    short: 'Tính giá',
+    title: 'Tính giá &amp; thuế, phí',
+    vi: 'Fare calculation, taxes &amp; fees',
+    required: ['q4-1', 'p4-total', 'q4-2'],
+    labels: { 'q4-1': 'giá vé của bé 6 tuổi', 'p4-total': 'tự tính tổng tiền vé', 'q4-2': 'các khoản thuế, phí cộng thêm' },
+    bonus: 5,
+    widget: wireP4Calc,
+    render: function (body) {
+      block(body,
+        '<p class="lead">Giá vé và tổng tiền khách phải trả là hai con số khác nhau. Bạn phải tính đúng cả phần <strong>giá vé</strong> ' +
+        'và phần <strong>thuế, phí</strong> cộng thêm — báo sai một khoản là khách mất tiền, hoặc quầy vé phải chịu phần chênh.</p>' +
+
+        '<div class="card card--accent">' +
+          '<p class="card__title">Quy định giá &amp; thuế, phí của hãng</p>' +
+          '<div class="kv">' +
+            '<div class="kv__row"><span class="kv__k">Giá niêm yết · 1 chặng HAN–SGN · hạng M</span><span class="kv__v">1.290.000 đ<small>Người lớn (từ 12 tuổi)</small></span></div>' +
+            '<div class="kv__row"><span class="kv__k">Trẻ em 2–11 tuổi</span><span class="kv__v">75% giá người lớn<small>Có ghế ngồi riêng</small></span></div>' +
+            '<div class="kv__row"><span class="kv__k">Em bé dưới 2 tuổi</span><span class="kv__v">10% giá người lớn<small>Không có ghế riêng</small></span></div>' +
+            '<div class="kv__row"><span class="kv__k">Thuế &amp; phí · mỗi khách từ 2 tuổi</span><span class="kv__v">VAT 8% trên giá vé<small>+ phí sân bay 100.000 đ/chặng</small></span></div>' +
+            '<div class="kv__row"><span class="kv__k">Phí an ninh</span><span class="kv__v">10.000 đ/khách/chặng</span></div>' +
+            '<div class="kv__row"><span class="kv__k">Phí xuất vé</span><span class="kv__v">30.000 đ/khách<small>Thu một lần cho cả hành trình</small></span></div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="callout"><strong>Hành trình là khứ hồi</strong> (HAN–SGN 15NOV và SGN–HAN 18NOV), giá chặng về bằng giá chặng đi. ' +
+        'Mọi khoản tính theo chặng đều phải nhân hai.</div>'
+
+      );
+      addQ(body, this.questions[0], 1);
+
+      block(body,
+        '<div class="card">' +
+          '<p class="card__title">Tự tính tiền vé</p>' +
+          '<div class="q__legend" style="margin-bottom:10px">' +
+            '<span class="q__badge" aria-hidden="true">2</span>' +
+            '<span class="q__prompt">Nhập <strong>tổng tiền vé</strong> (chưa gồm thuế, phí) cho cả 3 khách, khứ hồi</span>' +
+          '</div>' +
+          '<div class="calc">' +
+            '<input id="p4-total" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="Ví dụ: 1.234.000" aria-label="Tổng tiền vé">' +
+            '<span class="calc__unit">đ</span>' +
+            '<button type="button" class="btn btn--primary btn--sm" id="p4-calc">Kiểm tra</button>' +
+          '</div>' +
+          '<div class="fb" id="p4-calc-fb" hidden></div>' +
+        '</div>'
+      );
+
+      addQ(body, this.questions[1], 3);
+    },
+    questions: [
+      Q('q4-1',
+        'Giá vé khứ hồi của bé Gia Bảo (6 tuổi) là bao nhiêu? (chưa gồm thuế, phí)',
+        [
+          { label: '1.935.000 đ',
+            detail: '75% giá người lớn, tính cho cả hai chặng.',
+            why: '' },
+          { label: '2.580.000 đ',
+            detail: 'Bằng giá người lớn khứ hồi.',
+            why: '<strong>Đây là giá người lớn khứ hồi.</strong> Bé 6 tuổi thuộc nhóm trẻ em 2–11 tuổi, được 75% giá người lớn — tính bằng giá người lớn là thu thừa 645.000 đ của khách.' },
+          { label: '258.000 đ',
+            detail: '10% giá người lớn khứ hồi.',
+            why: '<strong>Mức 10% là giá em bé dưới 2 tuổi</strong> — em bé không có ghế riêng, ngồi trong lòng người lớn. Bé 6 tuổi phải có ghế riêng nên áp giá trẻ em 75%.' },
+          { label: '967.500 đ',
+            detail: '75% giá người lớn nhưng mới tính một chặng.',
+            why: '<strong>Mới tính một chặng.</strong> Hành trình là khứ hồi: 1.290.000 × 2 chặng × 75% = 1.935.000 đ. Bỏ chặng về là thiếu 967.500 đ trong báo giá.' }
+        ],
+        0,
+        '<p><strong>1.935.000 đ.</strong> Giá người lớn khứ hồi = 1.290.000 × 2 = 2.580.000 đ. Trẻ em 2–11 tuổi tính 75%: 2.580.000 × 75% = <strong>1.935.000 đ</strong>.</p>' +
+        '<p>Phân loại hành khách phải đúng trước khi tính giá: người lớn (từ 12 tuổi) 100%, trẻ em (2–11 tuổi) 75% có ghế riêng, em bé (dưới 2 tuổi) 10% không ghế riêng. ' +
+        'Tuổi tính theo ngày sinh đã nhập trong PNR ở giai đoạn trước — nhập sai ngày sinh thì giá cũng sai theo.</p>',
+        10,
+        'Giá vé khứ hồi của bé 6 tuổi là bao nhiêu?'),
+
+      Q('q4-2',
+        'Khách hỏi: “Sao tổng tiền lại cao hơn giá vé?” — Những khoản nào được cộng thêm?',
+        [
+          { label: 'Thuế VAT 8% trên giá vé, phí sân bay 100.000 đ và phí an ninh 10.000 đ mỗi khách mỗi chặng, và phí xuất vé 30.000 đ mỗi khách.',
+            detail: 'Đúng bốn nhóm khoản cộng thêm.',
+            why: '' },
+          { label: 'Chỉ có thuế VAT 8%.',
+            detail: 'Thuế là khoản duy nhất.',
+            why: '<strong>Thiếu phí sân bay, phí an ninh và phí xuất vé.</strong> Bỏ sót ba nhóm phí này là báo giá thấp hơn số tiền khách thực phải trả — đến lúc thu tiền sẽ phải xin thêm, rất mất thiện cảm.' },
+          { label: 'Phí sân bay và phí an ninh, không có thuế VAT.',
+            detail: 'Chỉ tính phí, miễn thuế.',
+            why: '<strong>Vé máy bay nội địa vẫn chịu thuế VAT</strong> theo quy định. Cộng phí mà bỏ thuế là tính thiếu.' },
+          { label: 'Phí hoa hồng đại lý 5% cộng vào giá vé.',
+            detail: 'Đại lý thu thêm hoa hồng.',
+            why: '<strong>Hoa hồng do hãng trả cho đại lý, không được cộng vào giá khách phải trả.</strong> Cộng thêm hoa hồng là vi phạm quy định giá bán.' }
+        ],
+        0,
+        '<p><strong>Với khách 3 người, khứ hồi:</strong> giá vé 7.095.000 đ; VAT 8% = 567.600 đ; phí sân bay 3 khách × 2 chặng × 100.000 = 600.000 đ; ' +
+        'phí an ninh 3 × 2 × 10.000 = 60.000 đ; phí xuất vé 3 × 30.000 = 90.000 đ → <strong>tổng khách phải trả 8.412.600 đ</strong>.</p>' +
+        '<p>Luôn báo giá thành hai phần rõ ràng: “Giá vé 7.095.000 đ, thuế và phí 1.317.600 đ, tổng 8.412.600 đ”. ' +
+        'Khách hiểu khoản nào là tiền vé, khoản nào là thuế phí nhà nước và sân bay — và quầy vé tránh phải xin thêm tiền sau khi đã báo giá.</p>',
+        10,
+        'Những khoản nào được cộng thêm vào giá vé?')
+    ]
+  },
+
+  /* ---------------------------------------------------------- 5 */
+  {
+    short: 'Ghế &amp; DV',
+    title: 'Ghế ngồi &amp; dịch vụ đặc biệt',
+    vi: 'Seating &amp; special services',
+    required: ['p5-seats', 'q5-1', 'q5-2'],
+    labels: { 'p5-seats': 'chọn 3 ghế liền nhau', 'q5-1': 'suất ăn cho bé', 'q5-2': 'quy định hàng cửa thoát hiểm' },
+    bonus: 5,
+    widget: wireP5Seats,
+    render: function (body) {
+      block(body,
+        '<p class="lead">Chuyến HH 231 khai thác bằng A320, sơ đồ 3–3. Hãng đã giữ một số ghế cho khách khác. ' +
+        'Hãy <strong>chọn 3 ghế liền nhau</strong> cho gia đình và xử lý yêu cầu dịch vụ của bé.</p>' +
+
+        '<div class="card card--accent">' +
+          '<p class="card__title">Sơ đồ ghế · HH 231 · A320</p>' +
+          '<div class="cabinlegend">' +
+            '<span><i class="swatch swatch--pick"></i>Đang chọn</span>' +
+            '<span><i class="swatch swatch--exit"></i>Hàng cửa thoát hiểm</span>' +
+            '<span><i class="swatch swatch--taken"></i>Đã có khách</span>' +
+          '</div>' +
+          '<div class="cabin" id="p5-map">' + seatMapHTML() + '</div>' +
+          '<div class="calc">' +
+            '<span class="calc__unit" id="p5-seatcount">0 / 3 ghế đã chọn</span>' +
+            '<button type="button" class="btn btn--primary btn--sm" id="p5-confirm" disabled>Xác nhận chọn ghế</button>' +
+          '</div>' +
+          '<div class="fb" id="p5-seatfb" hidden></div>' +
+        '</div>' +
+
+        '<div class="callout"><strong>Vì sao ghế không chỉ là chỗ ngồi:</strong> ' + term('exitRow') + ' có yêu cầu an toàn riêng, ' +
+        'và trẻ nhỏ đi cùng người lớn phải được xếp đúng chỗ trước khi in thẻ lên máy bay.</div>'
+
+      );
+      addQ(body, this.questions[0], 1);
+      addQ(body, this.questions[1], 2);
+    },
+    questions: [
+      Q('q5-1',
+        'Khách xin suất ăn dành cho trẻ em cho bé Gia Bảo. Ghi nhận yêu cầu này thế nào?',
+        [
+          { label: 'Gửi yêu cầu dịch vụ đặc biệt ' + term('ssr') + ' ' + term('chml') + ' trong PNR, và bảo đảm yêu cầu được gửi trước 24 giờ so với giờ khởi hành.',
+            detail: 'Yêu cầu chính thức, tới đúng bộ phận phục vụ.',
+            why: '' },
+          { label: 'Chỉ ghi chú OSI trong PNR.',
+            detail: 'Ghi chú nội bộ cho nhân viên biết.',
+            why: '<strong>OSI là thông tin nội bộ, không phải yêu cầu dịch vụ.</strong> Bộ phận phục vụ mặt đất và catering không nhận yêu cầu qua OSI, nên suất ăn sẽ không được chuẩn bị — bé có thể không có suất ăn trên chuyến.' },
+          { label: 'Nhắc tiếp viên khi lên máy bay là đủ.',
+            detail: 'Nói miệng với tổ tiếp viên.',
+            why: '<strong>Suất ăn đặc biệt phải đặt trước qua hệ thống</strong> để bộ phận catering chuẩn bị và xếp lên đúng chuyến. Nhắc miệng trên máy bay không tạo ra suất ăn, và tổ tiếp viên không có gì để phục vụ.' },
+          { label: 'Ghi vào phần ghi chú tự do của vé giấy.',
+            detail: 'Viết tay lên vé.',
+            why: '<strong>Vé điện tử không có phần ghi chú tự do cho yêu cầu dịch vụ.</strong> Mọi yêu cầu phải được ghi dưới dạng SSR trong PNR để đi tới đúng bộ phận xử lý.' }
+        ],
+        0,
+        '<p><strong>Gửi SSR, mã suất ăn trẻ em, trước hạn đặt dịch vụ (thường 24 giờ trước khởi hành).</strong> ' +
+        'SSR là yêu cầu dịch vụ chính thức, đi theo PNR tới sân bay và tới bộ phận catering — khác hẳn OSI chỉ là ghi chú nội bộ.</p>' +
+        '<p>Các mã SSR hay dùng: CHML (suất ăn trẻ em), WCHR (khách cần xe lăn), PETC (thú cưng trong cabin), BSCT (giường cho em bé). ' +
+        'Đặt sai kênh — ví dụ ghi vào OSI — là yêu cầu coi như không tồn tại, dù khách đã nói rõ với nhân viên bán vé.</p>',
+        10,
+        'Ghi nhận yêu cầu suất ăn trẻ em như thế nào?'),
+
+      Q('q5-2',
+        'Hàng 12–13 là hàng cửa thoát hiểm. Vì sao trẻ em dưới 15 tuổi không được xếp ngồi ở hàng này?',
+        [
+          { label: 'Vì hành khách ngồi cửa thoát hiểm phải đủ sức khoẻ, hiểu hướng dẫn và tự thao tác được cửa trong tình huống khẩn cấp; trẻ em không đáp ứng điều kiện an toàn này.',
+            detail: 'Yêu cầu an toàn, không phải yêu cầu thương mại.',
+            why: '' },
+          { label: 'Vì ghế ở hàng cửa thoát hiểm đắt hơn các ghế khác.',
+            detail: 'Đây là ghế trả phí.',
+            why: '<strong>Giá ghế không liên quan.</strong> Đây là quy định an toàn bay: hành khách ở hàng cửa thoát hiểm phải có khả năng thao tác cửa, không phải là vấn đề giá.' },
+          { label: 'Vì trẻ em hay đi lại và làm phiền hành khách khác.',
+            detail: 'Vấn đề tiện nghi và trật tự.',
+            why: '<strong>Đây là lý do về tiện nghi, không phải lý do pháp lý.</strong> Quy định cấm nằm ở yêu cầu an toàn, và không được giải thích cho khách bằng lý do không đúng.' },
+          { label: 'Vì hàng cửa thoát hiểm không được bán cho khách đi theo nhóm.',
+            detail: 'Cấm bán cho nhóm khách.',
+            why: '<strong>Cửa thoát hiểm hoàn toàn có thể bán cho khách đi theo nhóm, miễn là từng hành khách hội đủ điều kiện.</strong> Giới hạn áp dụng cho từng người — trẻ em, người khuyết tật, phụ nữ mang thai, người cao tuổi — chứ không phải cho cả nhóm.' }
+        ],
+        0,
+        '<p><strong>Đó là quy định an toàn bay.</strong> Hành khách ngồi hàng cửa thoát hiểm phải: đủ tuổi và sức khoẻ, hiểu được hướng dẫn an toàn, ' +
+        'và có khả năng mở cửa trong tình huống khẩn cấp. Trẻ em dưới 15 tuổi (theo quy định của hãng), người khuyết tật, phụ nữ mang thai và người cao tuổi không được xếp vào hàng này.</p>' +
+        '<p>Với gia đình có em bé, hệ thống ghế sẽ chặn luôn các hàng cửa thoát hiểm. Đây là ví dụ cho nguyên tắc chung: <strong>khi bán chỗ cho khách, ' +
+        'quy định an toàn luôn đứng trước mong muốn của khách.</strong> Nhân viên bán vé giải thích đúng lý do sẽ được khách tôn trọng hơn là “quy định của hãng”.</p>',
+        10,
+        'Vì sao trẻ em không được ngồi hàng cửa thoát hiểm?')
+    ]
+  },
+
+  /* ---------------------------------------------------------- 6 */
+  {
+    short: 'Xuất vé',
+    title: 'Hạn xuất vé &amp; xuất vé điện tử',
+    vi: 'Ticketing Time Limit &amp; ticket issuance',
+    required: ['q6-1', 'q6-2'],
+    labels: { 'q6-1': 'xử lý khi hết hạn xuất vé', 'q6-2': 'kiểm tra trước khi xuất vé' },
+    render: function (body) {
+      block(body,
+        '<p class="lead">10:30 — bạn tạo ' + term('pnr') + ' và giữ chỗ hạng M cho cả 3 khách. Hệ thống ghi hạn xuất vé (' + term('ttl') + ') ' +
+        '<strong>12:30 cùng ngày</strong>. Khách hẹn trưa quay lại thanh toán. 13:15, khách gọi lại.</p>' +
+
+        '<div class="card card--accent">' +
+          '<p class="card__title">Trạng thái hồ sơ · ' + PAX.pnr + '</p>' +
+          '<div class="kv">' +
+            '<div class="kv__row"><span class="kv__k">Tạo lúc</span><span class="kv__v">10:30 · hạng M · 3 khách</span></div>' +
+            '<div class="kv__row"><span class="kv__k">Hạn xuất vé (' + term('ttl') + ')</span><span class="kv__v">12:30 cùng ngày<small>Đã được ghi rõ khi tạo PNR</small></span></div>' +
+            '<div class="kv__row"><span class="kv__k">Trạng thái 13:15</span><span class="kv__v">Chỗ đã được nhả tự động<small>Hạn xuất vé đã qua 45 phút</small></span></div>' +
+            '<div class="kv__row"><span class="kv__k">Giá hạng M hiện tại</span><span class="kv__v">1.490.000 đ/chặng<small>Tăng 200.000 đ so với lúc giữ chỗ</small></span></div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="callout callout--info"><strong>Hạn xuất vé là gì:</strong> khoảng thời gian hệ thống giữ chỗ mà chưa có vé. Hết hạn, chỗ tự động trở lại kho bán — ' +
+        'giá chặng đó có thể đã đổi. Nhân viên không tự gia hạn và cũng không tự giữ giá cũ.</div>'
+
+      );
+      addQ(body, this.questions[0], 1);
+      addQ(body, this.questions[1], 2);
+    },
+    questions: [
+      Q('q6-1',
+        '13:15, khách gọi lại để thanh toán. Xử lý đúng là gì?',
+        [
+          { label: 'Xác nhận PNR đã bị huỷ, kiểm tra lại chỗ và giá hiện hành, báo khách mức giá mới để khách quyết định, rồi tạo PNR mới nếu khách đồng ý.',
+            detail: 'Kiểm tra thực tế trước, xác nhận với khách, rồi mới đặt lại.',
+            why: '' },
+          { label: 'Xin lỗi khách, giữ nguyên giá cũ và tạo lại PNR vì đây là lỗi hệ thống.',
+            detail: 'Bán theo giá đã báo ban đầu.',
+            why: '<strong>Không có lỗi hệ thống nào ở đây:</strong> hạn xuất vé đã được ghi rõ và chỗ bị nhả đúng hạn. Bán giá cũ khi chỗ đã nhả là tự ý hạ giá, làm sai doanh thu và vi phạm quy định giá.' },
+          { label: 'Gia hạn hạn xuất vé thêm 2 giờ để chờ khách đến.',
+            detail: 'Gia hạn để giữ chỗ cho khách.',
+            why: '<strong>Hạn xuất vé do hệ thống và điều kiện giá quy định, nhân viên không tự gia hạn.</strong> Giữ chỗ mà không có vé là chặn mất chỗ của kênh bán khác mà không đem lại doanh thu — và có thể bị ghi nhận là sai phạm.' },
+          { label: 'Tạo PNR mới và xuất vé luôn cho khách, thu tiền sau.',
+            detail: 'Giữ chỗ bằng cách xuất vé trước.',
+            why: '<strong>Xuất vé khi chưa thanh toán là rủi ro tài chính trực tiếp.</strong> Chỉ xuất vé khi đã đủ điều kiện thanh toán, trừ khi khách có hạn mức tín dụng theo quy định.' }
+        ],
+        0,
+        '<p><strong>Kiểm tra lại thực tế, báo giá mới, rồi mới tạo lại.</strong> Chỗ đã nhả, giá đã đổi — nói thẳng với khách và để khách quyết định. ' +
+        'Đó là cách duy nhất vừa đúng quy định, vừa giữ được khách.</p>' +
+        '<p>Bài học nằm ở phía trước đó: <strong>khi tạo PNR phải nói rõ hạn xuất vé và nhắc khách trước khi hết hạn</strong>. ' +
+        'Nhắc một cuộc gọi lúc 11:30 rẻ hơn nhiều so với việc mất một hồ sơ vì 45 phút.</p>',
+        10,
+        'Khách đến sau khi hết hạn xuất vé, xử lý thế nào?'),
+
+      Q('q6-2',
+        'Khách đồng ý giá mới và thanh toán. Trước khi bấm xuất vé điện tử, việc kiểm tra nào là đúng và đủ?',
+        [
+          { label: 'Kiểm tra lại toàn bộ PNR: họ tên và ngày sinh khớp giấy tờ, hành trình và ngày bay, giờ bay, loại giá và điều kiện, thuế phí, yêu cầu dịch vụ đặc biệt; ' +
+              'xác nhận khách đã đồng ý rồi mới xuất vé và gửi hành trình cho khách.',
+            detail: 'Kiểm tra toàn bộ hồ sơ trước khi vé được phát hành.',
+            why: '' },
+          { label: 'Cứ xuất vé trước, nếu sai tên thì sửa sau.',
+            detail: 'Sửa sau khi đã có vé.',
+            why: '<strong>Sau khi xuất vé, tên hành khách gần như không sửa được</strong> vì vé không được chuyển nhượng. Sai tên thường phải huỷ và xuất lại, mất phí và có khi mất cả giá vé.' },
+          { label: 'Chỉ cần kiểm tra khách đã trả đủ tiền.',
+            detail: 'Đủ tiền là xuất vé.',
+            why: '<strong>Thanh toán mới là một điều kiện.</strong> Xuất vé khi thông tin hành khách hoặc hành trình còn sai sẽ tạo ra một hồ sơ không dùng được — và phải sửa sau khi khách đã trả tiền.' },
+          { label: 'Chỉ cần kiểm tra hệ thống đã trả về số hiệu vé.',
+            detail: 'Có số hiệu vé là xong.',
+            why: '<strong>Số hiệu vé chỉ là kết quả, không phải nội dung.</strong> Chính nội dung PNR đã được kiểm tra mới làm cho tấm vé có giá trị sử dụng tại sân bay.' }
+        ],
+        0,
+        '<p><strong>Kiểm tra hết, rồi mới xuất.</strong> Danh sách kiểm tra trước khi xuất vé: họ tên và ngày sinh khớp giấy tờ; hành trình, ngày và giờ bay đúng; ' +
+        'loại giá và điều kiện khớp với điều khách đã đồng ý; thuế phí và tổng tiền đúng; yêu cầu đặc biệt (SSR) đã được ghi; thông tin liên hệ đã có.</p>' +
+        '<p>Sau khi xuất, vé điện tử (' + term('etkt') + ') được gửi cho khách qua email/SMS kèm số hiệu vé 13 chữ số. ' +
+        'Hãy đọc lại hành trình cho khách nghe một lần: đây là bước cuối cùng để phát hiện lỗi — trước khi mọi thứ trở nên tốn kém.</p>',
+        10,
+        'Cần kiểm tra gì trước khi xuất vé?')
+    ]
+  },
+
+  /* ---------------------------------------------------------- 7 */
+  {
+    short: 'Thanh toán',
+    title: 'Thanh toán &amp; hoá đơn',
+    vi: 'Payment, form of payment &amp; invoicing',
+    required: ['q7-1', 'q7-2'],
+    labels: { 'q7-1': 'thanh toán bằng thẻ của người khác', 'q7-2': 'xuất hoá đơn GTGT' },
+    render: function (body) {
+      block(body,
+        '<p class="lead">13:40, khách đến quầy. Hai yêu cầu cùng lúc: <strong>trả bằng thẻ của người khác</strong>, ' +
+        'và <strong>xin hoá đơn GTGT cho công ty của chồng</strong>. Cả hai đều có quy trình riêng — không được làm tắt.</p>' +
+
+        '<div class="card card--accent">' +
+          '<p class="card__title">Thanh toán · ' + PAX.pnr + '</p>' +
+          '<div class="kv">' +
+            '<div class="kv__row"><span class="kv__k">Tổng phải thu</span><span class="kv__v">' + dong(PAX.grandTotal) + '<small>Giá vé ' + dong(PAX.fareTotal) + ' + thuế phí 1.317.600 đ</small></span></div>' +
+            '<div class="kv__row"><span class="kv__k">' + term('fop') + ' khách đề nghị</span><span class="kv__v">Thẻ tín dụng của anh trai<small>Người không đi chuyến này</small></span></div>' +
+            '<div class="kv__row"><span class="kv__k">Hoá đơn</span><span class="kv__v">Hoá đơn GTGT cho công ty<small>Cần tên đơn vị, mã số thuế, địa chỉ</small></span></div>' +
+          '</div>' +
+        '</div>'
+
+      );
+      addQ(body, this.questions[0], 1);
+      addQ(body, this.questions[1], 2);
+    },
+    questions: [
+      Q('q7-1',
+        'Khách muốn trả bằng thẻ tín dụng của anh trai (người không đi chuyến này). Quy trình đúng là gì?',
+        [
+          { label: 'Đề nghị chủ thẻ có mặt để ký, hoặc thu thập form uỷ quyền thanh toán kèm bản sao thẻ và giấy tờ tuỳ thân của chủ thẻ, rồi lưu cùng hồ sơ đặt chỗ.',
+            detail: 'Có xác nhận của chủ thẻ — kiểm soát rủi ro chargeback.',
+            why: '' },
+          { label: 'Quẹt thẻ bình thường, không cần thêm giấy tờ vì khách đã có mặt tại quầy.',
+            detail: 'Khách có mặt là đủ.',
+            why: '<strong>Thẻ không phải của hành khách/người mua là dấu hiệu rủi ro gian lận.</strong> Nếu chủ thẻ khiếu nại (chargeback), hãng mất tiền vé và đại lý phải chịu trách nhiệm — kể cả khi khách đã có mặt tại quầy.' },
+          { label: 'Từ chối hoàn toàn, chỉ nhận tiền mặt hoặc thẻ của hành khách.',
+            detail: 'Không nhận thẻ người khác.',
+            why: '<strong>Không cần từ chối:</strong> thanh toán bên thứ ba có quy trình xử lý riêng. Từ chối vì thủ tục là làm mất cơ hội bán và không đúng quy định.' },
+          { label: 'Nhận thẻ và ghi lại số thẻ cùng mã bảo mật vào sổ của quầy để đối chiếu sau.',
+            detail: 'Lưu thông tin thẻ để tra cứu.',
+            why: '<strong>Tuyệt đối không ghi lại số thẻ hoặc mã bảo mật.</strong> Đó là vi phạm nghiêm trọng quy định bảo mật dữ liệu thẻ, và có thể khiến đại lý mất quyền nhận thanh toán bằng thẻ.' }
+        ],
+        0,
+        '<p><strong>Thanh toán bên thứ ba cần có xác nhận của chủ thẻ.</strong> Hai cách làm hợp lệ: chủ thẻ có mặt và ký, ' +
+        'hoặc thu form uỷ quyền thanh toán kèm bản sao thẻ và giấy tờ tuỳ thân của chủ thẻ, lưu vào hồ sơ.</p>' +
+        '<p>Quầy vé còn phải kiểm tra: thẻ có tên khớp với người uỷ quyền, giao dịch qua bước xác thực của ngân hàng (OTP/3D-Secure) khi được yêu cầu, ' +
+        'và không ghi lại số thẻ hay mã bảo mật dưới bất kỳ hình thức nào. Đây là phần “phòng gian lận” mà khách hiếm khi nhìn thấy — nhưng là phần bảo vệ cả khách và hãng.</p>',
+        10,
+        'Thanh toán bằng thẻ của người khác cần làm gì?'),
+
+      Q('q7-2',
+        'Khách xin hoá đơn GTGT cho công ty của chồng. Xử lý đúng là gì?',
+        [
+          { label: 'Xuất hoá đơn GTGT theo đúng thông tin doanh nghiệp khách cung cấp — tên đơn vị, mã số thuế, địa chỉ; kiểm tra lại thông tin trước khi phát hành và lưu ý thời hạn điều chỉnh nếu xuất sai.',
+            detail: 'Đúng thông tin doanh nghiệp, đúng thời hạn.',
+            why: '' },
+          { label: 'Vé máy bay không có hoá đơn GTGT.',
+            detail: 'Vé chỉ có xác nhận đặt chỗ.',
+            why: '<strong>Vận chuyển hành khách là dịch vụ chịu thuế.</strong> Khách mua cho doanh nghiệp có quyền nhận hoá đơn GTGT theo quy định; trả lời “không có hoá đơn” là sai và gây thiệt hại cho khách.' },
+          { label: 'Xuất hoá đơn cho bất kỳ ai gọi đến và đọc thông tin công ty của họ.',
+            detail: 'Ai yêu cầu cũng xuất.',
+            why: '<strong>Hoá đơn chỉ được xuất theo yêu cầu của người mua vé, với mã số thuế chính xác.</strong> Xuất cho người không liên quan là sai quy định về hoá đơn và có thể bị xử lý.' },
+          { label: 'Chỉ xuất hoá đơn sau khi máy bay đã cất cánh.',
+            detail: 'Đợi hoàn tất chuyến bay.',
+            why: '<strong>Thời điểm xuất hoá đơn theo quy định về hoá đơn và kỳ kế toán của doanh nghiệp, không theo giờ bay.</strong> Chờ đến khi chuyến bay hoàn tất có thể làm trễ hạn xuất hoá đơn.' }
+        ],
+        0,
+        '<p><strong>Xuất hoá đơn GTGT theo đúng thông tin doanh nghiệp, đúng thời hạn.</strong> Phải kiểm tra tên đơn vị, mã số thuế và địa chỉ trước khi phát hành; ' +
+        'thông tin sai phải điều chỉnh theo đúng thời hạn quy định.</p>' +
+        '<p>Bán vé doanh nghiệp là một mảng nghiệp vụ riêng: hoá đơn, hồ sơ thanh toán, và đôi khi cả hợp đồng/hạn mức tín dụng. ' +
+        'Với khách lẻ mua cho công ty, việc xác nhận sớm <strong>ai là người mua và cần hoá đơn đứng tên đơn vị nào</strong> giúp tránh phải thu lại hoặc điều chỉnh hoá đơn sau đó.</p>',
+        10,
+        'Xuất hoá đơn GTGT cho khách như thế nào?')
+    ]
+  },
+
+  /* ---------------------------------------------------------- 8 */
+  {
+    short: 'Sau bán',
+    title: 'Sau bán: đổi, hoàn vé &amp; hỗ trợ khách',
+    vi: 'Post-sale: changes, refunds &amp; customer care',
+    required: ['q8-1', 'q8-2'],
+    labels: { 'q8-1': 'quyền của khách khi hãng đổi giờ bay', 'q8-2': 'xử lý khi khách tự đổi ngày' },
+    render: function (body) {
+      block(body,
+        '<p class="lead">05NOV — còn 10 ngày tới khởi hành. Hãng gửi thông báo điều chỉnh lịch bay: chuyến HH 231 ngày 15NOV ' +
+        '<strong>đổi giờ khởi hành từ 06:00 thành 09:05</strong> (muộn 3 giờ 05 phút) do sắp xếp lại lịch điều hành.</p>' +
+
+        '<div class="card card--accent">' +
+          '<p class="card__title">Thay đổi lịch bay · ' + PAX.pnr + '</p>' +
+          '<div class="kv">' +
+            '<div class="kv__row"><span class="kv__k">Chuyến bị ảnh hưởng</span><span class="kv__v">HH 231 · 15NOV · HAN → SGN</span></div>' +
+            '<div class="kv__row"><span class="kv__k">Giờ cũ → giờ mới</span><span class="kv__v">06:00 → 09:05<small>Muộn 3 giờ 05 phút, do phía hãng</small></span></div>' +
+            '<div class="kv__row"><span class="kv__k">Loại thay đổi</span><span class="kv__v">' + term('involuntary') + '<small>Khách không yêu cầu thay đổi</small></span></div>' +
+            '<div class="kv__row"><span class="kv__k">Liên hệ khách</span><span class="kv__v">' + PAX.contact + '<small>Lấy từ PNR đã tạo ở giai đoạn 2</small></span></div>' +
+          '</div>' +
+        '</div>'
+
+      );
+      addQ(body, this.questions[0], 1);
+      addQ(body, this.questions[1], 2);
+    },
+    questions: [
+      Q('q8-1',
+        'Giờ bay bị đổi do phía hãng. Khách được quyền gì?',
+        [
+          { label: 'Được chuyển miễn phí sang chuyến khác cùng hành trình còn chỗ trong khoảng thời gian hợp lý, hoặc hoàn toàn bộ tiền vé — kể cả phần theo điều kiện giá là không hoàn — vì đây là thay đổi do phía hãng.',
+            detail: 'Quyền của khách trong thay đổi ngoài ý muốn.',
+            why: '' },
+          { label: 'Chỉ được chấp nhận giờ bay mới; hãng không có trách nhiệm gì thêm.',
+            detail: 'Thay đổi là quyền của hãng.',
+            why: '<strong>Thay đổi do hãng là thay đổi ngoài ý muốn của khách.</strong> Hãng có trách nhiệm bố trí lại chuyến phù hợp hoặc hoàn tiền, không phải chỉ thông báo rồi để khách tự xoay xở.' },
+          { label: 'Được hoàn nhưng bị trừ phí đổi/hoàn theo điều kiện giá.',
+            detail: 'Áp phí như khách tự đổi.',
+            why: '<strong>Phí theo điều kiện giá chỉ áp dụng khi khách TỰ NGUYỆN thay đổi.</strong> Áp phí tự nguyện cho một thay đổi do hãng gây ra là sai quyền lợi của khách.' },
+          { label: 'Được đổi chuyến nhưng phải trả chênh lệch giá nếu chuyến mới đắt hơn.',
+            detail: 'Khách chịu phần chênh.',
+            why: '<strong>Khi thay đổi do phía hãng, khách không phải trả chênh lệch giá.</strong> Hãng chịu chi phí bố trí lại — đó là hệ quả của việc hãng thay đổi kế hoạch của khách.' }
+        ],
+        0,
+        '<p><strong>Khách được bố trí lại miễn phí hoặc hoàn tiền toàn bộ.</strong> Nguyên tắc phân biệt rất rõ: ' +
+        term('involuntary') + ' — lỗi thuộc về hãng — khách không phải chịu phí và không phải trả chênh lệch; ' +
+        term('voluntary') + ' — khách tự muốn đổi — mới áp phí theo điều kiện giá.</p>' +
+        '<p>Đồng thời, hãng và đại lý phải <strong>chủ động liên hệ khách</strong> theo số điện thoại và email lấy từ PNR, ghi nhận lịch sử liên hệ; ' +
+        'nếu không liên hệ được thì niêm yết công khai. Đây chính là lý do ở giai đoạn 2, thông tin liên hệ là trường bắt buộc chứ không phải để cho có.</p>',
+        15,
+        'Khách được quyền gì khi hãng đổi giờ bay?'),
+
+      Q('q8-2',
+        'Vài ngày sau, khách gọi lại: muốn dời chặng về từ 18NOV sang 19NOV vì lý do gia đình. Vé hạng M (Standard). Xử lý thế nào?',
+        [
+          { label: 'Đổi ngày cho từng hành khách, thu 350.000 đ/khách phí đổi; nếu chuyến hoặc hạng mới có giá cao hơn thì thu thêm phần chênh lệch; sau đó xuất lại vé và gửi hành trình mới cho khách.',
+            detail: 'Phí theo điều kiện giá + chênh lệch giá, tính cho từng khách.',
+            why: '' },
+          { label: 'Miễn phí vì khách báo trước hơn 24 giờ.',
+            detail: 'Báo sớm thì miễn phí đổi.',
+            why: '<strong>Mốc 24 giờ không tạo ra quyền đổi miễn phí.</strong> Hạng M quy định phí đổi 350.000 đ/hành khách; báo sớm hay muộn không làm thay đổi điều kiện giá, trừ khi điều kiện giá ghi rõ.' },
+          { label: 'Thu 350.000 đ cho cả gia đình, tính theo hồ sơ đặt chỗ.',
+            detail: 'Một mức phí cho cả PNR.',
+            why: '<strong>Phí đổi tính theo từng hành khách, không theo hồ sơ.</strong> Ba hành khách đổi ngày là ba lần thu phí — thu một lần là làm thất thoát doanh thu.' },
+          { label: 'Từ chối, vì vé đã xuất thì không được đổi.',
+            detail: 'Vé đã xuất là cố định.',
+            why: '<strong>Hạng M cho phép đổi ngày có thu phí.</strong> Từ chối là bỏ qua quyền lợi mà khách đã trả tiền để có — và thường dẫn ngay tới khiếu nại.' }
+        ],
+        0,
+        '<p><strong>Thu phí đổi theo điều kiện giá, cộng chênh lệch giá nếu có, tính cho từng hành khách.</strong> ' +
+        'Với 3 khách, phí đổi là 3 × 350.000 = 1.050.000 đ, cộng phần chênh lệch nếu chuyến 19NOV đắt hơn.</p>' +
+        '<p>Sau khi đổi: <strong>xuất lại vé (' + term('reissue') + ')</strong>, cập nhật lại chỗ trên chuyến mới, ghi nhận hồ sơ, và gửi hành trình mới cho khách. ' +
+        'Trẻ em cũng áp dụng như người lớn — chỉ em bé dưới 2 tuổi là ngoại lệ.</p>' +
+        '<p>Đây là điểm kết của cả hồ sơ: một khách hàng được phục vụ đúng từ khâu tra cứu, tạo PNR, chọn loại giá, tính tiền, chọn ghế, xuất vé, thanh toán — ' +
+        'và cả sau khi vé đã xuất. <strong>Nghiệp vụ bán vé kết thúc ở chỗ khách hài lòng, không kết thúc ở lúc thu được tiền.</strong></p>',
+        15,
+        'Khách tự đổi ngày, xử lý và thu phí thế nào?')
+    ]
+  }
+  ];
+
+  const MAX_SCORE = PHASES.reduce(function (a, p) {
+    return a + (p.questions || []).reduce(function (b, q) { return b + q.points; }, 0) + (p.bonus || 0);
+  }, 0);
+
+  const WIDGET_IDS = PHASES.reduce(function (a, p) {
+    (p.required || []).forEach(function (id) { if (id.charAt(0) !== 'q') a.push(id); });
+    return a;
+  }, []);
+
+  /* ============================================================
+     6. Widget: sơ đồ ghế + máy tính tiền vé
+     ============================================================ */
+  const SEATCOLS = ['A', 'B', 'C', 'D', 'E', 'F'];
+  const CABIN = [
+    { row: 11, exit: false, taken: ['11B', '11E'] },
+    { row: 12, exit: true,  taken: [] },
+    { row: 13, exit: true,  taken: [] },
+    { row: 14, exit: false, taken: ['14A', '14B', '14E'] },
+    { row: 15, exit: false, taken: [] },
+    { row: 16, exit: false, taken: ['16B', '16C', '16F'] }
+  ];
+
+  function seatMapHTML() {
+    return CABIN.map(function (r) {
+      const cells = SEATCOLS.map(function (c, i) {
+        const id = r.row + c;
+        const taken = r.taken.indexOf(id) > -1;
+        let cls = 'seat';
+        if (taken) cls += ' is-taken';
+        if (r.exit) cls += ' is-exit';
+        return (i === 3 ? '<span class="seatrow__aisle" aria-hidden="true"></span>' : '') +
+          '<button type="button" class="' + cls + '" data-seat="' + id + '"' +
+          (taken ? ' disabled' : '') +
+          ' aria-label="Ghế ' + id + (taken ? ', đã có khách' : '') + '">' + c + '</button>';
+      }).join('');
+      return '<div class="seatrow"><span class="seatrow__n">' + r.row + '</span>' + cells + '</div>';
+    }).join('');
+  }
+
+  function wireP5Seats(body) {
+    const map = $('#p5-map', body);
+    const fb = $('#p5-seatfb', body);
+    const confirm = $('#p5-confirm', body);
+    const counter = $('#p5-seatcount', body);
+    const r = rec('p5-seats');
+    const picked = new Set();
+
+    function paint() {
+      $$('.seat', map).forEach(function (b) {
+        const on = picked.has(b.dataset.seat);
+        b.classList.toggle('is-picked', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      if (counter && !isDone('p5-seats')) counter.textContent = picked.size + ' / 3 ghế đã chọn';
+      confirm.disabled = isDone('p5-seats') || picked.size !== 3;
+    }
+
+    function say(kind, title, html) {
+      fb.hidden = false;
+      fb.className = 'fb fb--' + kind;
+      fb.innerHTML = '<p class="fb__title"><span class="fb__tag">' + title + '</span></p>' + html;
+    }
+
+    function solved() {
+      const chosen = Array.from(picked);
+      say('ok', 'Chính xác',
+        '<p class="fb__why">Ba ghế <strong>' + chosen.join(' · ') + '</strong> nằm liền nhau trong cùng một dãy và không ở hàng cửa thoát hiểm. Cả gia đình ngồi cạnh nhau như khách mong muốn.</p>' +
+        '<p class="fb__pts">Nhắc lại: hàng 12–13 là hàng cửa thoát hiểm, trẻ em dưới 15 tuổi không được xếp ngồi ở đây.</p>');
+      $$('.seat', map).forEach(function (b) { b.disabled = true; });
+      if (counter) counter.textContent = 'Đã chọn: ' + chosen.join(' · ');
+      confirm.disabled = true;
+    }
+
+    if (isDone('p5-seats')) {
+      (r.seats || []).forEach(function (s) { picked.add(s); });
+      paint();
+      solved();
+      return;
+    }
+
+    $$('.seat', map).forEach(function (b) {
+      b.addEventListener('click', function () {
+        const id = b.dataset.seat;
+        const row = Number(id.slice(0, -1));
+        if (b.classList.contains('is-exit')) {
+          say('no', 'Không hợp lệ',
+            '<p class="fb__why">Hàng ' + row + ' là <strong>hàng cửa thoát hiểm</strong>. Trẻ em dưới 15 tuổi không được xếp ngồi ở hàng này, ' +
+            'nên ghế ' + id + ' không dùng được cho gia đình. Hãy chọn hàng khác.</p>');
+          return;
+        }
+        if (picked.has(id)) picked.delete(id); else picked.add(id);
+        paint();
+        if (fb.hidden === false) { fb.hidden = true; }
+      });
+    });
+
+    confirm.addEventListener('click', function () {
+      const arr = Array.from(picked);
+      if (arr.length !== 3) return;
+      const rows = arr.map(function (id) { return id.slice(0, -1); });
+      if (rows[0] !== rows[1] || rows[1] !== rows[2]) {
+        say('no', 'Chưa đúng',
+          '<p class="fb__why">Ba ghế phải nằm <strong>cùng một hàng</strong> để cả nhà ngồi cạnh nhau. Bạn đang chọn ở các hàng ' +
+          Array.from(new Set(rows)).join(', ') + '. Hãy bỏ chọn rồi chọn lại.</p>');
+        return;
+      }
+      const idx = arr.map(function (id) { return SEATCOLS.indexOf(id.slice(-1)); })
+        .sort(function (a, b) { return a - b; });
+      const left = idx.every(function (i) { return i <= 2; });
+      const right = idx.every(function (i) { return i >= 3; });
+      if (!(left || right) || idx[1] !== idx[0] + 1 || idx[2] !== idx[1] + 1) {
+        say('no', 'Chưa đúng',
+          '<p class="fb__why">Ba ghế phải <strong>liền nhau trong cùng một dãy</strong> (A–B–C hoặc D–E–F) và không vắt qua lối đi giữa. ' +
+          'Lối đi không phải chỗ ngồi, nên C và D không tính là liền nhau.</p>');
+        return;
+      }
+      r.correct = true;
+      r.points = 5;
+      r.seats = arr;
+      solved();
+      taskDone('p5-seats');
+    });
+
+    paint();
+  }
+
+  function wireP4Calc(body) {
+    const input = $('#p4-total', body);
+    const btn = $('#p4-calc', body);
+    const fb = $('#p4-calc-fb', body);
+    const r = rec('p4-total');
+
+    function good() {
+      fb.hidden = false;
+      fb.className = 'fb fb--ok';
+      fb.innerHTML =
+        '<p class="fb__title"><span class="fb__tag">Chính xác</span>Tổng tiền vé: 7.095.000 đ</p>' +
+        '<p class="fb__why">2 người lớn × 2.580.000 = <strong>5.160.000 đ</strong> · 1 trẻ em (75%) = <strong>1.935.000 đ</strong> → ' +
+        'tổng <strong>7.095.000 đ</strong> (chưa gồm thuế, phí).</p>' +
+        '<p class="fb__pts">Cộng thuế, phí: VAT 8% = 567.600 đ · phí sân bay 600.000 đ · phí an ninh 60.000 đ · phí xuất vé 90.000 đ ' +
+        '→ tổng khách phải trả <strong>8.412.600 đ</strong>.</p>';
+      input.disabled = true;
+      btn.disabled = true;
+    }
+    function bad(html) {
+      fb.hidden = false;
+      fb.className = 'fb fb--no';
+      fb.innerHTML = '<p class="fb__title"><span class="fb__tag">Chưa đúng</span>' +
+        (html || 'Hãy nhập một con số.') + '</p>' +
+        '<p class="fb__why">Gợi ý: giá người lớn khứ hồi = 1.290.000 × 2 chặng = 2.580.000 đ; trẻ em 2–11 tuổi tính 75%.</p>';
+    }
+
+    if (isDone('p4-total')) { good(); return; }
+
+    btn.addEventListener('click', function () {
+      const digits = String(input.value).replace(/[^0-9]/g, '');
+      if (!digits) { bad(); return; }
+      r.attempts++;
+      if (digits === '7095000') {
+        r.correct = true;
+        r.points = 5;
+        good();
+        taskDone('p4-total');
+        return;
+      }
+      if (r.attempts >= 3) {
+        r.correct = true;
+        r.points = 5;
+        input.disabled = true;
+        btn.disabled = true;
+        fb.hidden = false;
+        fb.className = 'fb fb--info';
+        fb.innerHTML = '<p class="fb__title"><span class="fb__tag">Xem lại</span>Đáp án đúng: 7.095.000 đ</p>' +
+          '<p class="fb__why">2 người lớn × 2.580.000 = 5.160.000 đ · 1 trẻ em 75% = 1.935.000 đ → <strong>7.095.000 đ</strong> (chưa gồm thuế, phí).</p>';
+        taskDone('p4-total');
+        return;
+      }
+      bad('Bạn nhập <strong>' + fmt(Number(digits)) + ' đ</strong> — chưa đúng.');
+    });
+  }
+
+  /* ============================================================
+     7. Khung trang: stepper, HUD, thanh tiến trình
+     ============================================================ */
+  const stage = $('#stage');
+  const prevBtn = $('#prevBtn');
+  const nextBtn = $('#nextBtn');
+  const navEl = $('#nav');
+  const navHint = $('#navHint');
+  const stepperEl = $('#stepper');
+  const progressBar = $('#progressBar');
+  const progressWrap = $('#progressWrap');
+  const hudPhase = $('#hudPhase');
+  const hudScore = $('#hudScore');
+
+  function setHint(html) { navHint.innerHTML = html; }
+
+  function setNextEnabled(on) {
+    nextBtn.disabled = !on;
+    nextBtn.textContent = (state.phase === PHASES.length - 1 ? 'Xem kết quả' : 'Giai đoạn tiếp theo') + ' →';
+  }
+
+  function phaseComplete(p) {
+    return (p.required || []).every(function (id) { return isDone(id); });
+  }
+
+  function updateChrome() {
+    hudPhase.textContent = (state.finished ? PHASES.length : state.phase + 1) + ' / ' + PHASES.length;
+    hudScore.textContent = fmt(score()) + ' / ' + fmt(MAX_SCORE);
+
+    const doneCount = PHASES.filter(phaseComplete).length;
+    progressBar.style.width = (doneCount / PHASES.length * 100) + '%';
+    progressWrap.setAttribute('aria-valuenow', String(doneCount));
+
+    $$('.step', stepperEl).forEach(function (el, i) {
+      el.classList.toggle('done', phaseComplete(PHASES[i]));
+      el.classList.toggle('active', !state.finished && i === state.phase);
+    });
+  }
+
+  function buildStepper() {
+    stepperEl.innerHTML = PHASES.map(function (p, i) {
+      return '<div class="step" data-step="' + i + '">' +
+        '<span class="step__dot">' + (i + 1) + '</span>' +
+        '<span class="step__label">' + p.short + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  /* ============================================================
+     8. Hiển thị một giai đoạn
+     ============================================================ */
+  function renderPhase() {
+    if (state.finished) { renderResults(); return; }
+
+    const p = PHASES[state.phase];
+    runtime = {
+      required: (p.required || []).slice(),
+      done: new Set((p.required || []).filter(isDone)),
+      labels: Object.assign({}, p.labels || {})
+    };
+
+    navEl.classList.remove('hidden');
+    stage.innerHTML = '';
+
+    const sec = document.createElement('section');
+    sec.className = 'phase';
+    sec.innerHTML =
+      '<header class="phase__head">' +
+        '<span class="phase__num">GIAI ĐOẠN ' + (state.phase + 1) + '</span>' +
+        '<div>' +
+          '<h2 class="phase__title">' + p.title + '</h2>' +
+          (p.vi ? '<p class="phase__vi">' + p.vi + '</p>' : '') +
+        '</div>' +
+      '</header>' +
+      '<div class="phase__body"></div>';
+    stage.appendChild(sec);
+
+    const body = $('.phase__body', sec);
+    p.render.call(p, body);
+
+    $$('[data-qid]', body).forEach(function (el) {
+      const q = (p.questions || []).filter(function (x) { return x.id === el.dataset.qid; })[0];
+      if (q) wireMCQ(body, q);
+    });
+
+    if (typeof p.widget === 'function') p.widget(body);
+
+    setNextEnabled(runtime.required.every(function (id) { return runtime.done.has(id); }));
+    updateNavHint();
+    updateChrome();
+
+    prevBtn.disabled = state.phase === 0;
+    prevBtn.textContent = '← Giai đoạn trước';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ============================================================
+     9. Màn hình kết quả
+     ============================================================ */
+  function phasePoints(p) {
+    return (p.questions || []).reduce(function (a, q) {
+      return a + (state.answers[q.id] ? state.answers[q.id].points || 0 : 0);
+    }, 0) +
+    (p.required || []).filter(function (id) { return id.charAt(0) !== 'q'; }).reduce(function (a, id) {
+      return a + (state.answers[id] ? state.answers[id].points || 0 : 0);
+    }, 0);
+  }
+  function phaseMax(p) {
+    return (p.questions || []).reduce(function (a, q) { return a + q.points; }, 0) + (p.bonus || 0);
+  }
+
+  function renderResults() {
+    state.finished = true;
+
+    const total = PHASES.reduce(function (a, p) { return a + phasePoints(p); }, 0);
+    const pct = MAX_SCORE ? Math.round(total / MAX_SCORE * 100) : 0;
+    const perfect = PHASES.filter(function (p) {
+      return (p.questions || []).every(function (q) {
+        const r = state.answers[q.id];
+        return r && r.correct && r.points === q.points;
+      });
+    }).length;
+
+    let rank, blurb;
+    if (pct >= 90) {
+      rank = 'Chuyên viên bán vé vững vàng';
+      blurb = 'Bạn xử lý gần như hoàn hảo cả hồ sơ: tra cứu đúng chuyến, nhập đúng dữ liệu hành khách, tư vấn đúng loại giá, tính đúng thuế phí, chọn đúng ghế và xử lý đúng cả việc sau bán. Đây là mức nghiệp vụ có thể tự tin làm việc tại quầy vé.';
+    } else if (pct >= 75) {
+      rank = 'Nắm vững nghiệp vụ';
+      blurb = 'Bạn nắm chắc phần lớn quy trình bán vé. Hãy xem lại vài giai đoạn còn mất điểm — thường là phần thuế, phí hoặc sau bán — để tránh sai sót khi gặp hồ sơ thật.';
+    } else if (pct >= 55) {
+      rank = 'Đã nắm phần cơ bản';
+      blurb = 'Bạn đã hiểu đúng luồng công việc, nhưng còn nhầm ở một số quyết định. Hãy ôn lại các giai đoạn được đánh dấu và chú ý tới lý do nghiệp vụ phía sau mỗi đáp án.';
+    } else if (pct >= 35) {
+      rank = 'Cần luyện thêm';
+      blurb = 'Bạn đã làm quen với quy trình nhưng còn nhiều điểm cần củng cố. Hãy chơi lại và đọc kỹ phần giải thích sau mỗi câu — mỗi lời giải thích là một tình huống thật ở quầy vé.';
+    } else {
+      rank = 'Hãy ôn lại từ đầu';
+      blurb = 'Đừng ngại: nghiệp vụ bán vé có nhiều quy tắc riêng. Hãy chơi lại từ giai đoạn 1, đọc dữ kiện trong mỗi thẻ thông tin trước khi trả lời.';
+    }
+
+    const rows = PHASES.map(function (p, i) {
+      const qs = p.questions || [];
+      const first = qs.filter(function (q) { return state.answers[q.id] && state.answers[q.id].attempts === 1; }).length;
+      const pts = phasePoints(p);
+      const max = phaseMax(p);
+      const cls = pts === max ? 'style="background:var(--ok-bg)"' : (pts === 0 ? 'style="background:var(--err-bg)"' : '');
+      return '<tr ' + cls + '>' +
+        '<td><strong>' + (i + 1) + '. ' + p.title + '</strong></td>' +
+        '<td><strong>' + fmt(pts) + '</strong> / ' + fmt(max) + '</td>' +
+        '<td>' + first + ' / ' + qs.length + ' câu đúng ngay lần đầu</td>' +
+      '</tr>';
+    }).join('');
+
+    navEl.classList.add('hidden');
+    stage.innerHTML =
+      '<section class="phase results">' +
+        '<header class="phase__head">' +
+          '<span class="phase__num">TỔNG KẾT</span>' +
+          '<div>' +
+            '<h2 class="phase__title">Hoàn tất — tổng kết nghiệp vụ</h2>' +
+            '<p class="phase__vi">Bạn đã đi hết một hồ sơ bán vé cho khách lẻ.</p>' +
+          '</div>' +
+        '</header>' +
+        '<div class="phase__body">' +
+          '<p class="score-big"><span class="score-big__n">' + fmt(total) + '</span>' +
+          '<span class="score-big__d">/ ' + fmt(MAX_SCORE) + ' điểm · ' + pct + '% · ' + perfect + '/' + PHASES.length + ' giai đoạn đạt điểm tối đa</span></p>' +
+          '<p class="rank">' + rank + '</p>' +
+          '<p>' + blurb + '</p>' +
+          '<p class="sectionlabel">Chi tiết theo giai đoạn</p>' +
+          '<table class="tbl"><thead><tr><th>Giai đoạn</th><th>Điểm</th><th>Kết quả</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+          '<div class="nav" style="margin-top:24px">' +
+            '<button type="button" class="btn btn--ghost" id="reviewFirstBtn">← Ôn lại từ giai đoạn 1</button>' +
+            '<span class="nav__hint">Muốn xem lại phần giải thích? Bấm “Ôn lại” rồi đi tới giai đoạn cần xem.</span>' +
+            '<button type="button" class="btn btn--primary" id="restartBtn">Chơi lại từ đầu</button>' +
+          '</div>' +
+        '</div>' +
+      '</section>';
+
+    $('#reviewFirstBtn').addEventListener('click', function () {
+      state.phase = 0;
+      state.finished = false;
+      renderPhase();
+    });
+    $('#restartBtn').addEventListener('click', function () {
+      state.phase = 0;
+      state.finished = false;
+      state.answers = {};
+      renderPhase();
+    });
+
+    updateChrome();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ============================================================
+     10. Điều hướng + khởi động
+     ============================================================ */
+  prevBtn.addEventListener('click', function () {
+    if (state.finished) {
+      state.finished = false;
+      state.phase = PHASES.length - 1;
+      renderPhase();
+      return;
+    }
+    if (state.phase > 0) { state.phase--; renderPhase(); }
+  });
+
+  nextBtn.addEventListener('click', function () {
+    if (nextBtn.disabled || state.finished) return;
+    if (state.phase < PHASES.length - 1) { state.phase++; renderPhase(); }
+    else { renderResults(); }
+  });
+
+  buildStepper();
+  renderPhase();
+})();
+</script>
+</body>
+</html>
