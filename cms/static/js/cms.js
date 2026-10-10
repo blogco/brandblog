@@ -389,7 +389,6 @@
         }
       },
       copy(url) {
-        const full = window.location.origin.replace(":5000", "") + url;
         navigator.clipboard.writeText(url).then(
           () => CMS.toast("Copied: " + url),
           () => CMS.toast("Copy failed", "error")

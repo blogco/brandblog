@@ -35,6 +35,10 @@ def project(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "BACKUPS_DIR", tmp_path / ".backups")
     monkeypatch.setattr(config, "CONFIG_FILE", tmp_path / ".cms_config.json")
     monkeypatch.setattr(config, "AUTH_FILE", tmp_path / ".cms_auth.json")
+    # Never touch the real macOS Keychain during tests.
+    monkeypatch.setattr(config, "get_token", lambda: "")
+    monkeypatch.setattr(config, "set_token", lambda token=None: None)
+    monkeypatch.setattr(config, "token_source", lambda: "none")
 
     config.set_password("testpass")
     return tmp_path

@@ -102,15 +102,59 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     return JSONResponse(payload, status_code=exc.status_code)
 
 
+def _find_free_port(preferred: int = 5000, attempts: int = 30) -> int:
+    """Return the first port that is free on both IPv4 and IPv6.
+
+    Port 5000 is commonly held by the macOS AirPlay Receiver (listening on
+    both ``127.0.0.1`` and ``::1``), which makes ``http://localhost:5000``
+    answer with an HTTP 403 page instead of the CMS. We therefore probe for
+    ports that nothing is listening on and that we can bind.
+    """
+    import socket
+
+    def _in_use(family: int, address: tuple) -> bool:
+        with socket.socket(family, socket.SOCK_STREAM) as sock:
+            sock.settimeout(0.3)
+            return sock.connect_ex(address) == 0
+
+    def _bindable(family: int, address: tuple) -> bool:
+        with socket.socket(family, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                sock.bind(address)
+                return True
+            except OSError:
+                return False
+
+    for candidate in range(preferred, preferred + attempts):
+        busy = _in_use(socket.AF_INET, (HOST, candidate)) or _in_use(socket.AF_INET6, ("::1", candidate))
+        if busy:
+            continue
+        if _bindable(socket.AF_INET, (HOST, candidate)) and _bindable(socket.AF_INET6, ("::1", candidate)):
+            return candidate
+    return preferred
+
+
 def main() -> None:
+    import threading
+    import webbrowser
+
     import uvicorn
+
+    configured = int(os.environ.get("CMS_PORT", "0") or "0")
+    port = configured or _find_free_port(5000)
+    url = f"http://127.0.0.1:{port}"
 
     print("=" * 62)
     print("  BrandBlog CMS")
-    print(f"  → Open http://localhost:{PORT} in your browser")
+    if port != 5000:
+        print("  (port 5000 was busy — usually macOS AirPlay Receiver)")
+    print(f"  → Open {url} in your browser")
     print("  → Press Ctrl+C to stop")
     print("=" * 62)
-    uvicorn.run(app, host=HOST, port=PORT, log_level="info")
+
+    threading.Timer(1.5, lambda: webbrowser.open(url)).start()
+    uvicorn.run(app, host=HOST, port=port, log_level="info")
 
 
 if __name__ == "__main__":

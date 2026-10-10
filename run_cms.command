@@ -26,11 +26,8 @@ if [ ! -f "cms/static/css/cms.css" ] && command -v npx >/dev/null 2>&1; then
 fi
 
 echo "🚀 Starting BrandBlog CMS..."
-echo "📝 Open http://localhost:5000 in your browser (opening now)"
+echo "📝 It will open in your browser automatically."
 echo "   Press Ctrl+C in this window to stop the CMS."
 echo ""
-
-# Open the browser shortly after the server starts.
-( sleep 2 && open "http://localhost:5000" ) &
 
 python cms/app.py

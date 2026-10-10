@@ -30,7 +30,7 @@
 1. Mở thư mục dự án trong **Finder**.
 2. Double-click file **`run_cms.command`**.
 3. Lần đầu chạy sẽ tự tạo virtualenv + cài thư viện (mất 1–2 phút).
-4. Trình duyệt tự mở tại **http://localhost:5000**.
+4. Trình duyệt tự mở tại **http://127.0.0.1:5000** (nếu cổng 5000 bận — thường do AirPlay — CMS tự dùng 5001, 5002… và mở đúng URL đó).
 
 Nếu macOS chặn file: bấm **chuột phải → Open → Open** một lần, hoặc cấp quyền thực thi:
 
@@ -197,7 +197,8 @@ npm run build:site                       # pelican content -s publishconf.py -o 
 
 | Vấn đề | Cách khắc phục |
 |--------|----------------|
-| Cổng 5000 đang dùng | `CMS_PORT=5001 python cms/app.py` |
+| **Mở `localhost:5000` báo 403** | Cổng 5000 bị **AirPlay Receiver** của macOS chiếm. CMS tự chuyển sang cổng trống (5001, 5002…). Xem cổng thật ở cửa sổ Terminal hoặc dùng URL mà trình duyệt tự mở. Có thể tắt AirPlay: *System Settings → General → AirDrop & Handoff → AirPlay Receiver*. |
+| Cổng 5000 đang dùng | CMS tự nhảy cổng; hoặc chỉ định: `CMS_PORT=5010 python cms/app.py` |
 | Publish lỗi *Authentication failed* | Kiểm tra token trong Settings (cần `repo` + `workflow`). |
 | Publish lỗi *workflow scope* | Token thiếu scope `workflow`. |
 | Push bị *rejected* | Remote có commit mới hơn → bấm **Pull** rồi publish lại. |
