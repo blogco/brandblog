@@ -32,13 +32,18 @@ Everything (HTML, CSS, JavaScript, icons) lives in the single `index.html` file.
 ## How to play
 
 - Work through the eight phases in order using **Next phase →**. The button stays locked
-  until every task in the current phase is complete.
+  until every task in the current phase is complete, and the hint next to it always lists
+  exactly what is still outstanding (for example *"Still to do: run the 3 remaining
+  acceptance checks (1 of 4 done), the chargeable weight"*).
+- Some phases open with an interactive task first. Any decision that depends on it is
+  shown **locked, behind a padlock note**, so you can always see what is still coming —
+  click the four acceptance checks in Phase 3, release the flight in Phase 6, break down
+  the ULD in Phase 7.
 - Each phase contains at least one decision point. Pick an answer and press **Check
   answer** to get immediate feedback explaining the operational reasoning.
 - A correct answer on the **first try** scores full points; a correct retry scores half.
   After three attempts the correct answer is revealed so you can never get stuck.
-- Some phases open with an interactive task first (acceptance checks, flight release,
-  ULD breakdown). Complete the task to unlock the phase's decision.
+  Multi-answer questions reset their ticks on a wrong attempt so you can retry cleanly.
 - You can go **backwards** at any time with **Previous phase** — solved decisions stay
   solved, and your score is kept.
 - The final screen shows your score, your rank and a per-phase breakdown, with a
