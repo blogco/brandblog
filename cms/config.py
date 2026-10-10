@@ -60,8 +60,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "default_author": "BrandBlog Editorial",
     "github_username": "",
     # Appearance
-    "primary_color": "#006C53",
-    "font": "Helvetica Neue",
+    "primary_color": "#0082F0",
+    "font": "Ericsson Hilda",
     "theme_mode": "light",
     # Auto-save
     "autosave_enabled": True,

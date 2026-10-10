@@ -1,51 +1,54 @@
 {#
-  Primary navigation — utility bar + sticky main bar + mobile drawer.
-  Mirrors the reference site's slim utility strip above the main navigation.
+  Primary navigation — Ericsson-style sticky bar:
+  logo left, primary menu centre, search + hamburger right.
 #}
 {% set page_url = page.url if (page is defined and page) else (article.url if (article is defined and article) else '') %}
-<header class="sticky top-0 z-50 bg-white/95 shadow-[0_1px_0_rgba(0,0,0,0.06)] backdrop-blur">
-  <!-- Utility bar -->
-  <div class="bg-sembcorp-green-darker text-white">
-    <div class="container flex h-9 items-center justify-between text-[11px] font-medium tracking-wide">
-      <span class="hidden sm:inline text-white/70">A publication inspired by the energy transition</span>
-      <nav class="flex items-center gap-5" aria-label="Utility">
-        {% for label, url in NAV_UTILITY %}
-          <a class="hover:text-white/80" href="{{ SITEURL }}/{{ url }}">{{ label }}</a>
-        {% endfor %}
-      </nav>
-    </div>
-  </div>
-
-  <!-- Main bar -->
-  <div class="container flex items-center justify-between py-3">
-    <a href="{{ SITEURL }}/" class="flex items-center gap-2.5" aria-label="{{ SITENAME }} home">
-      <img src="{{ SITEURL }}/static/images/logo.svg" alt="" class="h-9 w-9" width="36" height="36">
-      <span class="flex flex-col leading-none">
-        <span class="text-lg font-bold tracking-tight text-sembcorp-ink">{{ SITENAME }}</span>
-        <span class="mt-0.5 hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-sembcorp-green sm:block">Energy &amp; Sustainability</span>
-      </span>
+<header class="sticky top-0 z-50 border-b border-ericsson-border bg-white">
+  <div class="container flex h-[72px] items-center justify-between gap-4">
+    <a href="{{ SITEURL }}/" class="flex items-center gap-3" aria-label="{{ SITENAME }} home">
+      <img src="{{ SITEURL }}/static/images/logo.svg" alt="" class="h-8 w-8" width="32" height="32">
+      <span class="text-xl font-bold tracking-tight text-ericsson-black">{{ SITENAME }}</span>
     </a>
 
-    <nav class="hidden items-center gap-7 md:flex" aria-label="Primary">
+    <nav class="hidden items-center gap-8 md:flex" aria-label="Primary">
       {% for label, url in MENUITEMS %}
         {% set is_current = (url == '' and (page_url == '' or page_url == '/')) or (url != '' and page_url.startswith(url)) %}
         <a href="{{ SITEURL }}/{{ url }}" class="nav-link" {% if is_current %}aria-current="page"{% endif %}>{{ label }}</a>
       {% endfor %}
-      <a href="{{ SITEURL }}/news/" class="btn-primary !py-2.5 !text-[13px]">Subscribe</a>
     </nav>
 
-    <button id="menu-toggle" type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-sembcorp-line text-sembcorp-ink md:hidden" aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation">
-      <svg id="menu-icon-open" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-      <svg id="menu-icon-close" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-    </button>
+    <div class="flex items-center gap-1.5">
+      <a href="{{ SITEURL }}/news/" class="btn-primary mr-1 hidden !py-2.5 !text-[13px] lg:inline-flex">Subscribe</a>
+
+      <button id="search-toggle" type="button" class="inline-flex h-10 w-10 items-center justify-center text-ericsson-black transition-colors hover:text-ericsson-blue focus:outline-none focus-visible:ring-2 focus-visible:ring-ericsson-blue" aria-controls="search-panel" aria-expanded="false" aria-label="Search">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </button>
+
+      <button id="menu-toggle" type="button" class="inline-flex h-10 w-10 items-center justify-center text-ericsson-black transition-colors hover:text-ericsson-blue focus:outline-none focus-visible:ring-2 focus-visible:ring-ericsson-blue md:hidden" aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <svg id="menu-icon-open" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <svg id="menu-icon-close" class="hidden h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Search panel (demo: submits to the newsroom) -->
+  <div id="search-panel" class="hidden border-t border-ericsson-border bg-white">
+    <div class="container py-4">
+      <form action="{{ SITEURL }}/news/" method="get" role="search" class="flex items-center gap-3 border-b-2 border-ericsson-black pb-2">
+        <svg class="h-5 w-5 shrink-0 text-ericsson-gray" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <label class="sr-only" for="header-search">Search {{ SITENAME }}</label>
+        <input id="header-search" name="q" type="search" placeholder="Search news and insights…" class="w-full border-0 bg-transparent py-2 text-base text-ericsson-black placeholder:text-ericsson-gray focus:outline-none">
+        <button type="submit" class="btn-primary !py-2 !text-[13px]">Search</button>
+      </form>
+    </div>
   </div>
 
   <!-- Mobile drawer -->
-  <div id="mobile-menu" class="hidden border-t border-sembcorp-line bg-white md:hidden">
-    <nav class="container flex flex-col py-3" aria-label="Mobile">
+  <div id="mobile-menu" class="hidden border-t border-ericsson-border bg-white md:hidden">
+    <nav class="container flex flex-col py-2" aria-label="Mobile">
       {% for label, url in MENUITEMS %}
         {% set is_current = (url == '' and (page_url == '' or page_url == '/')) or (url != '' and page_url.startswith(url)) %}
-        <a href="{{ SITEURL }}/{{ url }}" class="border-b border-sembcorp-line py-3 text-base font-semibold {% if is_current %}text-sembcorp-green{% else %}text-sembcorp-ink{% endif %}" {% if is_current %}aria-current="page"{% endif %}>{{ label }}</a>
+        <a href="{{ SITEURL }}/{{ url }}" class="border-b border-ericsson-border py-3.5 text-base font-bold {% if is_current %}text-ericsson-blue{% else %}text-ericsson-black{% endif %}" {% if is_current %}aria-current="page"{% endif %}>{{ label }}</a>
       {% endfor %}
       <a href="{{ SITEURL }}/news/" class="btn-primary mt-4">Subscribe to alerts</a>
     </nav>

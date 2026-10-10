@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="BrandBlog mark">
-  <rect width="48" height="48" rx="11" fill="#006C53"/>
+  <rect width="48" height="48" rx="11" fill="#0082F0"/>
   <path d="M14 34c0-11 9.5-20.5 20.5-20.5 0 11-9.5 20.5-20.5 20.5Z" fill="#FFFFFF"/>
-  <path d="M14.5 33.5C20 28 26 23.5 33 20.5" fill="none" stroke="#006C53" stroke-width="2.2" stroke-linecap="round"/>
-  <circle cx="35" cy="13" r="2.4" fill="#FF6400"/>
+  <path d="M14.5 33.5C20 28 26 23.5 33 20.5" fill="none" stroke="#0082F0" stroke-width="2.2" stroke-linecap="round"/>
+  <circle cx="35" cy="13" r="2.4" fill="#FAD22D"/>
 </svg>

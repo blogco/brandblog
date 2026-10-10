@@ -5,7 +5,7 @@
 /* ==========================================================================
    BrandBlog CMS — styles
    Shares design tokens with the public blog (see tailwind.config.js):
-   primary #006C53, text #464646, ink #1A1A1A, mist #F5F6F5.
+   primary #0082F0, text #6A6A6A, ink #000000, mist #F5F5F5.
    ========================================================================== */
 
 @layer base {
@@ -18,37 +18,37 @@
   }
 
   body {
-    @apply bg-sembcorp-mist text-sembcorp-gray antialiased;
+    @apply bg-ericsson-mist text-ericsson-gray antialiased;
   }
 
   h1,
   h2,
   h3,
   h4 {
-    @apply text-sembcorp-ink font-semibold;
+    @apply text-ericsson-black font-semibold;
   }
 
   ::selection {
-    @apply bg-sembcorp-green text-white;
+    @apply bg-ericsson-blue text-white;
   }
 }
 
 @layer components {
   /* ---- Buttons ---- */
   .cms-btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-sembcorp-green focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-ericsson-blue focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .cms-btn-primary {
-    @apply cms-btn bg-sembcorp-green text-white hover:bg-sembcorp-green-dark;
+    @apply cms-btn bg-ericsson-blue text-white hover:bg-ericsson-blue-dark;
   }
 
   .cms-btn-outline {
-    @apply cms-btn border border-sembcorp-line bg-white text-sembcorp-ink hover:border-sembcorp-green hover:text-sembcorp-green;
+    @apply cms-btn border border-ericsson-border bg-white text-ericsson-black hover:border-ericsson-blue hover:text-ericsson-blue;
   }
 
   .cms-btn-ghost {
-    @apply cms-btn text-sembcorp-gray hover:bg-sembcorp-green-wash hover:text-sembcorp-green-dark;
+    @apply cms-btn text-ericsson-gray hover:bg-ericsson-blue-wash hover:text-ericsson-blue-dark;
   }
 
   .cms-btn-danger {
@@ -61,20 +61,20 @@
 
   /* ---- Cards & surfaces ---- */
   .cms-card {
-    @apply rounded-lg border border-sembcorp-line bg-white shadow-card;
+    @apply rounded-lg border border-ericsson-border bg-white shadow-card;
   }
 
   .cms-panel {
-    @apply rounded-lg border border-sembcorp-line bg-white;
+    @apply rounded-lg border border-ericsson-border bg-white;
   }
 
   /* ---- Form controls ---- */
   .cms-label {
-    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-sembcorp-gray;
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ericsson-gray;
   }
 
   .cms-input {
-    @apply w-full rounded-md border border-sembcorp-line bg-white px-3 py-2 text-sm text-sembcorp-ink placeholder:text-gray-400 focus:border-sembcorp-green focus:outline-none focus:ring-1 focus:ring-sembcorp-green;
+    @apply w-full rounded-md border border-ericsson-border bg-white px-3 py-2 text-sm text-ericsson-black placeholder:text-gray-400 focus:border-ericsson-blue focus:outline-none focus:ring-1 focus:ring-ericsson-blue;
   }
 
   .cms-select {
@@ -87,11 +87,11 @@
 
   /* ---- Sidebar ---- */
   .cms-side-link {
-    @apply flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sembcorp-gray transition-colors hover:bg-sembcorp-green-wash hover:text-sembcorp-green-dark;
+    @apply flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ericsson-gray transition-colors hover:bg-ericsson-blue-wash hover:text-ericsson-blue-dark;
   }
 
   .cms-side-link-active {
-    @apply bg-sembcorp-green-wash font-semibold text-sembcorp-green-dark;
+    @apply bg-ericsson-blue-wash font-semibold text-ericsson-blue-dark;
   }
 
   /* ---- Badges ---- */
@@ -118,16 +118,16 @@
 
   /* ---- Toasts ---- */
   .cms-toast {
-    @apply pointer-events-auto flex items-start gap-3 rounded-lg border border-sembcorp-line bg-white px-4 py-3 shadow-card;
+    @apply pointer-events-auto flex items-start gap-3 rounded-lg border border-ericsson-border bg-white px-4 py-3 shadow-card;
   }
 
   /* ---- Editor ---- */
   .EasyMDEContainer .CodeMirror {
-    @apply min-h-[420px] rounded-b-md border-sembcorp-line text-[15px];
+    @apply min-h-[420px] rounded-b-md border-ericsson-border text-[15px];
   }
 
   .editor-toolbar {
-    @apply rounded-t-md border border-sembcorp-line bg-white;
+    @apply rounded-t-md border border-ericsson-border bg-white;
   }
 
   .editor-preview,
@@ -143,6 +143,6 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-sembcorp-line;
+    @apply rounded-full bg-ericsson-border;
   }
 }

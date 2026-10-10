@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Pastenote{% endblock %}
+{% block description %}Dán mọi thứ khẩn cấp — link, ảnh, text — dưới dạng giấy note 3M Post-it. Tự động lưu trên máy của bạn và có thể đồng bộ lên GitHub.{% endblock %}
+{% block og_title %}Pastenote — {{ SITENAME }}{% endblock %}
+{% block og_description %}Bảng giấy note 3M Post-it: dán link, ảnh hoặc text, tự động lưu và sync lên GitHub.{% endblock %}
+{% block canonical %}{{ SITEURL }}/{{ page.url }}{% endblock %}
+
+{% block head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="{{ SITEURL }}/static/css/pastenote.css">
+{% endblock %}
+
+{% block hero %}
+<section class="relative isolate overflow-hidden bg-ericsson-black">
+  <div class="absolute inset-0 -z-10 bg-gradient-to-br from-ericsson-black via-ericsson-black to-ericsson-blue/40"></div>
+  <div class="container py-14 md:py-20">
+    <nav aria-label="Breadcrumb" class="text-xs font-medium text-white/70">
+      <ol class="flex items-center gap-2">
+        <li><a href="{{ SITEURL }}/" class="hover:text-white">Home</a></li>
+        <li aria-hidden="true">/</li>
+        <li class="text-white/90" aria-current="page">Pastenote</li>
+      </ol>
+    </nav>
+    <p class="mt-6 eyebrow !text-white/70">Post-it board · dán là xong</p>
+    <h1 class="mt-3 max-w-3xl text-balance text-4xl font-bold leading-tight text-white md:text-5xl">Pastenote</h1>
+    <p class="mt-4 max-w-2xl text-lg leading-relaxed text-white/85">
+      Dán mọi thứ khẩn cấp — link, ảnh hoặc text — thành giấy note 3M Post-it.
+      Tự động lưu trên máy, sẵn sàng đồng bộ lên GitHub.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <span class="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>
+        <span data-pn-count>0</span> ghi chú
+      </span>
+      <span class="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+        Tự động lưu
+      </span>
+      <span class="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
+        Sync GitHub
+      </span>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="pn-page">
+
+  <!-- ======================= PASTE ZONE ======================= -->
+  <section class="section pt-10 md:pt-14">
+    <div class="container">
+      <div id="pn-compose" class="pn-compose">
+        <div class="pn-compose-head">
+          <span class="pn-compose-icon" aria-hidden="true">📋</span>
+          <label class="sr-only" for="pn-paste-input">Dán link, ảnh hoặc text</label>
+          <textarea id="pn-paste-input" class="pn-paste-input" rows="2"
+                    placeholder="Dán link, ảnh, hoặc text vào đây…  (Cmd/⌃+V)"
+                    aria-describedby="pn-compose-hint"></textarea>
+        </div>
+        <div class="pn-compose-foot">
+          <div id="pn-colors" class="pn-colors" role="group" aria-label="Chọn màu giấy cho ghi chú mới">
+            <button type="button" class="pn-color-dot" data-color="yellow" style="background:#FFE066" aria-pressed="true" aria-label="Vàng Canary"></button>
+            <button type="button" class="pn-color-dot" data-color="blue" style="background:#A5D8FF" aria-pressed="false" aria-label="Xanh dương"></button>
+            <button type="button" class="pn-color-dot" data-color="pink" style="background:#FFC9C9" aria-pressed="false" aria-label="Hồng"></button>
+            <button type="button" class="pn-color-dot" data-color="green" style="background:#B2F2BB" aria-pressed="false" aria-label="Xanh lá mint"></button>
+            <button type="button" class="pn-color-dot" data-color="orange" style="background:#FFCC80" aria-pressed="false" aria-label="Cam nhạt"></button>
+            <button type="button" class="pn-color-dot" data-color="purple" style="background:#D0BFFF" aria-pressed="false" aria-label="Tím lavender"></button>
+          </div>
+          <div class="pn-compose-actions">
+            <button id="pn-add" type="button" class="pn-btn pn-btn-ghost">＋ Thêm note mới</button>
+            <button id="pn-paste-btn" type="button" class="pn-btn pn-btn-primary">📋 Dán</button>
+          </div>
+        </div>
+      </div>
+      <p id="pn-compose-hint" class="pn-compose-hint">
+        Hỗ trợ <strong>Cmd/⌃+V</strong> để dán trực tiếp, hoặc kéo-thả ảnh vào đây.
+        Tự nhận diện: URL → link card · Ảnh → thumbnail · Text → ghi chú.
+      </p>
+    </div>
+  </section>
+
+  <!-- ======================= NOTES BOARD ======================= -->
+  <section class="pn-board-section">
+    <div class="container">
+      <div class="pn-board-head">
+        <h2 class="pn-board-title">Bảng ghi chú</h2>
+        <p class="pn-board-count"><span id="pn-count">0</span> ghi chú · công khai cho mọi người</p>
+      </div>
+
+      <div id="pn-board" class="pn-board" role="list" aria-live="polite"></div>
+
+      <div id="pn-empty" class="pn-empty">
+        <div class="pn-empty-emoji" aria-hidden="true">📝</div>
+        <h3 class="pn-empty-title">Chưa có ghi chú nào</h3>
+        <p class="pn-empty-text">
+          Dán một link, ảnh hoặc đoạn text vào ô phía trên (hoặc nhấn Cmd/⌃+V ở bất kỳ đâu)
+          để tạo giấy note đầu tiên.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= SYNC STATUS (sticky bottom-right) ======================= -->
+  <div id="pn-sync" class="pn-sync" data-state="idle" role="status" aria-live="polite">
+    <span class="pn-sync-dot" aria-hidden="true"></span>
+    <span id="pn-sync-text" class="pn-sync-text">0 ghi chú · chưa sync</span>
+    <span class="pn-sync-actions">
+      <button id="pn-sync-now" type="button" class="pn-sync-btn">Sync ngay</button>
+      <button id="pn-sync-settings" type="button" class="pn-sync-gear" aria-label="Cài đặt đồng bộ GitHub" title="Cài đặt token GitHub">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </span>
+  </div>
+
+  <!-- ======================= AUTH / SETTINGS MODAL ======================= -->
+  <div id="pn-auth-modal" class="pn-modal" role="dialog" aria-modal="true" aria-labelledby="pn-auth-title">
+    <div id="pn-auth-overlay" class="pn-modal-overlay"></div>
+    <div id="pn-auth-content" class="pn-modal-content">
+      <div class="pn-modal-panel">
+        <div class="pn-modal-head">
+          <div>
+            <h2 id="pn-auth-title" class="pn-modal-title">Đồng bộ lên GitHub</h2>
+            <p class="pn-modal-sub">Nhập GitHub Personal Access Token để commit bảng ghi chú lên repository.</p>
+          </div>
+          <button id="pn-auth-close" type="button" class="pn-modal-close" aria-label="Đóng">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+
+        <form id="pn-auth-form" novalidate>
+          <div class="pn-modal-body">
+            <label for="pn-auth-token" class="pn-label">🔑 GitHub Personal Access Token</label>
+            <input id="pn-auth-token" name="token" type="password" class="pn-input" autocomplete="off" placeholder="ghp_… hoặc github_pat_…">
+            <p id="pn-auth-error" class="pn-error-text" style="margin-top:.4rem;font-size:.75rem;color:#d0021b;"></p>
+            <label class="pn-check">
+              <input id="pn-auth-remember" type="checkbox" checked>
+              <span>Lưu token trên thiết bị này (localStorage) để nhập một lần.</span>
+            </label>
+            <p class="pn-note-text">
+              <strong>Bảo mật:</strong> token chỉ được dùng trực tiếp từ trình duyệt của bạn để ghi vào
+              <code>content/data/pastenote.json</code> và chỉ lưu trên máy bạn — không được commit lên
+              repository này. Hãy dùng token có quyền tối thiểu (<code>contents:write</code>) và thu hồi
+              nếu bị lộ.
+            </p>
+          </div>
+          <div class="pn-modal-foot">
+            <button id="pn-auth-clear" type="button" class="pn-btn pn-btn-ghost hidden">Xoá token</button>
+            <button id="pn-auth-cancel" type="button" class="pn-btn pn-btn-ghost">Hủy</button>
+            <button type="submit" class="pn-btn pn-btn-primary">Lưu &amp; kết nối</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= TOASTS ======================= -->
+  <div id="pn-toasts" class="pn-toasts" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- ======================= NOTE TEMPLATE ======================= -->
+  <template id="pn-note-template">
+    <article class="pn-note pn-note--yellow pn-tilt-l" role="listitem" data-note-card>
+      <svg class="pn-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 17v5"/>
+        <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>
+      </svg>
+      <div class="pn-note-body" data-field="body"></div>
+      <footer class="pn-note-foot">
+        <time class="pn-note-time" data-field="time"></time>
+        <div class="pn-note-actions">
+          <button type="button" class="pn-icon-btn" data-action="copy" aria-label="Sao chép nội dung" title="Sao chép">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+          <button type="button" class="pn-icon-btn is-danger" data-action="delete" aria-label="Xoá ghi chú" title="Xoá">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+          </button>
+        </div>
+      </footer>
+    </article>
+  </template>
+
+  <!-- ======================= CONFIG + SEED (embedded at build time) ======================= -->
+  <script id="pastenote-seed" type="application/json">{{ (PASTENOTE_NOTES|default([], true))|tojson }}</script>
+  <script id="pastenote-config" type="application/json">{{ {
+    "repo": PASTENOTE_GITHUB_REPO|default("", true),
+    "branch": PASTENOTE_GITHUB_BRANCH|default("main", true),
+    "path": PASTENOTE_FILE_PATH|default("content/data/pastenote.json", true),
+    "siteBase": SITEURL|default("", true),
+    "rawBase": "https://raw.githubusercontent.com",
+    "apiBase": "https://api.github.com"
+  }|tojson }}</script>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ SITEURL }}/static/js/pastenote.js" defer></script>
+{% endblock %}

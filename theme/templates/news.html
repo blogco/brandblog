@@ -1,32 +1,10 @@
 {% extends "base.html" %}
 {% import "partials/macros.html" as m with context %}
 
-{% block title %}News &amp; Insights{% endblock %}
-{% block description %}Latest media releases, company announcements and insights from the energy transition.{% endblock %}
+{% block title %}Blog{% endblock %}
+{% block description %}Latest news, media releases and technical insights on the energy transition and connected infrastructure.{% endblock %}
 {% block og_type %}website{% endblock %}
-{% block og_title %}News &amp; Insights — {{ SITENAME }}{% endblock %}
-
-{% block hero %}
-<section class="relative isolate overflow-hidden">
-  <img src="{{ SITEURL }}/static/images/hero-news.svg" alt="" class="absolute inset-0 -z-10 h-full w-full object-cover" width="1920" height="720" fetchpriority="high">
-  <div class="absolute inset-0 -z-10 bg-sembcorp-green-darker/70"></div>
-  <div class="absolute inset-0 -z-10 bg-gradient-to-t from-sembcorp-green-darker/90 to-transparent"></div>
-  <div class="container py-16 md:py-20">
-    <nav aria-label="Breadcrumb" class="text-xs font-medium text-white/70">
-      <ol class="flex items-center gap-2">
-        <li><a href="{{ SITEURL }}/" class="hover:text-white">Home</a></li>
-        <li aria-hidden="true">/</li>
-        <li class="text-white/90" aria-current="page">News &amp; Insights</li>
-      </ol>
-    </nav>
-    <h1 class="mt-6 max-w-3xl text-balance text-4xl font-bold leading-tight text-white md:text-5xl">News &amp; Insights</h1>
-    <p class="mt-4 max-w-2xl text-lg leading-relaxed text-white/85">
-      Explore how the energy transition is unfolding. Keep updated with our latest news and
-      gain insights into the businesses and technologies driving a sustainable future.
-    </p>
-  </div>
-</section>
-{% endblock %}
+{% block og_title %}Blog — {{ SITENAME }}{% endblock %}
 
 {% block content %}
 {% set ns = namespace(cats=[], topics=[]) %}
@@ -36,118 +14,104 @@
     {% if t.name not in ns.topics %}{% set ns.topics = ns.topics + [t.name] %}{% endif %}
   {% endfor %}
 {% endfor %}
+
+<!-- Page header -->
+<section class="border-b border-ericsson-border bg-white">
+  <div class="container py-16 md:py-24">
+    <nav aria-label="Breadcrumb" class="text-sm text-ericsson-gray">
+      <ol class="flex flex-wrap items-center gap-2">
+        <li><a href="{{ SITEURL }}/" class="transition-colors hover:text-ericsson-blue">Home</a></li>
+        <li aria-hidden="true">/</li>
+        <li class="text-ericsson-black" aria-current="page">Blog</li>
+      </ol>
+    </nav>
+    <h1 class="mt-8 text-5xl font-bold leading-[1.05] text-ericsson-black md:text-6xl">Blog</h1>
+    <p class="mt-6 max-w-2xl text-lg leading-relaxed text-ericsson-gray md:text-xl">
+      Insights, stories and technical deep dives on the energy transition and the
+      infrastructure of a connected, sustainable future.
+    </p>
+  </div>
+</section>
+
 <section class="section">
   <div class="container">
-    <div class="grid gap-12 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-      <!-- Main column -->
-      <div>
-        <div class="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p class="eyebrow">Newsroom</p>
-            <h2 class="mt-2 text-3xl font-bold text-sembcorp-ink md:text-4xl">Latest news &amp; insights</h2>
-          </div>
-          <p class="text-sm text-sembcorp-gray"><span id="result-count">{{ articles|length }}</span> articles</p>
-        </div>
-
-        <!-- Filter bar: type + topic -->
-        <div class="mt-8 space-y-4 border-y border-sembcorp-line py-5" data-filter-root>
-          <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <span class="w-20 shrink-0 text-xs font-bold uppercase tracking-wide text-sembcorp-gray">Type</span>
-            <div class="flex flex-wrap gap-2" data-filter-group="type">
-              <button type="button" class="filter-btn is-active" data-filter-value="all">All</button>
-              {% for c in ns.cats %}
-                <button type="button" class="filter-btn" data-filter-value="{{ c|lower }}">{{ c }}</button>
-              {% endfor %}
-            </div>
-          </div>
-          <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <span class="w-20 shrink-0 text-xs font-bold uppercase tracking-wide text-sembcorp-gray">Topic</span>
-            <div class="flex flex-wrap gap-2" data-filter-group="topic">
-              <button type="button" class="filter-btn is-active" data-filter-value="all">All</button>
-              {% for t in ns.topics %}
-                <button type="button" class="filter-btn" data-filter-value="{{ t|lower }}">{{ t }}</button>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
-
-        <!-- Featured article -->
-        {% if articles %}
-          {% set featured = articles[0] %}
-          <article class="group mt-10 grid gap-0 overflow-hidden rounded-sm border border-sembcorp-line bg-white transition-shadow hover:shadow-card md:grid-cols-2"
-                   data-article-card data-category="{{ featured.category|lower }}" data-tags="{% for t in featured.tags %}{{ t|lower }} {% endfor %}">
-            <a href="{{ SITEURL }}/{{ featured.url }}" class="relative aspect-[16/10] overflow-hidden bg-sembcorp-mist md:aspect-auto md:h-full" aria-hidden="true" tabindex="-1">
-              <img src="{{ m.image_url(featured) }}" alt="" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" width="800" height="600">
-              <span class="chip absolute left-4 top-4 bg-white/95 shadow-sm">Featured</span>
-            </a>
-            <div class="flex flex-col justify-center p-7 md:p-10">
-              <div class="flex items-center gap-3">
-                <span class="chip">{{ featured.category }}</span>
-                <time class="text-xs font-semibold uppercase tracking-wide text-sembcorp-gray" datetime="{{ featured.date.isoformat() }}">{{ featured.locale_date }}</time>
-              </div>
-              <h2 class="mt-4 text-2xl font-bold leading-tight text-sembcorp-ink md:text-3xl">
-                <a href="{{ SITEURL }}/{{ featured.url }}" class="transition-colors hover:text-sembcorp-green">{{ featured.title }}</a>
-              </h2>
-              <p class="mt-4 leading-relaxed text-sembcorp-gray">{{ featured.summary|striptags|truncate(220) }}</p>
-              <span class="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-sembcorp-green">
-                Read the full story
-                <svg class="h-4 w-4 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-              </span>
-            </div>
-          </article>
-        {% endif %}
-
-        <!-- Grid -->
-        <div id="article-grid" class="mt-8 grid gap-6 sm:grid-cols-2">
-          {% for a in articles[1:] %}
-            <div data-article-card data-category="{{ a.category|lower }}" data-tags="{% for t in a.tags %}{{ t|lower }} {% endfor %}">
-              {{ m.article_card(a) }}
-            </div>
+    <!-- Filter bar -->
+    <div class="space-y-4 border-b border-ericsson-border pb-8" data-filter-root>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <span class="w-20 shrink-0 text-sm font-bold text-ericsson-black">Type</span>
+        <div class="flex flex-wrap gap-2" data-filter-group="type">
+          <button type="button" class="filter-btn is-active" data-filter-value="all">All</button>
+          {% for c in ns.cats %}
+            <button type="button" class="filter-btn" data-filter-value="{{ c|lower }}">{{ c }}</button>
           {% endfor %}
         </div>
-
-        <p id="no-results" class="mt-10 hidden rounded-sm border border-dashed border-sembcorp-line bg-sembcorp-mist p-8 text-center text-sm text-sembcorp-gray">
-          No articles match the selected filters.
-        </p>
-
-        <div class="mt-10 flex items-center justify-center gap-4">
-          <a href="{{ SITEURL }}/news/" class="btn-outline">View all</a>
-          <a href="#subscribe" class="btn-primary">Sign up for alerts</a>
+      </div>
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <span class="w-20 shrink-0 text-sm font-bold text-ericsson-black">Topic</span>
+        <div class="flex flex-wrap gap-2" data-filter-group="topic">
+          <button type="button" class="filter-btn is-active" data-filter-value="all">All</button>
+          {% for t in ns.topics %}
+            <button type="button" class="filter-btn" data-filter-value="{{ t|lower }}">{{ t }}</button>
+          {% endfor %}
         </div>
       </div>
-
-      <!-- Sidebar -->
-      <aside class="space-y-10 lg:sticky lg:top-28 lg:self-start">
-        <div class="rounded-sm border border-sembcorp-line p-6">
-          <h2 class="text-lg font-bold text-sembcorp-ink">Most recent</h2>
-          <div class="mt-2">
-            {% for a in articles[:5] %}
-              {{ m.compact_item(a) }}
-            {% endfor %}
-          </div>
-        </div>
-
-        <div class="rounded-sm border border-sembcorp-line p-6">
-          <h2 class="text-lg font-bold text-sembcorp-ink">Topics</h2>
-          <div class="mt-4 flex flex-wrap gap-2">
-            {% for t in ns.topics %}
-              <button type="button" class="chip transition-colors hover:bg-sembcorp-green hover:text-white" data-sidebar-topic="{{ t|lower }}">{{ t }}</button>
-            {% endfor %}
-          </div>
-        </div>
-
-        <div id="subscribe" class="rounded-sm bg-sembcorp-green p-6 text-white">
-          <h2 class="text-lg font-bold">Stay in the loop</h2>
-          <p class="mt-2 text-sm text-white/80">Get media releases and insights delivered to your inbox.</p>
-          <form class="mt-4 space-y-3" onsubmit="return false;">
-            <label class="sr-only" for="email">Email address</label>
-            <input id="email" type="email" placeholder="you@company.com" class="w-full rounded-sm border border-white/30 bg-white/10 px-3 py-2.5 text-sm text-white placeholder:text-white/60 focus:border-white focus:outline-none">
-            <button type="submit" class="btn w-full !bg-white !text-sembcorp-green hover:!bg-sembcorp-green-wash">Subscribe</button>
-          </form>
-          <p class="mt-3 text-[11px] text-white/60">Demo form — no data is collected.</p>
-        </div>
-      </aside>
+      <p class="pt-1 text-sm text-ericsson-gray"><span id="result-count">{{ articles|length }}</span> articles</p>
     </div>
+
+    <!-- Featured post (hero card) -->
+    {% if articles %}
+      {% set featured = articles[0] %}
+      <article class="group relative isolate mt-12 overflow-hidden">
+        <a href="{{ SITEURL }}/{{ featured.url }}" class="block" aria-label="{{ featured.title }}">
+          <div class="relative aspect-[16/10] overflow-hidden bg-ericsson-mist sm:aspect-[21/9]">
+            <img src="{{ m.image_url(featured) }}" alt="" class="h-full w-full object-cover" width="1600" height="686">
+            <div class="absolute inset-0 bg-featured-overlay"></div>
+          </div>
+          <div class="absolute inset-x-0 bottom-0 p-6 md:p-10">
+            <span class="text-xs font-bold uppercase tracking-[0.12em] text-white/90">Featured · {{ featured.category }}</span>
+            <h2 class="mt-3 max-w-3xl text-2xl font-bold leading-tight text-white md:text-4xl">{{ featured.title }}</h2>
+            <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/80">
+              <time datetime="{{ featured.date.isoformat() }}">{{ featured.locale_date }}</time>
+              <span class="inline-flex items-center gap-1.5">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                {{ ((featured.content|striptags|wordcount) / 200)|round(0, 'ceil')|int }} min read
+              </span>
+            </div>
+          </div>
+        </span></a>
+      </article>
+    {% endif %}
+
+    <!-- Post grid -->
+    <div id="article-grid" class="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      {% for a in articles[1:] %}
+        {{ m.article_card(a) }}
+      {% endfor %}
+    </div>
+
+    <p id="no-results" class="mt-12 hidden border border-dashed border-ericsson-border p-12 text-center text-sm text-ericsson-gray">
+      No articles match the selected filters.
+    </p>
+
+    <!-- Pagination (rendered client-side) -->
+    <nav id="pagination" class="mt-12 hidden items-center justify-center gap-1" aria-label="Pagination"></nav>
+  </div>
+</section>
+
+<!-- Subscribe band -->
+<section id="subscribe" class="bg-ericsson-black">
+  <div class="container grid gap-8 py-16 md:grid-cols-2 md:items-center md:py-20">
+    <div>
+      <h2 class="text-3xl font-bold text-white md:text-4xl">Stay in the loop</h2>
+      <p class="mt-3 max-w-lg text-base leading-relaxed text-white/80">
+        Get media releases and insights delivered to your inbox. This is a demo form — no data is collected.
+      </p>
+    </div>
+    <form class="flex w-full max-w-lg gap-3 md:justify-self-end" onsubmit="return false;">
+      <label class="sr-only" for="email">Email address</label>
+      <input id="email" type="email" placeholder="you@company.com" class="w-full border border-white/30 bg-transparent px-4 py-3.5 text-sm text-white placeholder:text-white/60 focus:border-white focus:outline-none">
+      <button type="submit" class="btn !bg-white !text-ericsson-black hover:!bg-ericsson-mist">Subscribe</button>
+    </form>
   </div>
 </section>
 {% endblock %}

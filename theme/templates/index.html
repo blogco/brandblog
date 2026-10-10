@@ -6,7 +6,7 @@
 {% block title %}{{ SITESUBTITLE }}{% endblock %}
 
 {% block hero %}
-<section class="bg-sembcorp-green-darker">
+<section class="bg-ericsson-black">
   <div class="container py-16 md:py-20">
     <p class="eyebrow !text-white/70">{{ SITENAME }}</p>
     <h1 class="mt-3 text-4xl font-bold text-white md:text-5xl">{{ SITESUBTITLE }}</h1>
@@ -18,7 +18,7 @@
 {% block content %}
 <section class="section">
   <div class="container">
-    <h2 class="text-3xl font-bold text-sembcorp-ink">Latest news</h2>
+    <h2 class="text-3xl font-bold text-ericsson-black">Latest news</h2>
     <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {% for a in articles[:6] %}
         {{ m.article_card(a) }}

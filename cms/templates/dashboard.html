@@ -12,41 +12,41 @@
   {% endif %}
 
   <!-- Welcome -->
-  <section class="cms-card bg-sembcorp-green-wash p-6">
-    <h1 class="text-[28px] leading-tight text-sembcorp-green-dark">{{ t('dash.welcome', name=current_user) }}</h1>
-    <p class="mt-1 text-sm text-sembcorp-gray">{{ t('dash.subtitle') }}</p>
+  <section class="cms-card bg-ericsson-blue-wash p-6">
+    <h1 class="text-[28px] leading-tight text-ericsson-blue-dark">{{ t('dash.welcome', name=current_user) }}</h1>
+    <p class="mt-1 text-sm text-ericsson-gray">{{ t('dash.subtitle') }}</p>
   </section>
 
   <!-- Stats -->
   <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
     <div class="cms-stat">
-      <span class="cms-stat-icon bg-sembcorp-green-wash text-sembcorp-green"><i class="fa fa-check-circle"></i></span>
-      <div><p class="text-2xl font-bold text-sembcorp-ink">{{ published_count }}</p><p class="text-sm text-sembcorp-gray">{{ t('dash.published') }}</p></div>
+      <span class="cms-stat-icon bg-ericsson-blue-wash text-ericsson-blue"><i class="fa fa-check-circle"></i></span>
+      <div><p class="text-2xl font-bold text-ericsson-black">{{ published_count }}</p><p class="text-sm text-ericsson-gray">{{ t('dash.published') }}</p></div>
     </div>
     <div class="cms-stat">
       <span class="cms-stat-icon bg-amber-50 text-amber-600"><i class="fa fa-pencil"></i></span>
-      <div><p class="text-2xl font-bold text-sembcorp-ink">{{ draft_count }}</p><p class="text-sm text-sembcorp-gray">{{ t('dash.drafts') }}</p></div>
+      <div><p class="text-2xl font-bold text-ericsson-black">{{ draft_count }}</p><p class="text-sm text-ericsson-gray">{{ t('dash.drafts') }}</p></div>
     </div>
     <div class="cms-stat">
-      <span class="cms-stat-icon bg-sembcorp-mist text-sembcorp-gray"><i class="fa fa-picture-o"></i></span>
-      <div><p class="text-2xl font-bold text-sembcorp-ink">{{ media_count }}</p><p class="text-sm text-sembcorp-gray">{{ t('dash.media_files') }}</p></div>
+      <span class="cms-stat-icon bg-ericsson-mist text-ericsson-gray"><i class="fa fa-picture-o"></i></span>
+      <div><p class="text-2xl font-bold text-ericsson-black">{{ media_count }}</p><p class="text-sm text-ericsson-gray">{{ t('dash.media_files') }}</p></div>
     </div>
     <div class="cms-stat">
       <span class="cms-stat-icon bg-sky-50 text-sky-600"><i class="fa fa-font"></i></span>
-      <div><p class="text-2xl font-bold text-sembcorp-ink">{{ '{:,}'.format(total_words) }}</p><p class="text-sm text-sembcorp-gray">{{ t('dash.total_words') }}</p></div>
+      <div><p class="text-2xl font-bold text-ericsson-black">{{ '{:,}'.format(total_words) }}</p><p class="text-sm text-ericsson-gray">{{ t('dash.total_words') }}</p></div>
     </div>
   </section>
 
   <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
     <!-- Recent posts -->
     <section class="cms-card overflow-hidden lg:col-span-2">
-      <header class="flex items-center justify-between border-b border-sembcorp-line px-5 py-4">
+      <header class="flex items-center justify-between border-b border-ericsson-border px-5 py-4">
         <h2 class="text-lg">{{ t('dash.recent_posts') }}</h2>
-        <a href="/posts" class="text-sm font-semibold text-sembcorp-green hover:text-sembcorp-green-dark">{{ t('action.view_all') }} <i class="fa fa-arrow-right"></i></a>
+        <a href="/posts" class="text-sm font-semibold text-ericsson-blue hover:text-ericsson-blue-dark">{{ t('action.view_all') }} <i class="fa fa-arrow-right"></i></a>
       </header>
 
       {% if recent_posts %}
-      <ul class="divide-y divide-sembcorp-line">
+      <ul class="divide-y divide-ericsson-border">
         {% for post in recent_posts %}
         <li class="flex items-center justify-between gap-4 px-5 py-4">
           <div class="min-w-0">
@@ -55,7 +55,7 @@
                 <i class="fa {{ 'fa-circle' if post.status == 'published' else 'fa-circle-o' }} text-[7px]"></i>
                 {{ t('status.published') if post.status == 'published' else t('status.draft') }}
               </span>
-              <span class="truncate text-sm font-semibold text-sembcorp-ink">{{ post.title }}</span>
+              <span class="truncate text-sm font-semibold text-ericsson-black">{{ post.title }}</span>
             </div>
             <p class="mt-1 truncate text-xs text-gray-500">
               <i class="fa fa-calendar-o"></i> {{ post.date }}
@@ -83,7 +83,7 @@
     <!-- Git status -->
     <section class="space-y-6">
       <div class="cms-card p-5">
-        <h2 class="mb-3 flex items-center gap-2 text-lg"><i class="fa fa-code-fork text-sembcorp-green"></i>{{ t('dash.git_status') }}</h2>
+        <h2 class="mb-3 flex items-center gap-2 text-lg"><i class="fa fa-code-fork text-ericsson-blue"></i>{{ t('dash.git_status') }}</h2>
         {% if git.error %}
           <p class="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{{ git.error }}</p>
         {% else %}
@@ -109,8 +109,8 @@
         <ul class="space-y-3">
           {% for commit in commits %}
           <li class="text-sm">
-            <p class="truncate font-medium text-sembcorp-ink">{{ commit.message }}</p>
-            <p class="text-xs text-gray-400"><code class="text-sembcorp-green">{{ commit.sha }}</code> · {{ commit.date }}</p>
+            <p class="truncate font-medium text-ericsson-black">{{ commit.message }}</p>
+            <p class="text-xs text-gray-400"><code class="text-ericsson-blue">{{ commit.sha }}</code> · {{ commit.date }}</p>
           </li>
           {% endfor %}
         </ul>

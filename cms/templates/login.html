@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="/static/css/cms.css">
 </head>
 <body class="h-full">
-<div class="flex min-h-full items-center justify-center bg-gradient-to-br from-sembcorp-green-dark via-sembcorp-green to-sembcorp-green-light px-4 py-10">
+<div class="flex min-h-full items-center justify-center bg-gradient-to-br from-ericsson-blue-dark via-ericsson-blue to-ericsson-blue-light px-4 py-10">
   <div class="w-full max-w-md">
     <div class="mb-6 flex items-center justify-center gap-3 text-white">
       <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-white/15 text-xl"><i class="fa fa-leaf"></i></span>
@@ -22,7 +22,7 @@
 
     <div class="cms-card p-7" x-data="loginForm()" @submit.prevent="submit()">
       <h1 class="mb-1 text-[26px] leading-tight">{{ t('auth.login') }}</h1>
-      <p class="mb-6 text-sm text-sembcorp-gray">{{ t('app.tagline') }}</p>
+      <p class="mb-6 text-sm text-ericsson-gray">{{ t('app.tagline') }}</p>
 
       {% if default_password %}
       <div class="mb-5 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
@@ -40,7 +40,7 @@
           <label class="cms-label" for="password">{{ t('auth.password') }}</label>
           <div class="relative">
             <input id="password" class="cms-input pr-10" :type="show ? 'text' : 'password'" x-model="password" autocomplete="current-password">
-            <button type="button" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-sembcorp-ink" @click="show = !show">
+            <button type="button" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-ericsson-black" @click="show = !show">
               <i class="fa" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
             </button>
           </div>
@@ -57,7 +57,7 @@
       </form>
     </div>
 
-    <p class="mt-5 text-center text-xs text-white/70">Local-only CMS · Not affiliated with Sembcorp Industries</p>
+    <p class="mt-5 text-center text-xs text-white/70">Local-only CMS · Not affiliated with Ericsson</p>
   </div>
 </div>
 

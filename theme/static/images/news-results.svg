@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Financial results chart">
   <defs>
     <linearGradient id="r1" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0E846D"/>
-      <stop offset="1" stop-color="#004E3E"/>
+      <stop offset="0" stop-color="#1A8FF3"/>
+      <stop offset="1" stop-color="#00365C"/>
     </linearGradient>
   </defs>
   <rect width="800" height="500" fill="url(#r1)"/>
@@ -15,8 +15,8 @@
     <rect x="540" y="120" width="60" height="320" rx="6"/>
     <rect x="630" y="90" width="60" height="350" rx="6"/>
   </g>
-  <path d="M120 340 L210 280 L300 320 L390 230 L480 180 L570 140 L660 110" fill="none" stroke="#FF6400" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-  <g fill="#FF6400">
+  <path d="M120 340 L210 280 L300 320 L390 230 L480 180 L570 140 L660 110" fill="none" stroke="#FAD22D" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#FAD22D">
     <circle cx="660" cy="110" r="9"/>
   </g>
 </svg>

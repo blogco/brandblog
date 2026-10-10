@@ -6,16 +6,16 @@
   <header class="flex flex-wrap items-center justify-between gap-3">
     <div>
       <h1 class="text-[28px] leading-tight">{{ t('posts.title') }}</h1>
-      <p class="text-sm text-sembcorp-gray">{{ published_count }} {{ t('status.published') }} · {{ draft_count }} {{ t('status.draft') }}</p>
+      <p class="text-sm text-ericsson-gray">{{ published_count }} {{ t('status.published') }} · {{ draft_count }} {{ t('status.draft') }}</p>
     </div>
     <a href="/posts/new" class="cms-btn-primary"><i class="fa fa-plus"></i>{{ t('action.new_post') }}</a>
   </header>
 
   <!-- Filters -->
   <div class="cms-card flex flex-wrap items-center gap-3 p-4">
-    <div class="inline-flex rounded-md border border-sembcorp-line p-0.5">
+    <div class="inline-flex rounded-md border border-ericsson-border p-0.5">
       <template x-for="tab in tabs" :key="tab.value">
-        <button class="cms-btn cms-btn-sm" :class="status === tab.value ? 'bg-sembcorp-green text-white' : 'text-sembcorp-gray hover:bg-sembcorp-green-wash'"
+        <button class="cms-btn cms-btn-sm" :class="status === tab.value ? 'bg-ericsson-blue text-white' : 'text-ericsson-gray hover:bg-ericsson-blue-wash'"
                 @click="status = tab.value" x-text="tab.label"></button>
       </template>
     </div>
@@ -43,20 +43,20 @@
       </div>
     </template>
 
-    <ul class="divide-y divide-sembcorp-line">
+    <ul class="divide-y divide-ericsson-border">
       <template x-for="post in filtered" :key="post.slug">
-        <li class="flex flex-wrap items-center justify-between gap-4 px-5 py-4 hover:bg-sembcorp-mist/60">
+        <li class="flex flex-wrap items-center justify-between gap-4 px-5 py-4 hover:bg-ericsson-mist/60">
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-2">
               <span :class="post.status === 'published' ? 'cms-badge-published' : 'cms-badge-draft'"
                     x-text="post.status === 'published' ? '{{ t('status.published') }}' : '{{ t('status.draft') }}'"></span>
-              <a :href="'/posts/' + post.slug + '/edit'" class="truncate text-sm font-semibold text-sembcorp-ink hover:text-sembcorp-green" x-text="post.title"></a>
+              <a :href="'/posts/' + post.slug + '/edit'" class="truncate text-sm font-semibold text-ericsson-black hover:text-ericsson-blue" x-text="post.title"></a>
             </div>
             <p class="mt-1 truncate text-xs text-gray-500">
               <i class="fa fa-calendar-o"></i> <span x-text="post.date"></span>
               <template x-if="post.category"><span class="mx-1.5">·</span></template>
               <template x-if="post.category"><span><i class="fa fa-folder-o"></i> <span x-text="post.category"></span></span></template>
-              <template x-for="tag in post.tags" :key="tag"><span class="ml-2 rounded bg-sembcorp-green-wash px-1.5 py-0.5 text-[11px] text-sembcorp-green-dark" x-text="tag"></span></template>
+              <template x-for="tag in post.tags" :key="tag"><span class="ml-2 rounded bg-ericsson-blue-wash px-1.5 py-0.5 text-[11px] text-ericsson-blue-dark" x-text="tag"></span></template>
             </p>
           </div>
           <div class="flex shrink-0 items-center gap-1">
