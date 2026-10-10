@@ -65,7 +65,7 @@ ARCHIVES_SAVE_AS = ""
 CATEGORIES_SAVE_AS = ""
 TAGS_SAVE_AS = ""
 AUTHORS_SAVE_AS = ""
-DIRECT_TEMPLATES = ["index"]
+DIRECT_TEMPLATES = ["index", "404"]
 
 # Disable feeds to keep the output minimal (no external dependency required).
 FEED_ALL_ATOM = None
