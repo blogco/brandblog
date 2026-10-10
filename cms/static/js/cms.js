@@ -262,8 +262,8 @@
         return p;
       },
 
-      async save(silent) {
-        if (this.saving || this.publishing) return false;
+      async save(silent, force) {
+        if (this.saving || (this.publishing && !force)) return false;
         if (!this.post.title.trim()) {
           if (!silent) CMS.toast("Title is required", "error");
           return false;
@@ -294,7 +294,7 @@
         this.publishing = true;
         this.publishError = false;
         try {
-          const ok = await this.save(true);
+          const ok = await this.save(true, true);
           if (!ok) throw new Error("Could not save before publishing");
           const res = await CMS.api("/api/posts/" + encodeURIComponent(this.post.slug) + "/publish", { method: "POST" });
           this.post.status = "published";

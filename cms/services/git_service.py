@@ -130,9 +130,19 @@ def log(limit: int = 8) -> list[dict]:
 
 
 def publish(message: str, paths: list[str] | None = None) -> dict:
-    """Commit the working tree and push to the configured branch."""
+    """Commit the working tree and push to the configured branch.
+
+    Publishing is gated on the GitHub token (stored in the OS Keychain): the
+    token is the key that authorises a post to go live, so without it we refuse
+    instead of silently pushing with ambient git credentials.
+    """
+    token = config.get_token()
+    if not token:
+        raise GitError(
+            "GitHub token is not configured — publishing requires the token as the go-live key. Add it in Settings."
+        )
     result = commit(message, paths=paths)
-    push_result = push()
+    push_result = push(token=token)
     return {**result, **push_result}
 
 

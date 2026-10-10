@@ -1,4 +1,4 @@
-Title: Sembcorp Industries 1H2026 Results
+Title: Sembcorp Industries 1H2026 Resultllll
 Date: 2026-08-13 09:00
 Category: Media Releases
 Tags: Corporate, Financial Results

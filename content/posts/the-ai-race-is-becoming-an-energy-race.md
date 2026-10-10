@@ -1,4 +1,4 @@
-Title: The AI Race is Becoming an Energy Race
+Title: The AI Race is Becoming an Energy Race 99
 Date: 2026-07-15 08:00
 Category: Insights
 Tags: Innovation, Corporate
