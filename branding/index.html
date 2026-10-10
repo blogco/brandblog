@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Branding | BrandBlog</title>
-  <meta name="description" content="Brand system for BrandBlog — brand guidelines, colour palette, typography, iconography and UI/UX components, inspired by Sembcorp.">
+  <meta name="description" content="Brand system for BrandBlog — brand guidelines, colour palette, typography, iconography and UI/UX components, inspired by Ericsson's design language.">
   <meta name="author" content="BrandBlog Editorial">
   <link rel="canonical" href="https://blogco.github.io/brandblog/">
 
@@ -18,64 +18,68 @@
   <meta name="twitter:card" content="summary_large_image">
 
   <link rel="icon" href="https://blogco.github.io/brandblog/static/images/favicon.svg" type="image/svg+xml">
-  <link rel="preload" as="image" href="https://blogco.github.io/brandblog/static/images/hero-home.svg">
+  <meta name="theme-color" content="#0082F0">
 
   <!-- Tailwind build -->
   <link rel="stylesheet" href="https://blogco.github.io/brandblog/static/css/style.css">
 </head>
 <body class="flex min-h-screen flex-col">
-  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-sm focus:bg-sembcorp-green focus:px-4 focus:py-2 focus:text-white">Skip to content</a>
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-sm focus:bg-ericsson-blue focus:px-4 focus:py-2 focus:text-white">Skip to content</a>
 
-<header class="sticky top-0 z-50 bg-white/95 shadow-[0_1px_0_rgba(0,0,0,0.06)] backdrop-blur">
-  <!-- Utility bar -->
-  <div class="bg-sembcorp-green-darker text-white">
-    <div class="container flex h-9 items-center justify-between text-[11px] font-medium tracking-wide">
-      <span class="hidden sm:inline text-white/70">A publication inspired by the energy transition</span>
-      <nav class="flex items-center gap-5" aria-label="Utility">
-          <a class="hover:text-white/80" href="https://blogco.github.io/brandblog/news/">News & Insights</a>
-          <a class="hover:text-white/80" href="https://blogco.github.io/brandblog/branding/#contact">Contact</a>
-      </nav>
-    </div>
-  </div>
-
-  <!-- Main bar -->
-  <div class="container flex items-center justify-between py-3">
-    <a href="https://blogco.github.io/brandblog/" class="flex items-center gap-2.5" aria-label="BrandBlog home">
-      <img src="https://blogco.github.io/brandblog/static/images/logo.svg" alt="" class="h-9 w-9" width="36" height="36">
-      <span class="flex flex-col leading-none">
-        <span class="text-lg font-bold tracking-tight text-sembcorp-ink">BrandBlog</span>
-        <span class="mt-0.5 hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-sembcorp-green sm:block">Energy &amp; Sustainability</span>
-      </span>
+<header class="sticky top-0 z-50 border-b border-ericsson-border bg-white">
+  <div class="container flex h-[72px] items-center justify-between gap-4">
+    <a href="https://blogco.github.io/brandblog/" class="flex items-center gap-3" aria-label="BrandBlog home">
+      <img src="https://blogco.github.io/brandblog/static/images/logo.svg" alt="" class="h-8 w-8" width="32" height="32">
+      <span class="text-xl font-bold tracking-tight text-ericsson-black">BrandBlog</span>
     </a>
 
-    <nav class="hidden items-center gap-7 md:flex" aria-label="Primary">
+    <nav class="hidden items-center gap-8 md:flex" aria-label="Primary">
         <a href="https://blogco.github.io/brandblog/" class="nav-link" >Home</a>
         <a href="https://blogco.github.io/brandblog/news/" class="nav-link" >News</a>
         <a href="https://blogco.github.io/brandblog/branding/" class="nav-link" aria-current="page">Branding</a>
         <a href="https://blogco.github.io/brandblog/cargo-dictionary/" class="nav-link" >Từ điển Cargo</a>
-      <a href="https://blogco.github.io/brandblog/news/" class="btn-primary !py-2.5 !text-[13px]">Subscribe</a>
     </nav>
 
-    <button id="menu-toggle" type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-sembcorp-line text-sembcorp-ink md:hidden" aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation">
-      <svg id="menu-icon-open" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-      <svg id="menu-icon-close" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-    </button>
+    <div class="flex items-center gap-1.5">
+      <a href="https://blogco.github.io/brandblog/news/" class="btn-primary mr-1 hidden !py-2.5 !text-[13px] lg:inline-flex">Subscribe</a>
+
+      <button id="search-toggle" type="button" class="inline-flex h-10 w-10 items-center justify-center text-ericsson-black transition-colors hover:text-ericsson-blue focus:outline-none focus-visible:ring-2 focus-visible:ring-ericsson-blue" aria-controls="search-panel" aria-expanded="false" aria-label="Search">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </button>
+
+      <button id="menu-toggle" type="button" class="inline-flex h-10 w-10 items-center justify-center text-ericsson-black transition-colors hover:text-ericsson-blue focus:outline-none focus-visible:ring-2 focus-visible:ring-ericsson-blue md:hidden" aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <svg id="menu-icon-open" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <svg id="menu-icon-close" class="hidden h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Search panel (demo: submits to the newsroom) -->
+  <div id="search-panel" class="hidden border-t border-ericsson-border bg-white">
+    <div class="container py-4">
+      <form action="https://blogco.github.io/brandblog/news/" method="get" role="search" class="flex items-center gap-3 border-b-2 border-ericsson-black pb-2">
+        <svg class="h-5 w-5 shrink-0 text-ericsson-gray" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <label class="sr-only" for="header-search">Search BrandBlog</label>
+        <input id="header-search" name="q" type="search" placeholder="Search news and insights…" class="w-full border-0 bg-transparent py-2 text-base text-ericsson-black placeholder:text-ericsson-gray focus:outline-none">
+        <button type="submit" class="btn-primary !py-2 !text-[13px]">Search</button>
+      </form>
+    </div>
   </div>
 
   <!-- Mobile drawer -->
-  <div id="mobile-menu" class="hidden border-t border-sembcorp-line bg-white md:hidden">
-    <nav class="container flex flex-col py-3" aria-label="Mobile">
-        <a href="https://blogco.github.io/brandblog/" class="border-b border-sembcorp-line py-3 text-base font-semibold text-sembcorp-ink" >Home</a>
-        <a href="https://blogco.github.io/brandblog/news/" class="border-b border-sembcorp-line py-3 text-base font-semibold text-sembcorp-ink" >News</a>
-        <a href="https://blogco.github.io/brandblog/branding/" class="border-b border-sembcorp-line py-3 text-base font-semibold text-sembcorp-green" aria-current="page">Branding</a>
-        <a href="https://blogco.github.io/brandblog/cargo-dictionary/" class="border-b border-sembcorp-line py-3 text-base font-semibold text-sembcorp-ink" >Từ điển Cargo</a>
+  <div id="mobile-menu" class="hidden border-t border-ericsson-border bg-white md:hidden">
+    <nav class="container flex flex-col py-2" aria-label="Mobile">
+        <a href="https://blogco.github.io/brandblog/" class="border-b border-ericsson-border py-3.5 text-base font-bold text-ericsson-black" >Home</a>
+        <a href="https://blogco.github.io/brandblog/news/" class="border-b border-ericsson-border py-3.5 text-base font-bold text-ericsson-black" >News</a>
+        <a href="https://blogco.github.io/brandblog/branding/" class="border-b border-ericsson-border py-3.5 text-base font-bold text-ericsson-blue" aria-current="page">Branding</a>
+        <a href="https://blogco.github.io/brandblog/cargo-dictionary/" class="border-b border-ericsson-border py-3.5 text-base font-bold text-ericsson-black" >Từ điển Cargo</a>
       <a href="https://blogco.github.io/brandblog/news/" class="btn-primary mt-4">Subscribe to alerts</a>
     </nav>
   </div>
 </header>
-<section class="relative isolate overflow-hidden bg-sembcorp-green-darker">
+<section class="relative isolate overflow-hidden bg-ericsson-black">
   <img src="https://blogco.github.io/brandblog/static/images/hero-branding.svg" alt="" class="absolute inset-0 -z-10 h-full w-full object-cover opacity-60" width="1920" height="720">
-  <div class="absolute inset-0 -z-10 bg-gradient-to-r from-sembcorp-green-darker via-sembcorp-green-darker/85 to-sembcorp-green/40"></div>
+  <div class="absolute inset-0 -z-10 bg-gradient-to-r from-ericsson-black via-ericsson-black/85 to-ericsson-blue/40"></div>
   <div class="container py-16 md:py-20">
     <nav aria-label="Breadcrumb" class="text-xs font-medium text-white/70">
       <ol class="flex items-center gap-2">
@@ -88,7 +92,7 @@
     <h1 class="mt-3 max-w-3xl text-balance text-4xl font-bold leading-tight text-white md:text-5xl">Brand guidelines &amp; design system</h1>
     <p class="mt-4 max-w-2xl text-lg leading-relaxed text-white/85">
       The principles, palette, typography, iconography and UI/UX foundations behind this
-      publication — adapted from a Sembcorp-inspired visual language.
+      publication — adapted from an Ericsson-inspired visual language.
     </p>
     <div class="mt-8 flex flex-wrap gap-3">
       <a href="#colours" class="btn-ghost-light">Colour palette</a>
@@ -104,135 +108,136 @@
   <div class="container grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
     <div>
       <p class="eyebrow">01 — Brand guideline</p>
-      <h2 class="mt-2 text-3xl font-bold text-sembcorp-ink md:text-4xl">Our brand principles</h2>
-      <p class="mt-5 leading-relaxed text-sembcorp-gray">
+      <h2 class="mt-2 text-3xl font-bold text-ericsson-black md:text-4xl">Our brand principles</h2>
+      <p class="mt-5 leading-relaxed text-ericsson-gray">
         A consistent visual language builds trust. This system keeps every page, card and
         component recognisable, accessible and aligned with our purpose — to do good and
         play our part in building a sustainable future.
       </p>
-      <div class="mt-8 overflow-hidden rounded-sm border border-sembcorp-line">
-        <div class="flex items-center gap-4 border-b border-sembcorp-line p-5">
+      <div class="mt-8 overflow-hidden rounded-sm border border-ericsson-border">
+        <div class="flex items-center gap-4 border-b border-ericsson-border p-5">
           <img src="https://blogco.github.io/brandblog/static/images/logo.svg" alt="" class="h-12 w-12" width="48" height="48">
           <div>
-            <p class="font-bold text-sembcorp-ink">BrandBlog logo</p>
-            <p class="text-xs text-sembcorp-gray">Primary mark on light surfaces. Minimum clear space = height of the mark.</p>
+            <p class="font-bold text-ericsson-black">BrandBlog logo</p>
+            <p class="text-xs text-ericsson-gray">Primary mark on light surfaces. Minimum clear space = height of the mark.</p>
           </div>
         </div>
-        <div class="flex items-center gap-4 bg-sembcorp-green-darker p-5">
+        <div class="flex items-center gap-4 bg-ericsson-black p-5">
           <img src="https://blogco.github.io/brandblog/static/images/logo-white.svg" alt="" class="h-12 w-12" width="48" height="48">
           <div>
             <p class="font-bold text-white">Reversed logo</p>
-            <p class="text-xs text-white/70">Use the white mark on the deep-green brand surface.</p>
+            <p class="text-xs text-white/70">Use the white mark on the deep-blue or black brand surface.</p>
           </div>
         </div>
       </div>
     </div>
 
     <div class="grid gap-6 sm:grid-cols-3">
-        <div class="rounded-sm border border-sembcorp-line p-6">
-          <span class="text-sm font-bold text-sembcorp-green">01</span>
-          <h3 class="mt-3 text-lg font-bold text-sembcorp-ink">Insight</h3>
-          <p class="mt-2 text-sm leading-relaxed text-sembcorp-gray">We turn complexity into clarity with evidence-led thinking.</p>
+        <div class="rounded-sm border border-ericsson-border p-6">
+          <span class="text-sm font-bold text-ericsson-blue">01</span>
+          <h3 class="mt-3 text-lg font-bold text-ericsson-black">Insight</h3>
+          <p class="mt-2 text-sm leading-relaxed text-ericsson-gray">We turn complexity into clarity with evidence-led thinking.</p>
         </div>
-        <div class="rounded-sm border border-sembcorp-line p-6">
-          <span class="text-sm font-bold text-sembcorp-green">02</span>
-          <h3 class="mt-3 text-lg font-bold text-sembcorp-ink">Integrity</h3>
-          <p class="mt-2 text-sm leading-relaxed text-sembcorp-gray">We act with honesty, accountability and respect for every stakeholder.</p>
+        <div class="rounded-sm border border-ericsson-border p-6">
+          <span class="text-sm font-bold text-ericsson-blue">02</span>
+          <h3 class="mt-3 text-lg font-bold text-ericsson-black">Integrity</h3>
+          <p class="mt-2 text-sm leading-relaxed text-ericsson-gray">We act with honesty, accountability and respect for every stakeholder.</p>
         </div>
-        <div class="rounded-sm border border-sembcorp-line p-6">
-          <span class="text-sm font-bold text-sembcorp-green">03</span>
-          <h3 class="mt-3 text-lg font-bold text-sembcorp-ink">Integral</h3>
-          <p class="mt-2 text-sm leading-relaxed text-sembcorp-gray">We deliver end-to-end solutions that work as one integrated system.</p>
+        <div class="rounded-sm border border-ericsson-border p-6">
+          <span class="text-sm font-bold text-ericsson-blue">03</span>
+          <h3 class="mt-3 text-lg font-bold text-ericsson-black">Integral</h3>
+          <p class="mt-2 text-sm leading-relaxed text-ericsson-gray">We deliver end-to-end solutions that work as one integrated system.</p>
         </div>
     </div>
   </div>
 </section>
 
 <!-- Colour palette -->
-<section id="colours" class="section bg-sembcorp-mist">
+<section id="colours" class="section bg-ericsson-mist">
   <div class="container">
     <p class="eyebrow">02 — Colour palette</p>
-    <h2 class="mt-2 text-3xl font-bold text-sembcorp-ink md:text-4xl">Colours</h2>
-    <p class="mt-4 max-w-2xl text-sembcorp-gray">
-      Deep green leads, with blue and orange as accents. Click any swatch to copy its hex value.
+    <h2 class="mt-2 text-3xl font-bold text-ericsson-black md:text-4xl">Colours</h2>
+    <p class="mt-4 max-w-2xl text-ericsson-gray">
+      Brand blue leads, black carries text and dark surfaces, with yellow as a sparing
+      highlight. Click any swatch to copy its hex value.
     </p>
     <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <button type="button" class="brand-swatch group overflow-hidden rounded-sm border border-sembcorp-line text-left" data-hex="#006C53">
+        <button type="button" class="brand-swatch group overflow-hidden rounded-sm border border-ericsson-border text-left" data-hex="#006C53">
           <span class="flex h-32 w-full items-end justify-between p-4" style="background-color: #006C53;">
             <span class="text-xs font-bold uppercase tracking-wide text-white/80">Primary / accent</span>
             <span class="rounded-full bg-black/10 px-2 py-1 text-[10px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">Copy</span>
           </span>
-          <span class="flex items-center justify-between border-t border-sembcorp-line bg-white px-4 py-3">
+          <span class="flex items-center justify-between border-t border-ericsson-border bg-white px-4 py-3">
             <span>
-              <span class="block text-sm font-bold text-sembcorp-ink">Tropical Rain Forest</span>
-              <span class="block font-mono text-xs text-sembcorp-gray">#006C53</span>
+              <span class="block text-sm font-bold text-ericsson-black">Tropical Rain Forest</span>
+              <span class="block font-mono text-xs text-ericsson-gray">#006C53</span>
             </span>
-            <span class="text-xs font-semibold text-sembcorp-green">HEX</span>
+            <span class="text-xs font-semibold text-ericsson-blue">HEX</span>
           </span>
         </button>
-        <button type="button" class="brand-swatch group overflow-hidden rounded-sm border border-sembcorp-line text-left" data-hex="#0095FF">
+        <button type="button" class="brand-swatch group overflow-hidden rounded-sm border border-ericsson-border text-left" data-hex="#0095FF">
           <span class="flex h-32 w-full items-end justify-between p-4" style="background-color: #0095FF;">
             <span class="text-xs font-bold uppercase tracking-wide text-white/80">Secondary accent</span>
             <span class="rounded-full bg-black/10 px-2 py-1 text-[10px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">Copy</span>
           </span>
-          <span class="flex items-center justify-between border-t border-sembcorp-line bg-white px-4 py-3">
+          <span class="flex items-center justify-between border-t border-ericsson-border bg-white px-4 py-3">
             <span>
-              <span class="block text-sm font-bold text-sembcorp-ink">Azure Radiance</span>
-              <span class="block font-mono text-xs text-sembcorp-gray">#0095FF</span>
+              <span class="block text-sm font-bold text-ericsson-black">Azure Radiance</span>
+              <span class="block font-mono text-xs text-ericsson-gray">#0095FF</span>
             </span>
-            <span class="text-xs font-semibold text-sembcorp-green">HEX</span>
+            <span class="text-xs font-semibold text-ericsson-blue">HEX</span>
           </span>
         </button>
-        <button type="button" class="brand-swatch group overflow-hidden rounded-sm border border-sembcorp-line text-left" data-hex="#FF6400">
+        <button type="button" class="brand-swatch group overflow-hidden rounded-sm border border-ericsson-border text-left" data-hex="#FF6400">
           <span class="flex h-32 w-full items-end justify-between p-4" style="background-color: #FF6400;">
             <span class="text-xs font-bold uppercase tracking-wide text-white/80">Tertiary accent</span>
             <span class="rounded-full bg-black/10 px-2 py-1 text-[10px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">Copy</span>
           </span>
-          <span class="flex items-center justify-between border-t border-sembcorp-line bg-white px-4 py-3">
+          <span class="flex items-center justify-between border-t border-ericsson-border bg-white px-4 py-3">
             <span>
-              <span class="block text-sm font-bold text-sembcorp-ink">Blaze Orange</span>
-              <span class="block font-mono text-xs text-sembcorp-gray">#FF6400</span>
+              <span class="block text-sm font-bold text-ericsson-black">Blaze Orange</span>
+              <span class="block font-mono text-xs text-ericsson-gray">#FF6400</span>
             </span>
-            <span class="text-xs font-semibold text-sembcorp-green">HEX</span>
+            <span class="text-xs font-semibold text-ericsson-blue">HEX</span>
           </span>
         </button>
-        <button type="button" class="brand-swatch group overflow-hidden rounded-sm border border-sembcorp-line text-left" data-hex="#FFFFFF">
+        <button type="button" class="brand-swatch group overflow-hidden rounded-sm border border-ericsson-border text-left" data-hex="#FFFFFF">
           <span class="flex h-32 w-full items-end justify-between p-4" style="background-color: #FFFFFF;">
-            <span class="text-xs font-bold uppercase tracking-wide text-sembcorp-ink/70">Surface / reversed text</span>
-            <span class="rounded-full bg-black/10 px-2 py-1 text-[10px] font-semibold text-sembcorp-ink opacity-0 transition-opacity group-hover:opacity-100">Copy</span>
+            <span class="text-xs font-bold uppercase tracking-wide text-ericsson-black/70">Surface / reversed text</span>
+            <span class="rounded-full bg-black/10 px-2 py-1 text-[10px] font-semibold text-ericsson-black opacity-0 transition-opacity group-hover:opacity-100">Copy</span>
           </span>
-          <span class="flex items-center justify-between border-t border-sembcorp-line bg-white px-4 py-3">
+          <span class="flex items-center justify-between border-t border-ericsson-border bg-white px-4 py-3">
             <span>
-              <span class="block text-sm font-bold text-sembcorp-ink">White</span>
-              <span class="block font-mono text-xs text-sembcorp-gray">#FFFFFF</span>
+              <span class="block text-sm font-bold text-ericsson-black">White</span>
+              <span class="block font-mono text-xs text-ericsson-gray">#FFFFFF</span>
             </span>
-            <span class="text-xs font-semibold text-sembcorp-green">HEX</span>
+            <span class="text-xs font-semibold text-ericsson-blue">HEX</span>
           </span>
         </button>
-        <button type="button" class="brand-swatch group overflow-hidden rounded-sm border border-sembcorp-line text-left" data-hex="#464646">
+        <button type="button" class="brand-swatch group overflow-hidden rounded-sm border border-ericsson-border text-left" data-hex="#464646">
           <span class="flex h-32 w-full items-end justify-between p-4" style="background-color: #464646;">
             <span class="text-xs font-bold uppercase tracking-wide text-white/80">Body text</span>
             <span class="rounded-full bg-black/10 px-2 py-1 text-[10px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">Copy</span>
           </span>
-          <span class="flex items-center justify-between border-t border-sembcorp-line bg-white px-4 py-3">
+          <span class="flex items-center justify-between border-t border-ericsson-border bg-white px-4 py-3">
             <span>
-              <span class="block text-sm font-bold text-sembcorp-ink">Tundora</span>
-              <span class="block font-mono text-xs text-sembcorp-gray">#464646</span>
+              <span class="block text-sm font-bold text-ericsson-black">Tundora</span>
+              <span class="block font-mono text-xs text-ericsson-gray">#464646</span>
             </span>
-            <span class="text-xs font-semibold text-sembcorp-green">HEX</span>
+            <span class="text-xs font-semibold text-ericsson-blue">HEX</span>
           </span>
         </button>
-        <button type="button" class="brand-swatch group overflow-hidden rounded-sm border border-sembcorp-line text-left" data-hex="#1A1A1A">
+        <button type="button" class="brand-swatch group overflow-hidden rounded-sm border border-ericsson-border text-left" data-hex="#1A1A1A">
           <span class="flex h-32 w-full items-end justify-between p-4" style="background-color: #1A1A1A;">
             <span class="text-xs font-bold uppercase tracking-wide text-white/80">Headings</span>
             <span class="rounded-full bg-black/10 px-2 py-1 text-[10px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">Copy</span>
           </span>
-          <span class="flex items-center justify-between border-t border-sembcorp-line bg-white px-4 py-3">
+          <span class="flex items-center justify-between border-t border-ericsson-border bg-white px-4 py-3">
             <span>
-              <span class="block text-sm font-bold text-sembcorp-ink">Ink</span>
-              <span class="block font-mono text-xs text-sembcorp-gray">#1A1A1A</span>
+              <span class="block text-sm font-bold text-ericsson-black">Ink</span>
+              <span class="block font-mono text-xs text-ericsson-gray">#1A1A1A</span>
             </span>
-            <span class="text-xs font-semibold text-sembcorp-green">HEX</span>
+            <span class="text-xs font-semibold text-ericsson-blue">HEX</span>
           </span>
         </button>
     </div>
@@ -244,54 +249,54 @@
   <div class="container grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
     <div>
       <p class="eyebrow">03 — Typography</p>
-      <h2 class="mt-2 text-3xl font-bold text-sembcorp-ink md:text-4xl">Typeface</h2>
-      <p class="mt-5 leading-relaxed text-sembcorp-gray">
-        The brand typeface is <strong class="text-sembcorp-ink">Frutiger</strong>, a humanist sans-serif.
-        Because Frutiger is licensed and cannot be redistributed on the web, this build uses a
-        faithful fallback stack:
+      <h2 class="mt-2 text-3xl font-bold text-ericsson-black md:text-4xl">Typeface</h2>
+      <p class="mt-5 leading-relaxed text-ericsson-gray">
+        The brand typeface is <strong class="text-ericsson-black">Ericsson Hilda</strong>, a humanist sans-serif.
+        Because Ericsson Hilda is proprietary and cannot be redistributed on the web, this build
+        uses a faithful fallback stack:
       </p>
-      <p class="mt-4 rounded-sm border border-sembcorp-line bg-sembcorp-mist p-4 font-mono text-sm text-sembcorp-ink">
-        Frutiger, "Helvetica Neue", Helvetica, Arial, sans-serif
+      <p class="mt-4 rounded-sm border border-ericsson-border bg-ericsson-mist p-4 font-mono text-sm text-ericsson-black">
+        "Ericsson Hilda", Arial, sans-serif
       </p>
       <dl class="mt-8 space-y-3 text-sm">
-          <div class="flex justify-between border-b border-sembcorp-line pb-2">
-            <dt class="font-semibold text-sembcorp-ink">Regular 400</dt>
-            <dd class="text-sembcorp-gray">Body copy, captions</dd>
+          <div class="flex justify-between border-b border-ericsson-border pb-2">
+            <dt class="font-semibold text-ericsson-black">Regular 400</dt>
+            <dd class="text-ericsson-gray">Body copy, captions</dd>
           </div>
-          <div class="flex justify-between border-b border-sembcorp-line pb-2">
-            <dt class="font-semibold text-sembcorp-ink">Semibold 600</dt>
-            <dd class="text-sembcorp-gray">Sub-headings, buttons, labels</dd>
+          <div class="flex justify-between border-b border-ericsson-border pb-2">
+            <dt class="font-semibold text-ericsson-black">Semibold 600</dt>
+            <dd class="text-ericsson-gray">Sub-headings, buttons, labels</dd>
           </div>
-          <div class="flex justify-between border-b border-sembcorp-line pb-2">
-            <dt class="font-semibold text-sembcorp-ink">Bold 700</dt>
-            <dd class="text-sembcorp-gray">Headings, eyebrows</dd>
+          <div class="flex justify-between border-b border-ericsson-border pb-2">
+            <dt class="font-semibold text-ericsson-black">Bold 700</dt>
+            <dd class="text-ericsson-gray">Headings, eyebrows</dd>
           </div>
       </dl>
     </div>
 
-    <div class="rounded-sm border border-sembcorp-line p-8">
+    <div class="rounded-sm border border-ericsson-border p-8">
       <div class="space-y-6">
         <div>
-          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-sembcorp-green">Display / H1 · 48–60px</p>
-          <p class="mt-1 text-4xl font-bold leading-tight text-sembcorp-ink md:text-5xl">Insight that moves energy forward</p>
+          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-ericsson-blue">Display / H1 · 48–60px</p>
+          <p class="mt-1 text-4xl font-bold leading-tight text-ericsson-black md:text-5xl">Insight that moves energy forward</p>
         </div>
-        <div class="border-t border-sembcorp-line pt-6">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-sembcorp-green">Heading / H2 · 32–40px</p>
-          <p class="mt-1 text-3xl font-bold text-sembcorp-ink">Building a sustainable future</p>
+        <div class="border-t border-ericsson-border pt-6">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-ericsson-blue">Heading / H2 · 32–40px</p>
+          <p class="mt-1 text-3xl font-bold text-ericsson-black">Building a sustainable future</p>
         </div>
-        <div class="border-t border-sembcorp-line pt-6">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-sembcorp-green">Sub-heading / H3 · 24px</p>
-          <p class="mt-1 text-2xl font-semibold text-sembcorp-ink">Integrated urban solutions</p>
+        <div class="border-t border-ericsson-border pt-6">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-ericsson-blue">Sub-heading / H3 · 24px</p>
+          <p class="mt-1 text-2xl font-semibold text-ericsson-black">Integrated urban solutions</p>
         </div>
-        <div class="border-t border-sembcorp-line pt-6">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-sembcorp-green">Body · 16–18px / 1.6</p>
-          <p class="mt-1 text-[17px] leading-relaxed text-sembcorp-gray">
+        <div class="border-t border-ericsson-border pt-6">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-ericsson-blue">Body · 16–18px / 1.6</p>
+          <p class="mt-1 text-[17px] leading-relaxed text-ericsson-gray">
             We pair evidence-led thinking with clear, concise language — turning complex energy and
             urban challenges into insight that readers can act on.
           </p>
         </div>
-        <div class="border-t border-sembcorp-line pt-6">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-sembcorp-green">Label / eyebrow · 12–14px</p>
+        <div class="border-t border-ericsson-border pt-6">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-ericsson-blue">Label / eyebrow · 12–14px</p>
           <p class="mt-2 eyebrow">Driving the energy transition</p>
         </div>
       </div>
@@ -300,54 +305,54 @@
 </section>
 
 <!-- Icon set -->
-<section id="icons" class="section bg-sembcorp-mist">
+<section id="icons" class="section bg-ericsson-mist">
   <div class="container">
     <p class="eyebrow">04 — Iconography</p>
-    <h2 class="mt-2 text-3xl font-bold text-sembcorp-ink md:text-4xl">Icon set</h2>
-    <p class="mt-4 max-w-2xl text-sembcorp-gray">
+    <h2 class="mt-2 text-3xl font-bold text-ericsson-black md:text-4xl">Icon set</h2>
+    <p class="mt-4 max-w-2xl text-ericsson-gray">
       A minimal, line-style set drawn on a 24px grid with a consistent 2px stroke and rounded caps.
-      Icons render in the brand green on light surfaces.
+      Icons render in the brand blue on light surfaces.
     </p>
     <div class="mt-10 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5">
-        <div class="group flex flex-col items-center gap-3 rounded-sm border border-sembcorp-line bg-white p-6 text-center transition-colors hover:border-sembcorp-green">
-          <svg class="h-8 w-8 text-sembcorp-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-          <span class="text-xs font-semibold text-sembcorp-gray">Solar</span>
+        <div class="group flex flex-col items-center gap-3 rounded-sm border border-ericsson-border bg-white p-6 text-center transition-colors hover:border-ericsson-blue">
+          <svg class="h-8 w-8 text-ericsson-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <span class="text-xs font-semibold text-ericsson-gray">Solar</span>
         </div>
-        <div class="group flex flex-col items-center gap-3 rounded-sm border border-sembcorp-line bg-white p-6 text-center transition-colors hover:border-sembcorp-green">
-          <svg class="h-8 w-8 text-sembcorp-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h9a3 3 0 1 0-3-3M3 12h13a3 3 0 1 1-3 3M3 16h6"/></svg>
-          <span class="text-xs font-semibold text-sembcorp-gray">Wind</span>
+        <div class="group flex flex-col items-center gap-3 rounded-sm border border-ericsson-border bg-white p-6 text-center transition-colors hover:border-ericsson-blue">
+          <svg class="h-8 w-8 text-ericsson-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h9a3 3 0 1 0-3-3M3 12h13a3 3 0 1 1-3 3M3 16h6"/></svg>
+          <span class="text-xs font-semibold text-ericsson-gray">Wind</span>
         </div>
-        <div class="group flex flex-col items-center gap-3 rounded-sm border border-sembcorp-line bg-white p-6 text-center transition-colors hover:border-sembcorp-green">
-          <svg class="h-8 w-8 text-sembcorp-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h12v10H4zM16 10h2a2 2 0 0 1 0 4h-2M9 9l-3 4h3l-1 3 4-5H9z"/></svg>
-          <span class="text-xs font-semibold text-sembcorp-gray">Energy storage</span>
+        <div class="group flex flex-col items-center gap-3 rounded-sm border border-ericsson-border bg-white p-6 text-center transition-colors hover:border-ericsson-blue">
+          <svg class="h-8 w-8 text-ericsson-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h12v10H4zM16 10h2a2 2 0 0 1 0 4h-2M9 9l-3 4h3l-1 3 4-5H9z"/></svg>
+          <span class="text-xs font-semibold text-ericsson-gray">Energy storage</span>
         </div>
-        <div class="group flex flex-col items-center gap-3 rounded-sm border border-sembcorp-line bg-white p-6 text-center transition-colors hover:border-sembcorp-green">
-          <svg class="h-8 w-8 text-sembcorp-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s6 6.5 6 10.5A6 6 0 0 1 6 13.5C6 9.5 12 3 12 3zM12 18a3 3 0 0 0 3-3"/></svg>
-          <span class="text-xs font-semibold text-sembcorp-gray">Water</span>
+        <div class="group flex flex-col items-center gap-3 rounded-sm border border-ericsson-border bg-white p-6 text-center transition-colors hover:border-ericsson-blue">
+          <svg class="h-8 w-8 text-ericsson-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s6 6.5 6 10.5A6 6 0 0 1 6 13.5C6 9.5 12 3 12 3zM12 18a3 3 0 0 0 3-3"/></svg>
+          <span class="text-xs font-semibold text-ericsson-gray">Water</span>
         </div>
-        <div class="group flex flex-col items-center gap-3 rounded-sm border border-sembcorp-line bg-white p-6 text-center transition-colors hover:border-sembcorp-green">
-          <svg class="h-8 w-8 text-sembcorp-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5l2 3M17 5l-2 3M4 13h16M6 13l1.5 7h9L18 13M9 17h6"/></svg>
-          <span class="text-xs font-semibold text-sembcorp-gray">Waste-to-resource</span>
+        <div class="group flex flex-col items-center gap-3 rounded-sm border border-ericsson-border bg-white p-6 text-center transition-colors hover:border-ericsson-blue">
+          <svg class="h-8 w-8 text-ericsson-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5l2 3M17 5l-2 3M4 13h16M6 13l1.5 7h9L18 13M9 17h6"/></svg>
+          <span class="text-xs font-semibold text-ericsson-gray">Waste-to-resource</span>
         </div>
-        <div class="group flex flex-col items-center gap-3 rounded-sm border border-sembcorp-line bg-white p-6 text-center transition-colors hover:border-sembcorp-green">
-          <svg class="h-8 w-8 text-sembcorp-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18M6 20v-6M11 20V8M16 20v-9M21 20V5"/></svg>
-          <span class="text-xs font-semibold text-sembcorp-gray">Growth</span>
+        <div class="group flex flex-col items-center gap-3 rounded-sm border border-ericsson-border bg-white p-6 text-center transition-colors hover:border-ericsson-blue">
+          <svg class="h-8 w-8 text-ericsson-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18M6 20v-6M11 20V8M16 20v-9M21 20V5"/></svg>
+          <span class="text-xs font-semibold text-ericsson-gray">Growth</span>
         </div>
-        <div class="group flex flex-col items-center gap-3 rounded-sm border border-sembcorp-line bg-white p-6 text-center transition-colors hover:border-sembcorp-green">
-          <svg class="h-8 w-8 text-sembcorp-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-2a4 4 0 0 0-8 0v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM22 20v-2a3 3 0 0 0-2-2.8M2 20v-2a3 3 0 0 1 2-2.8"/></svg>
-          <span class="text-xs font-semibold text-sembcorp-gray">Community</span>
+        <div class="group flex flex-col items-center gap-3 rounded-sm border border-ericsson-border bg-white p-6 text-center transition-colors hover:border-ericsson-blue">
+          <svg class="h-8 w-8 text-ericsson-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-2a4 4 0 0 0-8 0v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM22 20v-2a3 3 0 0 0-2-2.8M2 20v-2a3 3 0 0 1 2-2.8"/></svg>
+          <span class="text-xs font-semibold text-ericsson-gray">Community</span>
         </div>
-        <div class="group flex flex-col items-center gap-3 rounded-sm border border-sembcorp-line bg-white p-6 text-center transition-colors hover:border-sembcorp-green">
-          <svg class="h-8 w-8 text-sembcorp-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/></svg>
-          <span class="text-xs font-semibold text-sembcorp-gray">Innovation</span>
+        <div class="group flex flex-col items-center gap-3 rounded-sm border border-ericsson-border bg-white p-6 text-center transition-colors hover:border-ericsson-blue">
+          <svg class="h-8 w-8 text-ericsson-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/></svg>
+          <span class="text-xs font-semibold text-ericsson-gray">Innovation</span>
         </div>
-        <div class="group flex flex-col items-center gap-3 rounded-sm border border-sembcorp-line bg-white p-6 text-center transition-colors hover:border-sembcorp-green">
-          <svg class="h-8 w-8 text-sembcorp-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>
-          <span class="text-xs font-semibold text-sembcorp-gray">Global reach</span>
+        <div class="group flex flex-col items-center gap-3 rounded-sm border border-ericsson-border bg-white p-6 text-center transition-colors hover:border-ericsson-blue">
+          <svg class="h-8 w-8 text-ericsson-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>
+          <span class="text-xs font-semibold text-ericsson-gray">Global reach</span>
         </div>
-        <div class="group flex flex-col items-center gap-3 rounded-sm border border-sembcorp-line bg-white p-6 text-center transition-colors hover:border-sembcorp-green">
-          <svg class="h-8 w-8 text-sembcorp-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6zM9 12l2 2 4-4"/></svg>
-          <span class="text-xs font-semibold text-sembcorp-gray">Integrity</span>
+        <div class="group flex flex-col items-center gap-3 rounded-sm border border-ericsson-border bg-white p-6 text-center transition-colors hover:border-ericsson-blue">
+          <svg class="h-8 w-8 text-ericsson-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6zM9 12l2 2 4-4"/></svg>
+          <span class="text-xs font-semibold text-ericsson-gray">Integrity</span>
         </div>
     </div>
   </div>
@@ -357,19 +362,19 @@
 <section id="components" class="section">
   <div class="container">
     <p class="eyebrow">05 — UI &amp; UX</p>
-    <h2 class="mt-2 text-3xl font-bold text-sembcorp-ink md:text-4xl">Components &amp; interaction</h2>
+    <h2 class="mt-2 text-3xl font-bold text-ericsson-black md:text-4xl">Components &amp; interaction</h2>
     <div class="mt-10 grid gap-10 lg:grid-cols-2">
       <div class="space-y-8">
         <div>
-          <h3 class="text-sm font-bold uppercase tracking-wide text-sembcorp-gray">Buttons</h3>
+          <h3 class="text-sm font-bold uppercase tracking-wide text-ericsson-gray">Buttons</h3>
           <div class="mt-4 flex flex-wrap items-center gap-3">
             <span class="btn-primary">Primary action</span>
             <span class="btn-outline">Secondary</span>
-            <span class="btn bg-sembcorp-mist text-sembcorp-ink hover:bg-sembcorp-line">Tertiary</span>
+            <span class="btn bg-ericsson-mist text-ericsson-black hover:bg-ericsson-border">Tertiary</span>
           </div>
         </div>
         <div>
-          <h3 class="text-sm font-bold uppercase tracking-wide text-sembcorp-gray">Chips &amp; filters</h3>
+          <h3 class="text-sm font-bold uppercase tracking-wide text-ericsson-gray">Chips &amp; filters</h3>
           <div class="mt-4 flex flex-wrap gap-2">
             <span class="chip">Corporate</span>
             <span class="chip">Renewables</span>
@@ -378,55 +383,56 @@
           </div>
         </div>
         <div>
-          <h3 class="text-sm font-bold uppercase tracking-wide text-sembcorp-gray">Spacing &amp; grid</h3>
-          <p class="mt-3 text-sm leading-relaxed text-sembcorp-gray">
+          <h3 class="text-sm font-bold uppercase tracking-wide text-ericsson-gray">Spacing &amp; grid</h3>
+          <p class="mt-3 text-sm leading-relaxed text-ericsson-gray">
             Mobile-first 12-column grid, max content width <span class="font-mono">1280px</span>,
             16–24px gutters. Section rhythm: eyebrow → heading → content, with generous
             vertical padding (<span class="font-mono">56–80px</span>).
           </p>
           <div class="mt-4 grid grid-cols-12 gap-1">
-              <span class="h-8 rounded-[2px] bg-sembcorp-green-wash"></span>
-              <span class="h-8 rounded-[2px] bg-sembcorp-green-wash"></span>
-              <span class="h-8 rounded-[2px] bg-sembcorp-green-wash"></span>
-              <span class="h-8 rounded-[2px] bg-sembcorp-green-wash"></span>
-              <span class="h-8 rounded-[2px] bg-sembcorp-green-wash"></span>
-              <span class="h-8 rounded-[2px] bg-sembcorp-green-wash"></span>
-              <span class="h-8 rounded-[2px] bg-sembcorp-green-wash"></span>
-              <span class="h-8 rounded-[2px] bg-sembcorp-green-wash"></span>
-              <span class="h-8 rounded-[2px] bg-sembcorp-green-wash"></span>
-              <span class="h-8 rounded-[2px] bg-sembcorp-green-wash"></span>
-              <span class="h-8 rounded-[2px] bg-sembcorp-green-wash"></span>
-              <span class="h-8 rounded-[2px] bg-sembcorp-green-wash"></span>
+              <span class="h-8 rounded-[2px] bg-ericsson-blue-wash"></span>
+              <span class="h-8 rounded-[2px] bg-ericsson-blue-wash"></span>
+              <span class="h-8 rounded-[2px] bg-ericsson-blue-wash"></span>
+              <span class="h-8 rounded-[2px] bg-ericsson-blue-wash"></span>
+              <span class="h-8 rounded-[2px] bg-ericsson-blue-wash"></span>
+              <span class="h-8 rounded-[2px] bg-ericsson-blue-wash"></span>
+              <span class="h-8 rounded-[2px] bg-ericsson-blue-wash"></span>
+              <span class="h-8 rounded-[2px] bg-ericsson-blue-wash"></span>
+              <span class="h-8 rounded-[2px] bg-ericsson-blue-wash"></span>
+              <span class="h-8 rounded-[2px] bg-ericsson-blue-wash"></span>
+              <span class="h-8 rounded-[2px] bg-ericsson-blue-wash"></span>
+              <span class="h-8 rounded-[2px] bg-ericsson-blue-wash"></span>
           </div>
         </div>
       </div>
 
-      <div class="rounded-sm border border-sembcorp-line bg-sembcorp-mist p-6">
-        <h3 class="text-sm font-bold uppercase tracking-wide text-sembcorp-gray">Motion</h3>
-        <ul class="mt-4 space-y-4 text-sm text-sembcorp-gray">
+      <div class="rounded-sm border border-ericsson-border bg-ericsson-mist p-6">
+        <h3 class="text-sm font-bold uppercase tracking-wide text-ericsson-gray">Motion</h3>
+        <ul class="mt-4 space-y-4 text-sm text-ericsson-gray">
             <li class="flex gap-3">
-              <svg class="mt-0.5 h-5 w-5 shrink-0 text-sembcorp-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span><strong class="text-sembcorp-ink">Hover.</strong> Card image zoom (1.05), headline colour shift, 150–300ms ease-out</span>
+              <svg class="mt-0.5 h-5 w-5 shrink-0 text-ericsson-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span><strong class="text-ericsson-black">Hover.</strong> Card image zoom (1.05), headline colour shift, 150–300ms ease-out</span>
             </li>
             <li class="flex gap-3">
-              <svg class="mt-0.5 h-5 w-5 shrink-0 text-sembcorp-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span><strong class="text-sembcorp-ink">Reveal.</strong> Subtle fade-up on hero content, 600ms ease-out</span>
+              <svg class="mt-0.5 h-5 w-5 shrink-0 text-ericsson-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span><strong class="text-ericsson-black">Reveal.</strong> Subtle fade-up on hero content, 600ms ease-out</span>
             </li>
             <li class="flex gap-3">
-              <svg class="mt-0.5 h-5 w-5 shrink-0 text-sembcorp-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span><strong class="text-sembcorp-ink">Focus.</strong> Visible 2px green focus ring for keyboard users</span>
+              <svg class="mt-0.5 h-5 w-5 shrink-0 text-ericsson-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span><strong class="text-ericsson-black">Focus.</strong> Visible 2px blue focus ring for keyboard users</span>
             </li>
             <li class="flex gap-3">
-              <svg class="mt-0.5 h-5 w-5 shrink-0 text-sembcorp-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-              <span><strong class="text-sembcorp-ink">Filtering.</strong> Instant, client-side content switching with no page reload</span>
+              <svg class="mt-0.5 h-5 w-5 shrink-0 text-ericsson-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span><strong class="text-ericsson-black">Filtering.</strong> Instant, client-side content switching with no page reload</span>
             </li>
         </ul>
-        <div class="mt-6 rounded-sm border border-sembcorp-line bg-white p-5">
-          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-sembcorp-green">Accessibility</p>
-          <p class="mt-2 text-sm leading-relaxed text-sembcorp-gray">
-            Brand green <span class="font-mono">#006C53</span> meets WCAG AA against white
-            (≈5.7:1). Body text uses near-black. All interactive elements expose visible focus
-            states and semantic landmarks.
+        <div class="mt-6 rounded-sm border border-ericsson-border bg-white p-5">
+          <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-ericsson-blue">Accessibility</p>
+          <p class="mt-2 text-sm leading-relaxed text-ericsson-gray">
+            Brand blue <span class="font-mono">#0082F0</span> carries accents, buttons and large
+            headings, while the darker <span class="font-mono">#0069C2</span> is used for body
+            links and icons that need AA contrast on white (≈5.0:1). Body copy is near-black on
+            white. All interactive elements expose visible focus states and semantic landmarks.
           </p>
         </div>
       </div>
@@ -435,83 +441,80 @@
 </section>
 
 <!-- Disclaimer -->
-<section class="border-t border-sembcorp-line bg-sembcorp-mist">
+<section class="border-t border-ericsson-border bg-ericsson-mist">
   <div class="container py-10 text-center">
-    <p class="mx-auto max-w-3xl text-sm text-sembcorp-gray">
+    <p class="mx-auto max-w-3xl text-sm text-ericsson-gray">
       This is an educational, non-commercial design-system demo. Colour values and brand
-      attributes are referenced for study only. Sembcorp and its logo are trademarks of
-      Sembcorp Industries Ltd; this site is not affiliated with or endorsed by Sembcorp.
+      attributes are referenced for study only. Ericsson and its logo are trademarks of
+      Telefonaktiebolaget LM Ericsson; this site is not affiliated with or endorsed by Ericsson.
     </p>
   </div>
 </section>
   </main>
 
-<footer class="mt-auto bg-sembcorp-green-darker text-white">
-  <div class="container grid gap-12 py-14 md:grid-cols-2 lg:grid-cols-6 lg:gap-8">
+<footer class="mt-auto bg-ericsson-black text-white">
+  <div class="container grid gap-12 py-16 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
     <!-- Brand + social -->
-    <div class="lg:col-span-2">
-      <a href="https://blogco.github.io/brandblog/" class="flex items-center gap-2.5" aria-label="BrandBlog home">
-        <img src="https://blogco.github.io/brandblog/static/images/logo-white.svg" alt="" class="h-9 w-9" width="36" height="36">
-        <span class="text-lg font-bold tracking-tight text-white">BrandBlog</span>
+    <div>
+      <a href="https://blogco.github.io/brandblog/" class="flex items-center gap-3" aria-label="BrandBlog home">
+        <img src="https://blogco.github.io/brandblog/static/images/logo-white.svg" alt="" class="h-8 w-8" width="32" height="32">
+        <span class="text-xl font-bold tracking-tight text-white">BrandBlog</span>
       </a>
-      <p class="mt-4 max-w-xs text-sm leading-relaxed text-white/70">BrandBlog is a static publication covering the energy transition, sustainability and the people driving a more sustainable future — with a design system inspired by Sembcorp.</p>
-      <div class="mt-6">
-        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-white/50">Follow us on</p>
-        <div class="mt-3 flex gap-3">
-            <a href="https://www.linkedin.com/company/sembcorp-industries-ltd" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 text-white/80 transition-colors hover:border-white hover:text-white" aria-label="LinkedIn" rel="noopener" target="_blank">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.5c0-1.3-.02-3-1.83-3-1.83 0-2.11 1.43-2.11 2.9V21H9z"/></svg>
-            </a>
-            <a href="https://x.com/sembcorp" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 text-white/80 transition-colors hover:border-white hover:text-white" aria-label="X" rel="noopener" target="_blank">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7 8 8.2 12h-6.4l-5-7.3L6 22H2.8l7.5-8.6L2.4 2h6.6l4.5 6.6zM17.8 20h1.8L8.3 4h-1.9z"/></svg>
-            </a>
-            <a href="https://www.youtube.com/@sembcorp" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 text-white/80 transition-colors hover:border-white hover:text-white" aria-label="YouTube" rel="noopener" target="_blank">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 7.2a2.5 2.5 0 00-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 002.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 001.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 001.8-1.8C22 15.2 22 12 22 12s0-3.2-.4-4.8zM10 15V9l5.2 3z"/></svg>
-            </a>
-        </div>
+      <p class="mt-4 max-w-sm text-sm leading-relaxed text-white/70">BrandBlog is a static publication covering the energy transition, sustainability and the people driving a more sustainable future — with a design system inspired by Sembcorp.</p>
+      <div class="mt-6 flex gap-3">
+          <a href="https://www.linkedin.com/company/sembcorp-industries-ltd" class="inline-flex h-10 w-10 items-center justify-center border border-white/25 text-white/80 transition-colors hover:border-white hover:bg-white hover:text-ericsson-black" aria-label="LinkedIn" rel="noopener" target="_blank">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.5c0-1.3-.02-3-1.83-3-1.83 0-2.11 1.43-2.11 2.9V21H9z"/></svg>
+          </a>
+          <a href="https://x.com/sembcorp" class="inline-flex h-10 w-10 items-center justify-center border border-white/25 text-white/80 transition-colors hover:border-white hover:bg-white hover:text-ericsson-black" aria-label="X" rel="noopener" target="_blank">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7 8 8.2 12h-6.4l-5-7.3L6 22H2.8l7.5-8.6L2.4 2h6.6l4.5 6.6zM17.8 20h1.8L8.3 4h-1.9z"/></svg>
+          </a>
+          <a href="https://www.youtube.com/@sembcorp" class="inline-flex h-10 w-10 items-center justify-center border border-white/25 text-white/80 transition-colors hover:border-white hover:bg-white hover:text-ericsson-black" aria-label="YouTube" rel="noopener" target="_blank">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 7.2a2.5 2.5 0 00-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 002.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 001.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 001.8-1.8C22 15.2 22 12 22 12s0-3.2-.4-4.8zM10 15V9l5.2 3z"/></svg>
+          </a>
       </div>
     </div>
 
     <!-- Link columns -->
       <nav aria-label="Explore">
-        <h2 class="text-sm font-bold uppercase tracking-[0.16em] text-white">Explore</h2>
+        <h2 class="text-sm font-bold text-white">Explore</h2>
         <div class="mt-4">
-            <a class="footer-link" href="https://blogco.github.io/brandblog/">Home</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/news/">News & Insights</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/branding/">Branding</a>
+            <a href="https://blogco.github.io/brandblog/" class="footer-link">Home</a>
+            <a href="https://blogco.github.io/brandblog/news/" class="footer-link">News & Insights</a>
+            <a href="https://blogco.github.io/brandblog/branding/" class="footer-link">Branding</a>
         </div>
       </nav>
       <nav aria-label="Topics">
-        <h2 class="text-sm font-bold uppercase tracking-[0.16em] text-white">Topics</h2>
+        <h2 class="text-sm font-bold text-white">Topics</h2>
         <div class="mt-4">
-            <a class="footer-link" href="https://blogco.github.io/brandblog/news/">Corporate</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/news/">Renewables</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/news/">Financial Results</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/news/">Innovation</a>
+            <a href="https://blogco.github.io/brandblog/news/" class="footer-link">Corporate</a>
+            <a href="https://blogco.github.io/brandblog/news/" class="footer-link">Renewables</a>
+            <a href="https://blogco.github.io/brandblog/news/" class="footer-link">Financial Results</a>
+            <a href="https://blogco.github.io/brandblog/news/" class="footer-link">Innovation</a>
         </div>
       </nav>
       <nav aria-label="Resources">
-        <h2 class="text-sm font-bold uppercase tracking-[0.16em] text-white">Resources</h2>
+        <h2 class="text-sm font-bold text-white">Resources</h2>
         <div class="mt-4">
-            <a class="footer-link" href="https://blogco.github.io/brandblog/news/">Media Releases</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/news/">Insights & Stories</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/branding/#subscribe">Email Alerts</a>
+            <a href="https://blogco.github.io/brandblog/news/" class="footer-link">Media Releases</a>
+            <a href="https://blogco.github.io/brandblog/news/" class="footer-link">Insights & Stories</a>
+            <a href="https://blogco.github.io/brandblog/branding/#subscribe" class="footer-link">Email Alerts</a>
         </div>
       </nav>
       <nav aria-label="Legal">
-        <h2 class="text-sm font-bold uppercase tracking-[0.16em] text-white">Legal</h2>
+        <h2 class="text-sm font-bold text-white">Legal</h2>
         <div class="mt-4">
-            <a class="footer-link" href="https://blogco.github.io/brandblog/branding/">Privacy Statement</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/branding/">Terms of Use</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/branding/">Cookie Policy</a>
+            <a href="https://blogco.github.io/brandblog/branding/" class="footer-link">Privacy Statement</a>
+            <a href="https://blogco.github.io/brandblog/branding/" class="footer-link">Terms of Use</a>
+            <a href="https://blogco.github.io/brandblog/branding/" class="footer-link">Cookie Policy</a>
         </div>
       </nav>
   </div>
 
-  <!-- Bottom bar -->
+  <!-- Legal bottom bar -->
   <div class="border-t border-white/15">
-    <div class="container flex flex-col gap-3 py-5 text-xs text-white/60 md:flex-row md:items-center md:justify-between">
-      <p>Copyright &copy; 2026 BrandBlog. All rights reserved.</p>
-      <p>Educational demo design system inspired by Sembcorp. Not affiliated with Sembcorp Industries.</p>
+    <div class="container flex flex-col gap-4 py-8 text-xs text-white/60 md:flex-row md:items-center md:justify-between">
+      <p>© 2026 BrandBlog. All rights reserved.</p>
+      <p class="max-w-2xl md:text-right">Educational demo. Visual design is inspired by Ericsson's design language; this site is not affiliated with Ericsson.</p>
     </div>
   </div>
 </footer>

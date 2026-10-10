@@ -18,64 +18,68 @@
   <meta name="twitter:card" content="summary_large_image">
 
   <link rel="icon" href="https://blogco.github.io/brandblog/static/images/favicon.svg" type="image/svg+xml">
-  <link rel="preload" as="image" href="https://blogco.github.io/brandblog/static/images/hero-home.svg">
+  <meta name="theme-color" content="#0082F0">
 
   <!-- Tailwind build -->
   <link rel="stylesheet" href="https://blogco.github.io/brandblog/static/css/style.css">
 </head>
 <body class="flex min-h-screen flex-col">
-  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-sm focus:bg-sembcorp-green focus:px-4 focus:py-2 focus:text-white">Skip to content</a>
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-sm focus:bg-ericsson-blue focus:px-4 focus:py-2 focus:text-white">Skip to content</a>
 
-<header class="sticky top-0 z-50 bg-white/95 shadow-[0_1px_0_rgba(0,0,0,0.06)] backdrop-blur">
-  <!-- Utility bar -->
-  <div class="bg-sembcorp-green-darker text-white">
-    <div class="container flex h-9 items-center justify-between text-[11px] font-medium tracking-wide">
-      <span class="hidden sm:inline text-white/70">A publication inspired by the energy transition</span>
-      <nav class="flex items-center gap-5" aria-label="Utility">
-          <a class="hover:text-white/80" href="https://blogco.github.io/brandblog/news/">News & Insights</a>
-          <a class="hover:text-white/80" href="https://blogco.github.io/brandblog/branding/#contact">Contact</a>
-      </nav>
-    </div>
-  </div>
-
-  <!-- Main bar -->
-  <div class="container flex items-center justify-between py-3">
-    <a href="https://blogco.github.io/brandblog/" class="flex items-center gap-2.5" aria-label="BrandBlog home">
-      <img src="https://blogco.github.io/brandblog/static/images/logo.svg" alt="" class="h-9 w-9" width="36" height="36">
-      <span class="flex flex-col leading-none">
-        <span class="text-lg font-bold tracking-tight text-sembcorp-ink">BrandBlog</span>
-        <span class="mt-0.5 hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-sembcorp-green sm:block">Energy &amp; Sustainability</span>
-      </span>
+<header class="sticky top-0 z-50 border-b border-ericsson-border bg-white">
+  <div class="container flex h-[72px] items-center justify-between gap-4">
+    <a href="https://blogco.github.io/brandblog/" class="flex items-center gap-3" aria-label="BrandBlog home">
+      <img src="https://blogco.github.io/brandblog/static/images/logo.svg" alt="" class="h-8 w-8" width="32" height="32">
+      <span class="text-xl font-bold tracking-tight text-ericsson-black">BrandBlog</span>
     </a>
 
-    <nav class="hidden items-center gap-7 md:flex" aria-label="Primary">
+    <nav class="hidden items-center gap-8 md:flex" aria-label="Primary">
         <a href="https://blogco.github.io/brandblog/" class="nav-link" >Home</a>
         <a href="https://blogco.github.io/brandblog/news/" class="nav-link" >News</a>
         <a href="https://blogco.github.io/brandblog/branding/" class="nav-link" >Branding</a>
         <a href="https://blogco.github.io/brandblog/cargo-dictionary/" class="nav-link" aria-current="page">Từ điển Cargo</a>
-      <a href="https://blogco.github.io/brandblog/news/" class="btn-primary !py-2.5 !text-[13px]">Subscribe</a>
     </nav>
 
-    <button id="menu-toggle" type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-sembcorp-line text-sembcorp-ink md:hidden" aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation">
-      <svg id="menu-icon-open" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-      <svg id="menu-icon-close" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-    </button>
+    <div class="flex items-center gap-1.5">
+      <a href="https://blogco.github.io/brandblog/news/" class="btn-primary mr-1 hidden !py-2.5 !text-[13px] lg:inline-flex">Subscribe</a>
+
+      <button id="search-toggle" type="button" class="inline-flex h-10 w-10 items-center justify-center text-ericsson-black transition-colors hover:text-ericsson-blue focus:outline-none focus-visible:ring-2 focus-visible:ring-ericsson-blue" aria-controls="search-panel" aria-expanded="false" aria-label="Search">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </button>
+
+      <button id="menu-toggle" type="button" class="inline-flex h-10 w-10 items-center justify-center text-ericsson-black transition-colors hover:text-ericsson-blue focus:outline-none focus-visible:ring-2 focus-visible:ring-ericsson-blue md:hidden" aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation">
+        <svg id="menu-icon-open" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <svg id="menu-icon-close" class="hidden h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Search panel (demo: submits to the newsroom) -->
+  <div id="search-panel" class="hidden border-t border-ericsson-border bg-white">
+    <div class="container py-4">
+      <form action="https://blogco.github.io/brandblog/news/" method="get" role="search" class="flex items-center gap-3 border-b-2 border-ericsson-black pb-2">
+        <svg class="h-5 w-5 shrink-0 text-ericsson-gray" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <label class="sr-only" for="header-search">Search BrandBlog</label>
+        <input id="header-search" name="q" type="search" placeholder="Search news and insights…" class="w-full border-0 bg-transparent py-2 text-base text-ericsson-black placeholder:text-ericsson-gray focus:outline-none">
+        <button type="submit" class="btn-primary !py-2 !text-[13px]">Search</button>
+      </form>
+    </div>
   </div>
 
   <!-- Mobile drawer -->
-  <div id="mobile-menu" class="hidden border-t border-sembcorp-line bg-white md:hidden">
-    <nav class="container flex flex-col py-3" aria-label="Mobile">
-        <a href="https://blogco.github.io/brandblog/" class="border-b border-sembcorp-line py-3 text-base font-semibold text-sembcorp-ink" >Home</a>
-        <a href="https://blogco.github.io/brandblog/news/" class="border-b border-sembcorp-line py-3 text-base font-semibold text-sembcorp-ink" >News</a>
-        <a href="https://blogco.github.io/brandblog/branding/" class="border-b border-sembcorp-line py-3 text-base font-semibold text-sembcorp-ink" >Branding</a>
-        <a href="https://blogco.github.io/brandblog/cargo-dictionary/" class="border-b border-sembcorp-line py-3 text-base font-semibold text-sembcorp-green" aria-current="page">Từ điển Cargo</a>
+  <div id="mobile-menu" class="hidden border-t border-ericsson-border bg-white md:hidden">
+    <nav class="container flex flex-col py-2" aria-label="Mobile">
+        <a href="https://blogco.github.io/brandblog/" class="border-b border-ericsson-border py-3.5 text-base font-bold text-ericsson-black" >Home</a>
+        <a href="https://blogco.github.io/brandblog/news/" class="border-b border-ericsson-border py-3.5 text-base font-bold text-ericsson-black" >News</a>
+        <a href="https://blogco.github.io/brandblog/branding/" class="border-b border-ericsson-border py-3.5 text-base font-bold text-ericsson-black" >Branding</a>
+        <a href="https://blogco.github.io/brandblog/cargo-dictionary/" class="border-b border-ericsson-border py-3.5 text-base font-bold text-ericsson-blue" aria-current="page">Từ điển Cargo</a>
       <a href="https://blogco.github.io/brandblog/news/" class="btn-primary mt-4">Subscribe to alerts</a>
     </nav>
   </div>
 </header>
-<section class="relative isolate overflow-hidden bg-sembcorp-green">
+<section class="relative isolate overflow-hidden bg-ericsson-blue">
   <img src="https://blogco.github.io/brandblog/static/images/hero-news.svg" alt="" class="absolute inset-0 -z-10 h-full w-full object-cover opacity-40" width="1920" height="720" fetchpriority="high">
-  <div class="absolute inset-0 -z-10 bg-gradient-to-r from-sembcorp-green-darker via-sembcorp-green-darker/90 to-sembcorp-green/60"></div>
+  <div class="absolute inset-0 -z-10 bg-gradient-to-r from-ericsson-black via-ericsson-black/90 to-ericsson-blue/60"></div>
   <div class="container py-14 md:py-20">
     <nav aria-label="Breadcrumb" class="text-xs font-medium text-white/70">
       <ol class="flex items-center gap-2">
@@ -109,24 +113,24 @@
 
   <main id="main" class="flex-1">
 <!-- ======================= SEARCH + FILTERS ======================= -->
-<section class="sticky top-24 z-40 border-b border-sembcorp-line bg-white/95 py-4 shadow-[0_2px_8px_rgba(0,0,0,0.06)] backdrop-blur">
+<section class="sticky top-24 z-40 border-b border-ericsson-border bg-white/95 py-4 shadow-[0_2px_8px_rgba(0,0,0,0.06)] backdrop-blur">
   <div class="container">
     <div class="relative">
-      <span class="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-sembcorp-gray" aria-hidden="true">
+      <span class="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-ericsson-gray" aria-hidden="true">
         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       </span>
       <label class="sr-only" for="dict-search">Tìm kiếm thuật ngữ</label>
       <input id="dict-search" type="search" class="dict-search" autocomplete="off" spellcheck="false"
              placeholder="Tìm kiếm thuật ngữ (Anh, Việt, Hàn)…  —  nhấn / để tìm"
              aria-describedby="dict-search-hint">
-      <button id="dict-search-clear" type="button" class="absolute right-4 top-1/2 hidden -translate-y-1/2 rounded-full p-1.5 text-sembcorp-gray transition-colors hover:bg-sembcorp-mist hover:text-sembcorp-ink" aria-label="Xóa tìm kiếm">
+      <button id="dict-search-clear" type="button" class="absolute right-4 top-1/2 hidden -translate-y-1/2 rounded-full p-1.5 text-ericsson-gray transition-colors hover:bg-ericsson-mist hover:text-ericsson-black" aria-label="Xóa tìm kiếm">
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
     </div>
     <p id="dict-search-hint" class="sr-only">Kết quả cập nhật ngay khi bạn gõ. Nhấn phím Escape để xóa.</p>
 
     <div class="mt-4 flex items-start gap-3">
-      <span class="hidden w-16 shrink-0 pt-2 text-xs font-bold uppercase tracking-wide text-sembcorp-gray sm:block">Danh mục</span>
+      <span class="hidden w-16 shrink-0 pt-2 text-xs font-bold uppercase tracking-wide text-ericsson-gray sm:block">Danh mục</span>
       <div id="dict-filters" class="flex flex-wrap gap-2" role="group" aria-label="Lọc theo danh mục">
         <button type="button" class="dict-pill is-active" data-category="all">Tất cả</button>
           <button type="button" class="dict-pill" data-category="Cơ bản">Cơ bản</button>
@@ -142,25 +146,25 @@
 </section>
 
 <!-- ======================= RESULTS ======================= -->
-<section class="section bg-sembcorp-mist">
+<section class="section bg-ericsson-mist">
   <div class="container">
     <!-- Toolbar -->
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <p class="text-sm text-sembcorp-gray">
-        Hiển thị <span id="dict-count" class="font-semibold text-sembcorp-ink">37</span>
-        / <span id="dict-total" class="font-semibold text-sembcorp-ink">37</span> thuật ngữ
+      <p class="text-sm text-ericsson-gray">
+        Hiển thị <span id="dict-count" class="font-semibold text-ericsson-black">37</span>
+        / <span id="dict-total" class="font-semibold text-ericsson-black">37</span> thuật ngữ
         <span id="dict-query-note" class="hidden"></span>
       </p>
 
       <div class="flex flex-wrap items-center gap-2">
         <label class="sr-only" for="dict-sort">Sắp xếp</label>
         <div class="relative">
-          <select id="dict-sort" class="appearance-none rounded-full border border-sembcorp-line bg-white py-2 pl-4 pr-9 text-sm font-semibold text-sembcorp-gray focus:border-sembcorp-green focus:outline-none focus:ring-2 focus:ring-sembcorp-green/20">
+          <select id="dict-sort" class="appearance-none rounded-full border border-ericsson-border bg-white py-2 pl-4 pr-9 text-sm font-semibold text-ericsson-gray focus:border-ericsson-blue focus:outline-none focus:ring-2 focus:ring-ericsson-blue/20">
             <option value="az">A–Z</option>
             <option value="new">Mới nhất</option>
             <option value="popular">Phổ biến</option>
           </select>
-          <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sembcorp-gray" aria-hidden="true">
+          <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ericsson-gray" aria-hidden="true">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
           </span>
         </div>
@@ -177,8 +181,8 @@
           <svg class="mr-1 inline h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
           <span id="dict-admin-label">Quản trị</span>
         </button>
-        <span id="dict-admin-state" class="hidden items-center gap-1.5 rounded-full bg-sembcorp-green-wash px-3 py-1.5 text-xs font-bold text-sembcorp-green">
-          <span class="inline-block h-1.5 w-1.5 rounded-full bg-sembcorp-green"></span>
+        <span id="dict-admin-state" class="hidden items-center gap-1.5 rounded-full bg-ericsson-blue-wash px-3 py-1.5 text-xs font-bold text-ericsson-blue">
+          <span class="inline-block h-1.5 w-1.5 rounded-full bg-ericsson-blue"></span>
           Live — đã mở quyền quản trị
         </span>
         <button id="dict-import" type="button" class="dict-pill admin-only hidden" title="Nhập thuật ngữ từ tệp JSON (cần quyền quản trị)">
@@ -191,45 +195,45 @@
 
     <!-- Loading skeleton -->
     <div id="dict-skeleton" class="mt-8 grid gap-6 md:grid-cols-2" aria-hidden="true">
-        <div class="animate-pulse rounded-xl border border-sembcorp-line bg-white p-6">
-          <div class="h-5 w-1/3 rounded bg-sembcorp-line"></div>
+        <div class="animate-pulse rounded-xl border border-ericsson-border bg-white p-6">
+          <div class="h-5 w-1/3 rounded bg-ericsson-border"></div>
           <div class="mt-5 space-y-3">
-            <div class="h-3 w-3/4 rounded bg-sembcorp-mist"></div>
-            <div class="h-3 w-2/3 rounded bg-sembcorp-mist"></div>
-            <div class="h-3 w-1/2 rounded bg-sembcorp-mist"></div>
+            <div class="h-3 w-3/4 rounded bg-ericsson-mist"></div>
+            <div class="h-3 w-2/3 rounded bg-ericsson-mist"></div>
+            <div class="h-3 w-1/2 rounded bg-ericsson-mist"></div>
           </div>
-          <div class="mt-6 h-3 w-full rounded bg-sembcorp-mist"></div>
-          <div class="mt-2 h-3 w-5/6 rounded bg-sembcorp-mist"></div>
+          <div class="mt-6 h-3 w-full rounded bg-ericsson-mist"></div>
+          <div class="mt-2 h-3 w-5/6 rounded bg-ericsson-mist"></div>
         </div>
-        <div class="animate-pulse rounded-xl border border-sembcorp-line bg-white p-6">
-          <div class="h-5 w-1/3 rounded bg-sembcorp-line"></div>
+        <div class="animate-pulse rounded-xl border border-ericsson-border bg-white p-6">
+          <div class="h-5 w-1/3 rounded bg-ericsson-border"></div>
           <div class="mt-5 space-y-3">
-            <div class="h-3 w-3/4 rounded bg-sembcorp-mist"></div>
-            <div class="h-3 w-2/3 rounded bg-sembcorp-mist"></div>
-            <div class="h-3 w-1/2 rounded bg-sembcorp-mist"></div>
+            <div class="h-3 w-3/4 rounded bg-ericsson-mist"></div>
+            <div class="h-3 w-2/3 rounded bg-ericsson-mist"></div>
+            <div class="h-3 w-1/2 rounded bg-ericsson-mist"></div>
           </div>
-          <div class="mt-6 h-3 w-full rounded bg-sembcorp-mist"></div>
-          <div class="mt-2 h-3 w-5/6 rounded bg-sembcorp-mist"></div>
+          <div class="mt-6 h-3 w-full rounded bg-ericsson-mist"></div>
+          <div class="mt-2 h-3 w-5/6 rounded bg-ericsson-mist"></div>
         </div>
-        <div class="animate-pulse rounded-xl border border-sembcorp-line bg-white p-6">
-          <div class="h-5 w-1/3 rounded bg-sembcorp-line"></div>
+        <div class="animate-pulse rounded-xl border border-ericsson-border bg-white p-6">
+          <div class="h-5 w-1/3 rounded bg-ericsson-border"></div>
           <div class="mt-5 space-y-3">
-            <div class="h-3 w-3/4 rounded bg-sembcorp-mist"></div>
-            <div class="h-3 w-2/3 rounded bg-sembcorp-mist"></div>
-            <div class="h-3 w-1/2 rounded bg-sembcorp-mist"></div>
+            <div class="h-3 w-3/4 rounded bg-ericsson-mist"></div>
+            <div class="h-3 w-2/3 rounded bg-ericsson-mist"></div>
+            <div class="h-3 w-1/2 rounded bg-ericsson-mist"></div>
           </div>
-          <div class="mt-6 h-3 w-full rounded bg-sembcorp-mist"></div>
-          <div class="mt-2 h-3 w-5/6 rounded bg-sembcorp-mist"></div>
+          <div class="mt-6 h-3 w-full rounded bg-ericsson-mist"></div>
+          <div class="mt-2 h-3 w-5/6 rounded bg-ericsson-mist"></div>
         </div>
-        <div class="animate-pulse rounded-xl border border-sembcorp-line bg-white p-6">
-          <div class="h-5 w-1/3 rounded bg-sembcorp-line"></div>
+        <div class="animate-pulse rounded-xl border border-ericsson-border bg-white p-6">
+          <div class="h-5 w-1/3 rounded bg-ericsson-border"></div>
           <div class="mt-5 space-y-3">
-            <div class="h-3 w-3/4 rounded bg-sembcorp-mist"></div>
-            <div class="h-3 w-2/3 rounded bg-sembcorp-mist"></div>
-            <div class="h-3 w-1/2 rounded bg-sembcorp-mist"></div>
+            <div class="h-3 w-3/4 rounded bg-ericsson-mist"></div>
+            <div class="h-3 w-2/3 rounded bg-ericsson-mist"></div>
+            <div class="h-3 w-1/2 rounded bg-ericsson-mist"></div>
           </div>
-          <div class="mt-6 h-3 w-full rounded bg-sembcorp-mist"></div>
-          <div class="mt-2 h-3 w-5/6 rounded bg-sembcorp-mist"></div>
+          <div class="mt-6 h-3 w-full rounded bg-ericsson-mist"></div>
+          <div class="mt-2 h-3 w-5/6 rounded bg-ericsson-mist"></div>
         </div>
     </div>
 
@@ -237,14 +241,14 @@
     <div id="dict-grid" class="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3" role="list" aria-live="polite" aria-busy="true"></div>
 
     <!-- Empty state -->
-    <div id="dict-empty" class="mt-8 hidden rounded-xl border border-dashed border-sembcorp-line bg-white p-12 text-center">
-      <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sembcorp-green-wash text-sembcorp-green">
+    <div id="dict-empty" class="mt-8 hidden rounded-xl border border-dashed border-ericsson-border bg-white p-12 text-center">
+      <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-ericsson-blue-wash text-ericsson-blue">
         <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3M8 11h6"/></svg>
       </div>
-      <h2 class="mt-5 text-lg font-bold text-sembcorp-ink">Không tìm thấy thuật ngữ</h2>
-      <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-sembcorp-gray">
+      <h2 class="mt-5 text-lg font-bold text-ericsson-black">Không tìm thấy thuật ngữ</h2>
+      <p class="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ericsson-gray">
         Thử từ khóa khác, bỏ bộ lọc danh mục, hoặc thêm thuật ngữ mới bằng nút
-        <span class="font-semibold text-sembcorp-green">+</span> ở góc phải bên dưới.
+        <span class="font-semibold text-ericsson-blue">+</span> ở góc phải bên dưới.
       </p>
       <button id="dict-empty-reset" type="button" class="btn-outline mt-6">Đặt lại bộ lọc</button>
     </div>
@@ -261,34 +265,34 @@
   <div id="dict-modal-overlay" class="dict-modal-overlay"></div>
   <div id="dict-modal-content" class="absolute inset-0 flex items-end justify-center overflow-y-auto p-0 sm:items-center sm:p-6">
     <div id="dict-modal-panel" class="dict-modal-panel w-full rounded-t-2xl bg-white shadow-2xl sm:max-w-2xl sm:rounded-2xl">
-      <div class="flex items-center justify-between border-b border-sembcorp-line px-6 py-4">
+      <div class="flex items-center justify-between border-b border-ericsson-border px-6 py-4">
         <div>
-          <h2 id="dict-modal-title" class="text-lg font-bold text-sembcorp-ink">Thêm thuật ngữ mới</h2>
-          <p class="text-xs text-sembcorp-gray">Thay đổi sẽ được lưu vào từ điển <b>live</b> trên GitHub — mọi người đều xem được sau khi build.</p>
+          <h2 id="dict-modal-title" class="text-lg font-bold text-ericsson-black">Thêm thuật ngữ mới</h2>
+          <p class="text-xs text-ericsson-gray">Thay đổi sẽ được lưu vào từ điển <b>live</b> trên GitHub — mọi người đều xem được sau khi build.</p>
         </div>
-        <button id="dict-modal-close" type="button" class="rounded-full p-2 text-sembcorp-gray transition-colors hover:bg-sembcorp-mist hover:text-sembcorp-ink" aria-label="Đóng">
+        <button id="dict-modal-close" type="button" class="rounded-full p-2 text-ericsson-gray transition-colors hover:bg-ericsson-mist hover:text-ericsson-black" aria-label="Đóng">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
 
       <form id="dict-form" class="max-h-[70vh] space-y-5 overflow-y-auto px-6 py-5" novalidate>
         <div>
-          <label for="term-english" class="dict-label">🇬🇧 Tiếng Anh <span class="text-sembcorp-orange">*</span></label>
+          <label for="term-english" class="dict-label">🇬🇧 Tiếng Anh <span class="text-ericsson-danger">*</span></label>
           <input id="term-english" name="english" type="text" class="dict-input" placeholder="Nhập thuật ngữ tiếng Anh…" required>
           <p class="dict-error" data-error-for="term-english"></p>
         </div>
         <div>
-          <label for="term-vietnamese" class="dict-label">🇻🇳 Tiếng Việt <span class="text-sembcorp-orange">*</span></label>
+          <label for="term-vietnamese" class="dict-label">🇻🇳 Tiếng Việt <span class="text-ericsson-danger">*</span></label>
           <input id="term-vietnamese" name="vietnamese" type="text" class="dict-input" placeholder="Nhập nghĩa tiếng Việt…" required>
           <p class="dict-error" data-error-for="term-vietnamese"></p>
         </div>
         <div>
-          <label for="term-korean" class="dict-label">🇰🇷 Tiếng Hàn <span class="text-sembcorp-orange">*</span></label>
+          <label for="term-korean" class="dict-label">🇰🇷 Tiếng Hàn <span class="text-ericsson-danger">*</span></label>
           <input id="term-korean" name="korean" type="text" class="dict-input" placeholder="한국어 입력…" required>
           <p class="dict-error" data-error-for="term-korean"></p>
         </div>
         <div>
-          <label for="term-definition" class="dict-label">📝 Định nghĩa <span class="text-sembcorp-gray/60">(tùy chọn)</span></label>
+          <label for="term-definition" class="dict-label">📝 Định nghĩa <span class="text-ericsson-gray/60">(tùy chọn)</span></label>
           <textarea id="term-definition" name="definition" rows="3" class="dict-input resize-y" placeholder="Mô tả chi tiết…"></textarea>
         </div>
         <div class="grid gap-5 sm:grid-cols-2">
@@ -304,13 +308,13 @@
           </div>
         </div>
         <div>
-          <label for="term-example" class="dict-label">💡 Ví dụ <span class="text-sembcorp-gray/60">(tùy chọn)</span></label>
+          <label for="term-example" class="dict-label">💡 Ví dụ <span class="text-ericsson-gray/60">(tùy chọn)</span></label>
           <input id="term-example" name="example" type="text" class="dict-input" placeholder="Ví dụ câu sử dụng…">
         </div>
       </form>
 
-      <div class="flex items-center justify-end gap-3 border-t border-sembcorp-line px-6 py-4">
-        <button id="dict-form-cancel" type="button" class="btn bg-sembcorp-mist text-sembcorp-ink hover:bg-sembcorp-line">Hủy</button>
+      <div class="flex items-center justify-end gap-3 border-t border-ericsson-border px-6 py-4">
+        <button id="dict-form-cancel" type="button" class="btn bg-ericsson-mist text-ericsson-black hover:bg-ericsson-border">Hủy</button>
         <button id="dict-form-save" type="submit" form="dict-form" class="btn-primary">💾 Lưu thuật ngữ</button>
       </div>
     </div>
@@ -322,12 +326,12 @@
   <div id="dict-auth-overlay" class="dict-modal-overlay"></div>
   <div id="dict-auth-content" class="absolute inset-0 flex items-end justify-center overflow-y-auto p-0 sm:items-center sm:p-6">
     <div id="dict-auth-panel" class="dict-modal-panel w-full rounded-t-2xl bg-white shadow-2xl sm:max-w-md sm:rounded-2xl">
-      <div class="flex items-center justify-between border-b border-sembcorp-line px-6 py-4">
+      <div class="flex items-center justify-between border-b border-ericsson-border px-6 py-4">
         <div>
-          <h2 id="dict-auth-title" class="text-lg font-bold text-sembcorp-ink">Đăng nhập quản trị</h2>
-          <p class="text-xs text-sembcorp-gray">Thêm / sửa / xoá / nhập thuật ngữ yêu cầu mật khẩu.</p>
+          <h2 id="dict-auth-title" class="text-lg font-bold text-ericsson-black">Đăng nhập quản trị</h2>
+          <p class="text-xs text-ericsson-gray">Thêm / sửa / xoá / nhập thuật ngữ yêu cầu mật khẩu.</p>
         </div>
-        <button id="dict-auth-close" type="button" class="rounded-full p-2 text-sembcorp-gray transition-colors hover:bg-sembcorp-mist hover:text-sembcorp-ink" aria-label="Đóng">
+        <button id="dict-auth-close" type="button" class="rounded-full p-2 text-ericsson-gray transition-colors hover:bg-ericsson-mist hover:text-ericsson-black" aria-label="Đóng">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
@@ -336,13 +340,13 @@
           <label for="auth-token" class="dict-label">🔑 Mật khẩu (GitHub Personal Access Token)</label>
           <input id="auth-token" name="token" type="password" class="dict-input" autocomplete="off" placeholder="ghp_…" required>
           <p class="dict-error" data-error-for="auth-token"></p>
-          <p class="mt-2 text-[11px] leading-relaxed text-sembcorp-gray">
+          <p class="mt-2 text-[11px] leading-relaxed text-ericsson-gray">
             Token được dùng trực tiếp từ trình duyệt của bạn để ghi vào file dữ liệu trên GitHub —
             không được lưu trên web này và không hiển thị cho người khác.
           </p>
         </div>
         <div class="flex items-center justify-end gap-3">
-          <button id="dict-auth-cancel" type="button" class="btn bg-sembcorp-mist text-sembcorp-ink hover:bg-sembcorp-line">Hủy</button>
+          <button id="dict-auth-cancel" type="button" class="btn bg-ericsson-mist text-ericsson-black hover:bg-ericsson-border">Hủy</button>
           <button type="submit" class="btn-primary">Đăng nhập</button>
         </div>
       </form>
@@ -358,8 +362,8 @@
   <article class="dict-card" role="listitem" data-term-card>
     <div class="flex items-start justify-between gap-3">
       <div class="min-w-0">
-        <h3 class="text-lg font-bold leading-snug text-sembcorp-ink" data-field="term"></h3>
-        <p class="mt-1 hidden text-xs font-semibold uppercase tracking-wide text-sembcorp-green" data-field="abbr-wrap">
+        <h3 class="text-lg font-bold leading-snug text-ericsson-black" data-field="term"></h3>
+        <p class="mt-1 hidden text-xs font-semibold uppercase tracking-wide text-ericsson-blue" data-field="abbr-wrap">
           <span data-field="abbr"></span>
         </p>
       </div>
@@ -382,22 +386,22 @@
       </div>
     </div>
 
-    <div class="mt-4 space-y-2 border-t border-sembcorp-line pt-4">
+    <div class="mt-4 space-y-2 border-t border-ericsson-border pt-4">
       <p class="dict-lang"><span class="dict-flag" aria-hidden="true">🇬🇧</span><span data-field="english"></span></p>
       <p class="dict-lang"><span class="dict-flag" aria-hidden="true">🇻🇳</span><span data-field="vietnamese"></span></p>
       <p class="dict-lang"><span class="dict-flag" aria-hidden="true">🇰🇷</span><span data-field="korean"></span></p>
     </div>
 
     <p class="dict-def mt-4 line-clamp-3" data-field="definition-wrap"><span data-field="definition"></span></p>
-    <p class="mt-3 hidden text-sm italic leading-relaxed text-sembcorp-gray" data-field="example-wrap">
+    <p class="mt-3 hidden text-sm italic leading-relaxed text-ericsson-gray" data-field="example-wrap">
       <span class="not-italic" aria-hidden="true">💡</span> <span data-field="example"></span>
     </p>
 
     <div class="mt-auto flex flex-wrap items-center gap-2 pt-5">
       <span class="dict-badge" data-field="category"></span>
-      <span class="dict-badge !bg-sembcorp-mist !text-sembcorp-gray" data-field="level"></span>
-      <span class="dict-badge !bg-sembcorp-orange/10 !text-sembcorp-orange hidden" data-field="live-badge">Mới</span>
-      <button type="button" class="ml-auto text-xs font-semibold text-sembcorp-green transition-colors hover:text-sembcorp-green-dark hover:underline disabled:hidden" data-action="toggle-def" data-field="toggle">Xem thêm</button>
+      <span class="dict-badge !bg-ericsson-mist !text-ericsson-gray" data-field="level"></span>
+      <span class="dict-badge !bg-ericsson-danger/10 !text-ericsson-danger hidden" data-field="live-badge">Mới</span>
+      <button type="button" class="ml-auto text-xs font-semibold text-ericsson-blue transition-colors hover:text-ericsson-blue-dark hover:underline disabled:hidden" data-action="toggle-def" data-field="toggle">Xem thêm</button>
     </div>
   </article>
 </template>
@@ -407,72 +411,69 @@
 <script id="cargo-dictionary-config" type="application/json">{"apiBase": "https://api.github.com", "branch": "main", "rawBase": "https://raw.githubusercontent.com", "repo": "blogco/brandblog"}</script>
   </main>
 
-<footer class="mt-auto bg-sembcorp-green-darker text-white">
-  <div class="container grid gap-12 py-14 md:grid-cols-2 lg:grid-cols-6 lg:gap-8">
+<footer class="mt-auto bg-ericsson-black text-white">
+  <div class="container grid gap-12 py-16 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
     <!-- Brand + social -->
-    <div class="lg:col-span-2">
-      <a href="https://blogco.github.io/brandblog/" class="flex items-center gap-2.5" aria-label="BrandBlog home">
-        <img src="https://blogco.github.io/brandblog/static/images/logo-white.svg" alt="" class="h-9 w-9" width="36" height="36">
-        <span class="text-lg font-bold tracking-tight text-white">BrandBlog</span>
+    <div>
+      <a href="https://blogco.github.io/brandblog/" class="flex items-center gap-3" aria-label="BrandBlog home">
+        <img src="https://blogco.github.io/brandblog/static/images/logo-white.svg" alt="" class="h-8 w-8" width="32" height="32">
+        <span class="text-xl font-bold tracking-tight text-white">BrandBlog</span>
       </a>
-      <p class="mt-4 max-w-xs text-sm leading-relaxed text-white/70">BrandBlog is a static publication covering the energy transition, sustainability and the people driving a more sustainable future — with a design system inspired by Sembcorp.</p>
-      <div class="mt-6">
-        <p class="text-xs font-semibold uppercase tracking-[0.16em] text-white/50">Follow us on</p>
-        <div class="mt-3 flex gap-3">
-            <a href="https://www.linkedin.com/company/sembcorp-industries-ltd" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 text-white/80 transition-colors hover:border-white hover:text-white" aria-label="LinkedIn" rel="noopener" target="_blank">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.5c0-1.3-.02-3-1.83-3-1.83 0-2.11 1.43-2.11 2.9V21H9z"/></svg>
-            </a>
-            <a href="https://x.com/sembcorp" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 text-white/80 transition-colors hover:border-white hover:text-white" aria-label="X" rel="noopener" target="_blank">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7 8 8.2 12h-6.4l-5-7.3L6 22H2.8l7.5-8.6L2.4 2h6.6l4.5 6.6zM17.8 20h1.8L8.3 4h-1.9z"/></svg>
-            </a>
-            <a href="https://www.youtube.com/@sembcorp" class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 text-white/80 transition-colors hover:border-white hover:text-white" aria-label="YouTube" rel="noopener" target="_blank">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 7.2a2.5 2.5 0 00-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 002.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 001.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 001.8-1.8C22 15.2 22 12 22 12s0-3.2-.4-4.8zM10 15V9l5.2 3z"/></svg>
-            </a>
-        </div>
+      <p class="mt-4 max-w-sm text-sm leading-relaxed text-white/70">BrandBlog is a static publication covering the energy transition, sustainability and the people driving a more sustainable future — with a design system inspired by Sembcorp.</p>
+      <div class="mt-6 flex gap-3">
+          <a href="https://www.linkedin.com/company/sembcorp-industries-ltd" class="inline-flex h-10 w-10 items-center justify-center border border-white/25 text-white/80 transition-colors hover:border-white hover:bg-white hover:text-ericsson-black" aria-label="LinkedIn" rel="noopener" target="_blank">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.5c0-1.3-.02-3-1.83-3-1.83 0-2.11 1.43-2.11 2.9V21H9z"/></svg>
+          </a>
+          <a href="https://x.com/sembcorp" class="inline-flex h-10 w-10 items-center justify-center border border-white/25 text-white/80 transition-colors hover:border-white hover:bg-white hover:text-ericsson-black" aria-label="X" rel="noopener" target="_blank">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7 8 8.2 12h-6.4l-5-7.3L6 22H2.8l7.5-8.6L2.4 2h6.6l4.5 6.6zM17.8 20h1.8L8.3 4h-1.9z"/></svg>
+          </a>
+          <a href="https://www.youtube.com/@sembcorp" class="inline-flex h-10 w-10 items-center justify-center border border-white/25 text-white/80 transition-colors hover:border-white hover:bg-white hover:text-ericsson-black" aria-label="YouTube" rel="noopener" target="_blank">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 7.2a2.5 2.5 0 00-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 002.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 001.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 001.8-1.8C22 15.2 22 12 22 12s0-3.2-.4-4.8zM10 15V9l5.2 3z"/></svg>
+          </a>
       </div>
     </div>
 
     <!-- Link columns -->
       <nav aria-label="Explore">
-        <h2 class="text-sm font-bold uppercase tracking-[0.16em] text-white">Explore</h2>
+        <h2 class="text-sm font-bold text-white">Explore</h2>
         <div class="mt-4">
-            <a class="footer-link" href="https://blogco.github.io/brandblog/">Home</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/news/">News & Insights</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/branding/">Branding</a>
+            <a href="https://blogco.github.io/brandblog/" class="footer-link">Home</a>
+            <a href="https://blogco.github.io/brandblog/news/" class="footer-link">News & Insights</a>
+            <a href="https://blogco.github.io/brandblog/branding/" class="footer-link">Branding</a>
         </div>
       </nav>
       <nav aria-label="Topics">
-        <h2 class="text-sm font-bold uppercase tracking-[0.16em] text-white">Topics</h2>
+        <h2 class="text-sm font-bold text-white">Topics</h2>
         <div class="mt-4">
-            <a class="footer-link" href="https://blogco.github.io/brandblog/news/">Corporate</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/news/">Renewables</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/news/">Financial Results</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/news/">Innovation</a>
+            <a href="https://blogco.github.io/brandblog/news/" class="footer-link">Corporate</a>
+            <a href="https://blogco.github.io/brandblog/news/" class="footer-link">Renewables</a>
+            <a href="https://blogco.github.io/brandblog/news/" class="footer-link">Financial Results</a>
+            <a href="https://blogco.github.io/brandblog/news/" class="footer-link">Innovation</a>
         </div>
       </nav>
       <nav aria-label="Resources">
-        <h2 class="text-sm font-bold uppercase tracking-[0.16em] text-white">Resources</h2>
+        <h2 class="text-sm font-bold text-white">Resources</h2>
         <div class="mt-4">
-            <a class="footer-link" href="https://blogco.github.io/brandblog/news/">Media Releases</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/news/">Insights & Stories</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/branding/#subscribe">Email Alerts</a>
+            <a href="https://blogco.github.io/brandblog/news/" class="footer-link">Media Releases</a>
+            <a href="https://blogco.github.io/brandblog/news/" class="footer-link">Insights & Stories</a>
+            <a href="https://blogco.github.io/brandblog/branding/#subscribe" class="footer-link">Email Alerts</a>
         </div>
       </nav>
       <nav aria-label="Legal">
-        <h2 class="text-sm font-bold uppercase tracking-[0.16em] text-white">Legal</h2>
+        <h2 class="text-sm font-bold text-white">Legal</h2>
         <div class="mt-4">
-            <a class="footer-link" href="https://blogco.github.io/brandblog/branding/">Privacy Statement</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/branding/">Terms of Use</a>
-            <a class="footer-link" href="https://blogco.github.io/brandblog/branding/">Cookie Policy</a>
+            <a href="https://blogco.github.io/brandblog/branding/" class="footer-link">Privacy Statement</a>
+            <a href="https://blogco.github.io/brandblog/branding/" class="footer-link">Terms of Use</a>
+            <a href="https://blogco.github.io/brandblog/branding/" class="footer-link">Cookie Policy</a>
         </div>
       </nav>
   </div>
 
-  <!-- Bottom bar -->
+  <!-- Legal bottom bar -->
   <div class="border-t border-white/15">
-    <div class="container flex flex-col gap-3 py-5 text-xs text-white/60 md:flex-row md:items-center md:justify-between">
-      <p>Copyright &copy; 2026 BrandBlog. All rights reserved.</p>
-      <p>Educational demo design system inspired by Sembcorp. Not affiliated with Sembcorp Industries.</p>
+    <div class="container flex flex-col gap-4 py-8 text-xs text-white/60 md:flex-row md:items-center md:justify-between">
+      <p>© 2026 BrandBlog. All rights reserved.</p>
+      <p class="max-w-2xl md:text-right">Educational demo. Visual design is inspired by Ericsson's design language; this site is not affiliated with Ericsson.</p>
     </div>
   </div>
 </footer>

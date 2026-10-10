@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Wind turbines">
   <defs>
     <linearGradient id="w1" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0E846D"/>
-      <stop offset="1" stop-color="#003429"/>
+      <stop offset="0" stop-color="#1A8FF3"/>
+      <stop offset="1" stop-color="#001A2E"/>
     </linearGradient>
   </defs>
   <rect width="800" height="500" fill="url(#w1)"/>
-  <circle cx="620" cy="120" r="60" fill="#FFB27A" opacity="0.4"/>
+  <circle cx="620" cy="120" r="60" fill="#FCE07A" opacity="0.4"/>
   <g stroke="#ffffff" stroke-opacity="0.85" stroke-width="6" stroke-linecap="round">
     <path d="M260 430 V210"/>
     <path d="M260 210 L260 140"/>
@@ -21,5 +21,5 @@
     <path d="M470 280 L418 310"/>
     <circle cx="470" cy="280" r="7" fill="#ffffff" stroke="none"/>
   </g>
-  <path d="M0 460 C200 420 360 480 560 440 C680 415 740 460 800 440 L800 500 L0 500 Z" fill="#004E3E" opacity="0.9"/>
+  <path d="M0 460 C200 420 360 480 560 440 C680 415 740 460 800 440 L800 500 L0 500 Z" fill="#00365C" opacity="0.9"/>
 </svg>
