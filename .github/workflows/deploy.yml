@@ -50,12 +50,15 @@ jobs:
         run: pelican content -s publishconf.py -o output
 
       # ---- Bundled mini games ---------------------------------------------
-      # cargo-simulator/ lives outside content/, so Pelican ignores it.
-      # Copy it into the published tree so it ships with the site.
-      - name: Copy Cargo Operations Simulator into the published site
+      # *-simulator/ folders live outside content/, so Pelican ignores them.
+      # Copy every simulator folder into the published tree so it ships live.
+      - name: Copy simulator games into the published site
         run: |
-          mkdir -p output/cargo-simulator
-          cp -R cargo-simulator/. output/cargo-simulator/
+          for d in *-simulator; do
+            [ -d "$d" ] || continue
+            mkdir -p "output/$d"
+            cp -R "$d/." "output/$d/"
+          done
 
       # ---- Publish --------------------------------------------------------
       - name: Deploy to GitHub Pages

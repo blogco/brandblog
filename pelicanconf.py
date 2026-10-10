@@ -96,6 +96,7 @@ MENUITEMS = [
     ("Branding", "branding/"),
     ("Từ điển Cargo", "cargo-dictionary/"),
     ("Cargo Simulator", "cargo-simulator/"),
+    ("Bán vé máy bay", "ticket-sales-simulator/"),
     ("Pastenote", "pastenote/"),
 ]
 
@@ -118,6 +119,7 @@ FOOTER_COLUMNS = [
             ("Home", ""),
             ("News & Insights", "news/"),
             ("Branding", "branding/"),
+            ("Bán vé máy bay", "ticket-sales-simulator/"),
             ("Pastenote", "pastenote/"),
         ],
     ),

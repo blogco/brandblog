@@ -19,16 +19,27 @@ ROOT = sys.argv[1] if len(sys.argv) > 1 else "output"
 _SKIP_PREFIXES = ("http://", "https://", "//", "mailto:", "tel:", "data:", "javascript:")
 
 
-def target_exists(path: str) -> bool:
+def target_exists(path: str, basefile: str | None = None) -> bool:
     clean = path.split("#", 1)[0].split("?", 1)[0]
     if not clean:
         return True
-    rel = clean.lstrip("/")
-    candidates = [
-        os.path.join(ROOT, rel),
-        os.path.join(ROOT, rel, "index.html"),
-        os.path.join(ROOT, rel.rstrip("/"), "index.html"),
-    ]
+    if clean.startswith("/"):
+        # Site-absolute link (e.g. /news/): resolve from the build root.
+        rel = clean.lstrip("/")
+        candidates = [
+            os.path.join(ROOT, rel),
+            os.path.join(ROOT, rel, "index.html"),
+            os.path.join(ROOT, rel.rstrip("/"), "index.html"),
+        ]
+    else:
+        # Relative link (e.g. ./../ or ./page.html): resolve from the
+        # directory of the HTML file that contains it.
+        base = os.path.dirname(basefile or "")
+        joined = os.path.normpath(os.path.join(base, clean))
+        candidates = [
+            joined,
+            os.path.join(joined, "index.html"),
+        ]
     return any(os.path.isfile(c) for c in candidates)
 
 
@@ -63,7 +74,7 @@ def main() -> int:
                 if link.startswith(_SKIP_PREFIXES) or link.startswith("#"):
                     continue
                 checked += 1
-                if not target_exists(link):
+                if not target_exists(link, filepath):
                     broken.append((filepath, link))
 
     print(f"checked {checked} internal links across '{ROOT}/'")
