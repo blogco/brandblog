@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}{{ t('settings.title') }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-3xl space-y-6" x-data="settingsPage()">
+  <header>
+    <h1 class="text-[28px] leading-tight"><i class="fa fa-cog mr-2 text-sembcorp-green"></i>{{ t('settings.title') }}</h1>
+  </header>
+
+  <!-- Paths -->
+  <section class="cms-card p-5">
+    <h2 class="mb-4 text-lg">{{ t('settings.paths') }}</h2>
+    <dl class="space-y-2 text-sm">
+      <div class="flex justify-between gap-4"><dt class="text-gray-500">{{ t('settings.content_folder') }}</dt><dd class="truncate font-mono text-xs text-sembcorp-ink">{{ paths.content }}</dd></div>
+      <div class="flex justify-between gap-4"><dt class="text-gray-500">{{ t('settings.media_folder') }}</dt><dd class="truncate font-mono text-xs text-sembcorp-ink">{{ paths.media }}</dd></div>
+      <div class="flex justify-between gap-4"><dt class="text-gray-500">{{ t('settings.theme_folder') }}</dt><dd class="truncate font-mono text-xs text-sembcorp-ink">{{ paths.theme }}</dd></div>
+    </dl>
+  </section>
+
+  <!-- GitHub -->
+  <section class="cms-card p-5">
+    <h2 class="mb-4 text-lg"><i class="fa fa-github mr-2"></i>{{ t('settings.github') }}</h2>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div class="sm:col-span-2">
+        <label class="cms-label" for="repo">{{ t('settings.repo_url') }}</label>
+        <input id="repo" class="cms-input font-mono text-xs" x-model="cfg.repo_url">
+      </div>
+      <div>
+        <label class="cms-label" for="branch">{{ t('settings.branch') }}</label>
+        <input id="branch" class="cms-input" x-model="cfg.branch">
+      </div>
+      <div>
+        <label class="cms-label" for="site_url">{{ t('nav.view_site') }} URL</label>
+        <input id="site_url" class="cms-input font-mono text-xs" x-model="cfg.site_url">
+      </div>
+      <div class="sm:col-span-2">
+        <label class="cms-label" for="token">{{ t('settings.token') }}</label>
+        <div class="relative">
+          <input id="token" class="cms-input pr-10 font-mono text-xs" :type="showToken ? 'text' : 'password'"
+                 x-model="token" placeholder="{{ masked_token or 'ghp_…' }}">
+          <button type="button" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-sembcorp-ink" @click="showToken = !showToken">
+            <i class="fa" :class="showToken ? 'fa-eye-slash' : 'fa-eye'"></i>
+          </button>
+        </div>
+        <p class="mt-1 text-[11px] text-gray-400">
+          {{ t('settings.token_hint') }} ·
+          <span x-text="tokenSource"></span>
+          <span class="ml-1 text-sembcorp-green" x-show="hasToken" x-cloak><i class="fa fa-lock"></i> configured</span>
+        </p>
+      </div>
+      <div class="sm:col-span-2">
+        <label class="cms-label" for="author">{{ t('label.author') }}</label>
+        <input id="author" class="cms-input" x-model="cfg.default_author">
+      </div>
+    </div>
+  </section>
+
+  <!-- Appearance -->
+  <section class="cms-card p-5">
+    <h2 class="mb-4 text-lg">{{ t('settings.appearance') }}</h2>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div>
+        <label class="cms-label">{{ t('settings.primary_color') }}</label>
+        <div class="flex items-center gap-2">
+          <input type="color" class="h-9 w-12 rounded border border-sembcorp-line" x-model="cfg.primary_color">
+          <input class="cms-input font-mono text-xs" x-model="cfg.primary_color">
+        </div>
+      </div>
+      <div>
+        <label class="cms-label" for="font">{{ t('settings.font') }}</label>
+        <select id="font" class="cms-select" x-model="cfg.font">
+          <option value="Helvetica Neue">Helvetica Neue</option>
+          <option value="Frutiger">Frutiger</option>
+          <option value="Arial">Arial</option>
+        </select>
+      </div>
+      <div>
+        <span class="cms-label">{{ t('settings.theme_mode') }}</span>
+        <div class="flex gap-4 text-sm">
+          <label class="flex items-center gap-2"><input type="radio" value="light" x-model="cfg.theme_mode"> Light</label>
+          <label class="flex items-center gap-2"><input type="radio" value="dark" x-model="cfg.theme_mode"> Dark</label>
+        </div>
+      </div>
+      <div>
+        <label class="cms-label" for="locale">{{ t('settings.locale') }}</label>
+        <select id="locale" class="cms-select" x-model="cfg.locale">
+          {% for loc in locales %}<option value="{{ loc }}">{{ 'Tiếng Việt' if loc == 'vi' else 'English' }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- Auto-save -->
+  <section class="cms-card p-5">
+    <h2 class="mb-4 text-lg">{{ t('settings.autosave') }}</h2>
+    <label class="mb-4 flex items-center gap-2 text-sm"><input type="checkbox" x-model="cfg.autosave_enabled"> {{ t('settings.enable_autosave') }}</label>
+    <div class="flex items-center gap-3 text-sm">
+      <span class="text-gray-500">{{ t('settings.interval') }}</span>
+      <input type="number" min="5" max="600" class="cms-input w-24" x-model.number="cfg.autosave_interval">
+      <span class="text-gray-400">seconds</span>
+    </div>
+  </section>
+
+  <div class="flex flex-wrap items-center gap-3">
+    <button class="cms-btn-primary" @click="save()" :disabled="saving">
+      <i class="fa" :class="saving ? 'fa-spinner animate-spin' : 'fa-floppy-o'"></i>{{ t('settings.save_settings') }}
+    </button>
+    <button class="cms-btn-outline" @click="testGithub()" :disabled="testing">
+      <i class="fa" :class="testing ? 'fa-spinner animate-spin' : 'fa-plug'"></i>{{ t('settings.test_connection') }}
+    </button>
+    <button class="cms-btn-outline" @click="testPelican()"><i class="fa fa-check"></i>Test Pelican</button>
+  </div>
+
+  <!-- Password -->
+  <section class="cms-card p-5">
+    <h2 class="mb-4 text-lg">{{ t('settings.change_password') }}</h2>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div><label class="cms-label">Current</label><input type="password" class="cms-input" x-model="pwd.current"></div>
+      <div><label class="cms-label">New</label><input type="password" class="cms-input" x-model="pwd.new"></div>
+    </div>
+    <button class="cms-btn-outline mt-4" @click="changePassword()" :disabled="changing">
+      <i class="fa" :class="changing ? 'fa-spinner animate-spin' : 'fa-key'"></i>{{ t('settings.change_password') }}
+    </button>
+  </section>
+</div>
+
+<script>
+  window.__CFG__ = {{ cfg|tojson }};
+  window.__TOKEN_SOURCE__ = {{ token_source|tojson }};
+  window.__HAS_TOKEN__ = {{ 'true' if has_token else 'false' }};
+</script>
+{% endblock %}

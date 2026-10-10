@@ -1,7 +1,16 @@
 {# Reusable UI macros #}
 
 {% macro image_url(a, fallback='article-default.svg') -%}
-{{ SITEURL }}/static/images/{{ a.metadata.get('image', fallback) }}
+{%- set img = a.metadata.get('image', fallback) -%}
+{%- if img.startswith('http://') or img.startswith('https://') or img.startswith('//') -%}
+{{ img }}
+{%- elif img.startswith('/') -%}
+{{ SITEURL }}{{ img }}
+{%- elif '/' in img -%}
+{{ SITEURL }}/{{ img }}
+{%- else -%}
+{{ SITEURL }}/static/images/{{ img }}
+{%- endif -%}
 {%- endmacro %}
 
 {% macro tag_list(a) -%}

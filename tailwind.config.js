@@ -3,7 +3,9 @@ module.exports = {
   content: [
     "./theme/templates/**/*.html",
     "./content/**/*.md",
+    "./cms/templates/**/*.html",
     "./src/**/*.css",
+    "./cms/static/css/**/*.css",
   ],
   theme: {
     container: {

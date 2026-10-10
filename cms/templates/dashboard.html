@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}{{ t('nav.dashboard') }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-6xl space-y-6">
+
+  {% if default_password %}
+  <div class="flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+    <span class="flex items-center gap-2"><i class="fa fa-shield"></i>{{ t('auth.default_hint') }}</span>
+    <a href="/settings" class="cms-btn cms-btn-sm border border-amber-300 bg-white text-amber-800 hover:bg-amber-100">{{ t('nav.settings') }}</a>
+  </div>
+  {% endif %}
+
+  <!-- Welcome -->
+  <section class="cms-card bg-sembcorp-green-wash p-6">
+    <h1 class="text-[28px] leading-tight text-sembcorp-green-dark">{{ t('dash.welcome', name=current_user) }}</h1>
+    <p class="mt-1 text-sm text-sembcorp-gray">{{ t('dash.subtitle') }}</p>
+  </section>
+
+  <!-- Stats -->
+  <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="cms-stat">
+      <span class="cms-stat-icon bg-sembcorp-green-wash text-sembcorp-green"><i class="fa fa-check-circle"></i></span>
+      <div><p class="text-2xl font-bold text-sembcorp-ink">{{ published_count }}</p><p class="text-sm text-sembcorp-gray">{{ t('dash.published') }}</p></div>
+    </div>
+    <div class="cms-stat">
+      <span class="cms-stat-icon bg-amber-50 text-amber-600"><i class="fa fa-pencil"></i></span>
+      <div><p class="text-2xl font-bold text-sembcorp-ink">{{ draft_count }}</p><p class="text-sm text-sembcorp-gray">{{ t('dash.drafts') }}</p></div>
+    </div>
+    <div class="cms-stat">
+      <span class="cms-stat-icon bg-sembcorp-mist text-sembcorp-gray"><i class="fa fa-picture-o"></i></span>
+      <div><p class="text-2xl font-bold text-sembcorp-ink">{{ media_count }}</p><p class="text-sm text-sembcorp-gray">{{ t('dash.media_files') }}</p></div>
+    </div>
+    <div class="cms-stat">
+      <span class="cms-stat-icon bg-sky-50 text-sky-600"><i class="fa fa-font"></i></span>
+      <div><p class="text-2xl font-bold text-sembcorp-ink">{{ '{:,}'.format(total_words) }}</p><p class="text-sm text-sembcorp-gray">{{ t('dash.total_words') }}</p></div>
+    </div>
+  </section>
+
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <!-- Recent posts -->
+    <section class="cms-card overflow-hidden lg:col-span-2">
+      <header class="flex items-center justify-between border-b border-sembcorp-line px-5 py-4">
+        <h2 class="text-lg">{{ t('dash.recent_posts') }}</h2>
+        <a href="/posts" class="text-sm font-semibold text-sembcorp-green hover:text-sembcorp-green-dark">{{ t('action.view_all') }} <i class="fa fa-arrow-right"></i></a>
+      </header>
+
+      {% if recent_posts %}
+      <ul class="divide-y divide-sembcorp-line">
+        {% for post in recent_posts %}
+        <li class="flex items-center justify-between gap-4 px-5 py-4">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="{{ 'cms-badge-published' if post.status == 'published' else 'cms-badge-draft' }}">
+                <i class="fa {{ 'fa-circle' if post.status == 'published' else 'fa-circle-o' }} text-[7px]"></i>
+                {{ t('status.published') if post.status == 'published' else t('status.draft') }}
+              </span>
+              <span class="truncate text-sm font-semibold text-sembcorp-ink">{{ post.title }}</span>
+            </div>
+            <p class="mt-1 truncate text-xs text-gray-500">
+              <i class="fa fa-calendar-o"></i> {{ post.date }}
+              {% if post.category %}<span class="mx-1.5">·</span><i class="fa fa-folder-o"></i> {{ post.category }}{% endif %}
+            </p>
+          </div>
+          <div class="flex shrink-0 items-center gap-1">
+            <a href="/posts/{{ post.slug }}/edit" class="cms-btn-ghost cms-btn-sm" title="{{ t('action.edit') }}"><i class="fa fa-pencil"></i></a>
+            <a href="/preview" target="_blank" rel="noopener" class="cms-btn-ghost cms-btn-sm" title="{{ t('action.preview') }}"><i class="fa fa-eye"></i></a>
+            <button class="cms-btn-ghost cms-btn-sm text-red-600 hover:bg-red-50" title="{{ t('action.delete') }}"
+                    onclick="CMS.deletePost('{{ post.slug }}')"><i class="fa fa-trash-o"></i></button>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="px-5 py-12 text-center text-sm text-gray-500">
+        <i class="fa fa-file-text-o text-3xl text-gray-300"></i>
+        <p class="mt-3">{{ t('dash.no_posts') }}</p>
+        <a href="/posts/new" class="cms-btn-primary mt-4"><i class="fa fa-plus"></i>{{ t('action.new_post') }}</a>
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- Git status -->
+    <section class="space-y-6">
+      <div class="cms-card p-5">
+        <h2 class="mb-3 flex items-center gap-2 text-lg"><i class="fa fa-code-fork text-sembcorp-green"></i>{{ t('dash.git_status') }}</h2>
+        {% if git.error %}
+          <p class="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">{{ git.error }}</p>
+        {% else %}
+          <div class="space-y-1 text-sm">
+            <p class="flex justify-between"><span class="text-gray-500">Branch</span><span class="font-semibold">{{ git.branch }}</span></p>
+            <p class="flex justify-between"><span class="text-gray-500">Working tree</span>
+              <span class="font-semibold {{ 'text-amber-600' if git.dirty else 'text-emerald-600' }}">
+                {{ 'Uncommitted' if git.dirty else 'Clean' }}
+              </span>
+            </p>
+            {% set changed = (git.changed|length) + (git.untracked|length) %}
+            {% if changed %}<p class="flex justify-between"><span class="text-gray-500">Changes</span><span class="font-semibold">{{ changed }}</span></p>{% endif %}
+          </div>
+          <button class="cms-btn-outline mt-4 w-full" onclick="CMS.publishAll(this)">
+            <i class="fa fa-cloud-upload"></i>Publish all changes
+          </button>
+        {% endif %}
+      </div>
+
+      <div class="cms-card p-5">
+        <h2 class="mb-3 text-lg">Recent commits</h2>
+        {% if commits %}
+        <ul class="space-y-3">
+          {% for commit in commits %}
+          <li class="text-sm">
+            <p class="truncate font-medium text-sembcorp-ink">{{ commit.message }}</p>
+            <p class="text-xs text-gray-400"><code class="text-sembcorp-green">{{ commit.sha }}</code> · {{ commit.date }}</p>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-gray-400">No commits yet.</p>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

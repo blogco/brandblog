@@ -26,3 +26,16 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# ---- BrandBlog CMS ----
+cms/venv/
+cms/.venv/
+.cms_config.json
+.cms_auth.json
+.cms_secret
+.cms_sessions/
+.cms_preview.log
+.trash/
+.backups/
+*.pyc
+__pycache__/

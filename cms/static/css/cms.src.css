@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   BrandBlog CMS — styles
+   Shares design tokens with the public blog (see tailwind.config.js):
+   primary #006C53, text #464646, ink #1A1A1A, mist #F5F6F5.
+   ========================================================================== */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  [x-cloak] {
+    display: none !important;
+  }
+
+  body {
+    @apply bg-sembcorp-mist text-sembcorp-gray antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-sembcorp-ink font-semibold;
+  }
+
+  ::selection {
+    @apply bg-sembcorp-green text-white;
+  }
+}
+
+@layer components {
+  /* ---- Buttons ---- */
+  .cms-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-sembcorp-green focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .cms-btn-primary {
+    @apply cms-btn bg-sembcorp-green text-white hover:bg-sembcorp-green-dark;
+  }
+
+  .cms-btn-outline {
+    @apply cms-btn border border-sembcorp-line bg-white text-sembcorp-ink hover:border-sembcorp-green hover:text-sembcorp-green;
+  }
+
+  .cms-btn-ghost {
+    @apply cms-btn text-sembcorp-gray hover:bg-sembcorp-green-wash hover:text-sembcorp-green-dark;
+  }
+
+  .cms-btn-danger {
+    @apply cms-btn bg-red-600 text-white hover:bg-red-700;
+  }
+
+  .cms-btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  /* ---- Cards & surfaces ---- */
+  .cms-card {
+    @apply rounded-lg border border-sembcorp-line bg-white shadow-card;
+  }
+
+  .cms-panel {
+    @apply rounded-lg border border-sembcorp-line bg-white;
+  }
+
+  /* ---- Form controls ---- */
+  .cms-label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-sembcorp-gray;
+  }
+
+  .cms-input {
+    @apply w-full rounded-md border border-sembcorp-line bg-white px-3 py-2 text-sm text-sembcorp-ink placeholder:text-gray-400 focus:border-sembcorp-green focus:outline-none focus:ring-1 focus:ring-sembcorp-green;
+  }
+
+  .cms-select {
+    @apply cms-input appearance-none pr-9;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23464646'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-position: right 0.6rem center;
+    background-repeat: no-repeat;
+    background-size: 1.1rem;
+  }
+
+  /* ---- Sidebar ---- */
+  .cms-side-link {
+    @apply flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sembcorp-gray transition-colors hover:bg-sembcorp-green-wash hover:text-sembcorp-green-dark;
+  }
+
+  .cms-side-link-active {
+    @apply bg-sembcorp-green-wash font-semibold text-sembcorp-green-dark;
+  }
+
+  /* ---- Badges ---- */
+  .cms-badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+
+  .cms-badge-published {
+    @apply cms-badge bg-emerald-50 text-emerald-700;
+  }
+
+  .cms-badge-draft {
+    @apply cms-badge bg-amber-50 text-amber-700;
+  }
+
+  /* ---- Stat tiles ---- */
+  .cms-stat {
+    @apply cms-card flex items-center gap-4 p-5;
+  }
+
+  .cms-stat-icon {
+    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-xl;
+  }
+
+  /* ---- Toasts ---- */
+  .cms-toast {
+    @apply pointer-events-auto flex items-start gap-3 rounded-lg border border-sembcorp-line bg-white px-4 py-3 shadow-card;
+  }
+
+  /* ---- Editor ---- */
+  .EasyMDEContainer .CodeMirror {
+    @apply min-h-[420px] rounded-b-md border-sembcorp-line text-[15px];
+  }
+
+  .editor-toolbar {
+    @apply rounded-t-md border border-sembcorp-line bg-white;
+  }
+
+  .editor-preview,
+  .editor-preview-side {
+    @apply bg-white p-5;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-sembcorp-line;
+  }
+}

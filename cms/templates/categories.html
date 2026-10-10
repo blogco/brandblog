@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ t('categories.title') }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl space-y-6">
+  <header>
+    <h1 class="text-[28px] leading-tight">{{ t('categories.title') }}</h1>
+    <p class="text-sm text-sembcorp-gray">{{ post_count }} {{ t('nav.posts')|lower }}</p>
+  </header>
+
+  <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+    <section class="cms-card overflow-hidden">
+      <header class="border-b border-sembcorp-line px-5 py-4"><h2 class="text-lg"><i class="fa fa-folder-o mr-2 text-sembcorp-green"></i>{{ t('label.category') }}</h2></header>
+      <ul class="divide-y divide-sembcorp-line">
+        {% for name, count in categories.items() %}
+        <li class="flex items-center justify-between px-5 py-3">
+          <span class="text-sm font-medium text-sembcorp-ink">{{ name }}</span>
+          <span class="cms-badge bg-sembcorp-green-wash text-sembcorp-green-dark">{{ t('categories.used', count=count) }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="cms-card overflow-hidden">
+      <header class="border-b border-sembcorp-line px-5 py-4"><h2 class="text-lg"><i class="fa fa-tags mr-2 text-sembcorp-green"></i>{{ t('label.tags') }}</h2></header>
+      <div class="flex flex-wrap gap-2 p-5">
+        {% for name, count in tags.items() %}
+        <span class="cms-badge bg-sembcorp-mist text-sembcorp-gray">{{ name }} <span class="text-sembcorp-green">{{ count }}</span></span>
+        {% else %}
+        <p class="text-sm text-gray-400">—</p>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

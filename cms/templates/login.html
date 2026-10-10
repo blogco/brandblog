@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="{{ locale }}" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <title>{{ t('auth.login') }} · {{ app_name }}</title>
+  <link rel="icon" href="/static/img/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/vendor/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/static/css/cms.css">
+</head>
+<body class="h-full">
+<div class="flex min-h-full items-center justify-center bg-gradient-to-br from-sembcorp-green-dark via-sembcorp-green to-sembcorp-green-light px-4 py-10">
+  <div class="w-full max-w-md">
+    <div class="mb-6 flex items-center justify-center gap-3 text-white">
+      <span class="flex h-11 w-11 items-center justify-center rounded-lg bg-white/15 text-xl"><i class="fa fa-leaf"></i></span>
+      <div>
+        <p class="text-lg font-bold leading-tight">{{ app_name }}</p>
+        <p class="text-sm text-white/80">{{ t('app.tagline') }}</p>
+      </div>
+    </div>
+
+    <div class="cms-card p-7" x-data="loginForm()" @submit.prevent="submit()">
+      <h1 class="mb-1 text-[26px] leading-tight">{{ t('auth.login') }}</h1>
+      <p class="mb-6 text-sm text-sembcorp-gray">{{ t('app.tagline') }}</p>
+
+      {% if default_password %}
+      <div class="mb-5 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <i class="fa fa-exclamation-triangle mt-0.5"></i>
+        <span>{{ t('auth.default_hint') }}</span>
+      </div>
+      {% endif %}
+
+      <form @submit.prevent="submit()" class="space-y-4">
+        <div>
+          <label class="cms-label" for="username">{{ t('auth.username') }}</label>
+          <input id="username" class="cms-input" type="text" x-model="username" autocomplete="username" autofocus>
+        </div>
+        <div>
+          <label class="cms-label" for="password">{{ t('auth.password') }}</label>
+          <div class="relative">
+            <input id="password" class="cms-input pr-10" :type="show ? 'text' : 'password'" x-model="password" autocomplete="current-password">
+            <button type="button" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-sembcorp-ink" @click="show = !show">
+              <i class="fa" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <p x-show="error" x-cloak class="flex items-center gap-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+          <i class="fa fa-times-circle"></i><span x-text="error"></span>
+        </p>
+
+        <button type="submit" class="cms-btn-primary w-full" :disabled="loading">
+          <i class="fa" :class="loading ? 'fa-spinner animate-spin' : 'fa-sign-in'"></i>
+          <span x-text="loading ? '{{ t('action.publishing') }}' : '{{ t('auth.signin') }}'"></span>
+        </button>
+      </form>
+    </div>
+
+    <p class="mt-5 text-center text-xs text-white/70">Local-only CMS · Not affiliated with Sembcorp Industries</p>
+  </div>
+</div>
+
+<script src="/static/vendor/alpine.min.js" defer></script>
+<script src="/static/js/cms.js"></script>
+</body>
+</html>

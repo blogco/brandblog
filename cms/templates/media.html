@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ t('media.title') }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-6xl space-y-6" x-data="mediaLibrary()">
+  <header class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-[28px] leading-tight"><i class="fa fa-picture-o mr-2 text-sembcorp-green"></i>{{ t('media.title') }}</h1>
+      <p class="text-sm text-sembcorp-gray">{{ media|length }} {{ t('dash.media_files')|lower }} · {{ total_size }}</p>
+    </div>
+    <label class="cms-btn-primary cursor-pointer">
+      <i class="fa fa-upload"></i>{{ t('action.upload') }}
+      <input type="file" class="hidden" accept=".jpg,.jpeg,.png,.gif,.svg,.webp,.pdf" multiple @change="uploadFiles($event.target.files)">
+    </label>
+  </header>
+
+  <!-- Dropzone -->
+  <div class="rounded-lg border-2 border-dashed border-sembcorp-line bg-white px-6 py-8 text-center text-sm text-gray-500 transition-colors"
+       :class="dragging ? 'border-sembcorp-green bg-sembcorp-green-wash' : ''"
+       @dragover.prevent="dragging = true" @dragleave.prevent="dragging = false"
+       @drop.prevent="dragging = false; uploadFiles($event.dataTransfer.files)">
+    <i class="fa fa-cloud-upload text-2xl text-sembcorp-green"></i>
+    <p class="mt-2">{{ t('media.drop') }}</p>
+    <p class="mt-1 text-xs text-gray-400">{{ t('media.support') }}</p>
+    <div class="mx-auto mt-3 h-1.5 w-64 overflow-hidden rounded-full bg-sembcorp-mist" x-show="uploading" x-cloak>
+      <div class="h-full bg-sembcorp-green transition-all" :style="'width:' + progress + '%'"></div>
+    </div>
+  </div>
+
+  {% for label, group in [(t('media.uploads'), uploads), (t('media.theme'), theme_assets)] %}
+  <section>
+    <h2 class="mb-3 text-lg">{{ label }} <span class="text-sm font-normal text-gray-400">({{ group|length }})</span></h2>
+    {% if group %}
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      {% for item in group %}
+      <figure class="cms-card group overflow-hidden transition-transform duration-150 hover:-translate-y-0.5 hover:shadow-lg">
+        <div class="flex h-32 items-center justify-center overflow-hidden bg-sembcorp-mist">
+          {% if item.is_image %}
+          <img src="{{ item.preview }}" alt="{{ item.name }}" loading="lazy" class="h-full w-full object-cover">
+          {% else %}
+          <i class="fa fa-file-pdf-o text-4xl text-red-400"></i>
+          {% endif %}
+        </div>
+        <figcaption class="p-3">
+          <p class="truncate text-xs font-semibold text-sembcorp-ink" title="{{ item.name }}">{{ item.name }}</p>
+          <p class="mb-2 text-[11px] text-gray-400">{{ item.size_human }} · {{ item.modified }}</p>
+          <div class="flex gap-1">
+            <button class="cms-btn-ghost cms-btn-sm flex-1" @click="copy('{{ item.url }}')" title="{{ t('action.copy_url') }}"><i class="fa fa-link"></i></button>
+            <button class="cms-btn-ghost cms-btn-sm text-red-600 hover:bg-red-50" @click="remove('{{ item.source }}', '{{ item.name }}')" title="{{ t('action.delete') }}"><i class="fa fa-trash-o"></i></button>
+          </div>
+        </figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="rounded-lg border border-dashed border-sembcorp-line bg-white px-5 py-8 text-center text-sm text-gray-400">{{ t('media.empty') }}</p>
+    {% endif %}
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

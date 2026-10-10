@@ -5,7 +5,10 @@
   "description": "Static brand blog (Home / News / Branding) built with Pelican + Tailwind CSS, inspired by Sembcorp's UI/UX.",
   "scripts": {
     "build:css": "tailwindcss -i ./src/input.css -o ./theme/static/css/style.css --minify",
+    "build:cms-css": "tailwindcss -i ./cms/static/css/cms.src.css -o ./cms/static/css/cms.css --minify",
+    "build": "npm run build:css && npm run build:cms-css",
     "watch:css": "tailwindcss -i ./src/input.css -o ./theme/static/css/style.css --watch",
+    "watch:cms-css": "tailwindcss -i ./cms/static/css/cms.src.css -o ./cms/static/css/cms.css --watch",
     "build:site": "pelican content -s publishconf.py -o output",
     "serve": "pelican content -s pelicanconf.py -l -r"
   },
