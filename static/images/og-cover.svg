@@ -1,24 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" preserveAspectRatio="xMidYMid slice" role="img" aria-label="BrandBlog — Energy, Sustainability and Innovation Insights">
   <defs>
     <linearGradient id="ob" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#001A2E"/>
-      <stop offset="0.6" stop-color="#0082F0"/>
-      <stop offset="1" stop-color="#1A8FF3"/>
+      <stop offset="0" stop-color="#003429"/>
+      <stop offset="0.6" stop-color="#006C53"/>
+      <stop offset="1" stop-color="#0E846D"/>
     </linearGradient>
   </defs>
   <rect width="1200" height="630" fill="url(#ob)"/>
-  <circle cx="960" cy="170" r="120" fill="#FAD22D" opacity="0.25"/>
-  <circle cx="1060" cy="420" r="150" fill="#3AA0F5" opacity="0.20"/>
+  <circle cx="960" cy="170" r="120" fill="#FF6400" opacity="0.25"/>
+  <circle cx="1060" cy="420" r="150" fill="#0095FF" opacity="0.20"/>
   <g fill="none" stroke="#ffffff" stroke-opacity="0.10" stroke-width="2">
     <circle cx="960" cy="170" r="220"/>
     <circle cx="960" cy="170" r="320"/>
   </g>
   <g transform="translate(90 250)">
     <rect width="72" height="72" rx="16" fill="#ffffff"/>
-    <path d="M21 51c0-16.5 14.5-31 31-31 0 16.5-14.5 31-31 31Z" fill="#0082F0"/>
-    <circle cx="52" cy="20" r="3.5" fill="#FAD22D"/>
+    <path d="M21 51c0-16.5 14.5-31 31-31 0 16.5-14.5 31-31 31Z" fill="#006C53"/>
+    <circle cx="52" cy="20" r="3.5" fill="#FF6400"/>
   </g>
   <text x="90" y="400" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="64" font-weight="700" fill="#ffffff">BrandBlog</text>
   <text x="92" y="448" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="26" font-weight="600" fill="#ffffff" opacity="0.75" letter-spacing="3">ENERGY · SUSTAINABILITY · INNOVATION</text>
-  <rect x="92" y="480" width="120" height="6" rx="3" fill="#FAD22D"/>
+  <rect x="92" y="480" width="120" height="6" rx="3" fill="#FF6400"/>
 </svg>

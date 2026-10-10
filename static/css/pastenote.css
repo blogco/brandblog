@@ -39,7 +39,7 @@
 
   /* ---- Handwriting (Google Fonts Caveat + graceful fallbacks) ---- */
   --pn-hand: "Caveat", "Kalam", "Segoe Print", "Comic Sans MS", cursive;
-  --pn-ui: "Ericsson Hilda", Arial, sans-serif;
+  --pn-ui: "Frutiger", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 /* ---------------------------------------------------------------------------
@@ -56,16 +56,16 @@
 }
 
 .pn-compose:focus-within {
-  border-color: #0082f0;
+  border-color: #006c53;
   border-style: solid;
   background: #fff;
-  box-shadow: 0 0 0 4px rgba(0, 130, 240, 0.08);
+  box-shadow: 0 0 0 4px rgba(0, 108, 83, 0.08);
 }
 
 .pn-compose.is-dragover {
-  border-color: #0082f0;
+  border-color: #006c53;
   border-style: solid;
-  background: #e6f2fd;
+  background: #e6f1ee;
 }
 
 .pn-compose-head {
@@ -138,7 +138,7 @@
 }
 
 .pn-color-dot:focus-visible {
-  outline: 2px solid #0082f0;
+  outline: 2px solid #006c53;
   outline-offset: 2px;
 }
 
@@ -170,14 +170,14 @@
 }
 
 .pn-btn-primary {
-  border: 1px solid #0082f0;
-  background: #0082f0;
+  border: 1px solid #006c53;
+  background: #006c53;
   color: #fff;
 }
 
 .pn-btn-primary:hover {
-  background: #0069c2;
-  border-color: #0069c2;
+  background: #005b48;
+  border-color: #005b48;
 }
 
 .pn-btn-ghost {
@@ -187,12 +187,12 @@
 }
 
 .pn-btn-ghost:hover {
-  border-color: #0082f0;
-  color: #0082f0;
+  border-color: #006c53;
+  color: #006c53;
 }
 
 .pn-btn:focus-visible {
-  outline: 2px solid #0082f0;
+  outline: 2px solid #006c53;
   outline-offset: 2px;
 }
 
@@ -517,7 +517,7 @@
 }
 
 .pn-icon-btn:focus-visible {
-  outline: 2px solid #0082f0;
+  outline: 2px solid #006c53;
   outline-offset: 1px;
 }
 
@@ -574,10 +574,10 @@
   gap: 0.65rem;
   max-width: calc(100vw - 2rem);
   border-radius: 100px;
-  background: #0082f0;
+  background: #006c53;
   padding: 0.5rem 0.55rem 0.5rem 1rem;
   color: #fff;
-  box-shadow: 0 8px 24px rgba(0, 130, 240, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 108, 83, 0.35);
   font-family: var(--pn-ui);
   font-size: 0.82rem;
   font-weight: 600;
@@ -589,7 +589,7 @@
 }
 
 .pn-sync[data-state="syncing"] {
-  background: #0069c2;
+  background: #005b48;
 }
 
 .pn-sync-text {
@@ -788,9 +788,9 @@
 }
 
 .pn-input:focus {
-  border-color: #0082f0;
+  border-color: #006c53;
   outline: none;
-  box-shadow: 0 0 0 4px rgba(0, 130, 240, 0.1);
+  box-shadow: 0 0 0 4px rgba(0, 108, 83, 0.1);
 }
 
 .pn-check {
@@ -868,7 +868,7 @@
   align-items: flex-start;
   gap: 0.7rem;
   border: 1px solid #e0e0e0;
-  border-left: 4px solid #0082f0;
+  border-left: 4px solid #006c53;
   border-radius: 10px;
   background: #fff;
   padding: 0.85rem 1rem;
