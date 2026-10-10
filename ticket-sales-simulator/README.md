@@ -6,7 +6,9 @@ Không phụ thuộc mạng, không cần cài đặt, không bước build.
 Bạn đóng vai nhân viên quầy vé của hãng hư cấu **TNHH Hưng Hà Airways (HH)** tại Hà Nội.
 Thay vì bấm nút, bạn **gõ lệnh như trên hệ thống đặt chỗ Amadeus** (màn hình xanh đen,
 chữ monospace, hiệu ứng CRT) để phục vụ từng khách: nhập tên + APIS, tra cứu chuyến, bán chỗ,
-tạo PNR, tính giá, xuất vé, tra lại vé bằng `RT#<PNR>` — và giữ doanh thu, điểm uy tín.
+tạo PNR, tính giá, thu phí dịch vụ, xuất vé, tra lại vé bằng `RT#<PNR>` — và giữ doanh thu, điểm uy tín.
+Các lệnh phụ trợ thực tế (sửa tên `NACO`, thông tin tàu bay `EQ`, thời tiết `WEA`, giải mã `DA`…)
+cũng được mô phỏng theo chuẩn Amadeus.
 
 > Sản phẩm học tập, phi thương mại. Hãng hàng không, số hiệu chuyến, giá vé và nhân vật
 > đều hư cấu và đã được đơn giản hoá cho mục đích giảng dạy. Không liên kết với, cũng không
@@ -33,24 +35,34 @@ vào dấu nhắc `>`:
 | Lệnh | Ý nghĩa | Ví dụ |
 |------|---------|-------|
 | `NM1<MR|MS> <SURNAME>/<GIVEN>` | Nhập tên hành khách **kèm danh xưng** (HỌ/TÊN, viết hoa, không dấu) | `NM1MR NGUYEN/VAN MINH` |
+| `NACO<LINE><TÊN MỚI>` | **Sửa tên hành khách** (name correction). Đổi ≤3 ký tự miễn phí; đổi nhiều hơn bị thu phí `NACO` | `NACO2MR TRAN/THU HA` |
 | `APIS <TYPE>/<ISSUE>/<DOCNO>/<NAT>/<DOB>/<SEX>/<EXP>/<SURNAME>/<GIVEN>` | Nhập dữ liệu hành khách theo **chuẩn IATA** (bắt buộc cho mọi khách) | `APIS P/VN/B1234567/VN/12MAR1985/M/15MAR2030/NGUYEN/VAN MINH` |
 | `AN<DDMMM><ORG><DST>` | Hiển thị chuyến bay & tình trạng chỗ (chỉ sau khi đủ tên + APIS) | `AN10NOVHANSGN` |
 | `SS<QTY><CLASS><LINE>` | Bán (giữ) chỗ theo dòng đã hiển thị | `SS3M1` |
+| `XK<LINE>` / `XE<LINE>` | Huỷ / xoá một chặng trong PNR | `XK1` |
+| `SO <AMOUNT>` | **Thu phí dịch vụ** ngay trên màn hình (gộp vào tổng khi tính giá) | `SO150000` |
+| `FO <FORM>` | Ghi **hình thức thanh toán** (`CASH` / `CK` / `CC<16 số>/<YYMM>`) | `FO CASH` |
 | `AP <PHONE>` | Thêm liên hệ | `AP 0912345678` |
 | `SR <CODE>` | Yêu cầu dịch vụ đặc biệt (SSR) | `SR CHML` |
-| `FXP` | Tính giá vé, thuế và phí | `FXP` |
+| `FXP` | Tính giá vé, thuế, phí và dịch vụ | `FXP` |
+| `TQT` | Xem **chi tiết thuế & phí** (chưa gồm giá vé) | `TQT` |
 | `TKTL` | Phát hành vé điện tử | `TKTL` |
+| `TTK` | **Danh sách số vé đã xuất** | `TTK` |
 | `RT` | Xem lại PNR đang mở (hoặc vé gần nhất) | `RT` |
+| `RD` | Hiển thị lại PNR (redisplay) | `RD` |
 | `RT#<PNR>` | Tra **ruột vé đã xuất** + chi tiết + **thống kê doanh thu** | `RT#YF4AJ6` |
+| `EQ<CODE>` | **Thông tin tàu bay** (equipment): tầm bay, sức chứa, động cơ… (`EQ` không mã = danh sách đội tàu) | `EQ320` |
+| `WEA <CITY>` | **Thời tiết 5 ngày** tại điểm đến | `WEA SGN` |
+| `DA <CITY>` | Giải mã mã sân bay (decode) | `DA SIN` |
 | `NEXT` | **Tiếp nhận khách mua vé kế tiếp** | `NEXT` |
-| `XE<LINE>` | Xoá một chặng | `XE1` |
 | `IG` | Bỏ PNR hiện tại (ignore) | `IG` |
 | `RF` | Hoàn vé gần nhất (refund) | `RF` |
 | `HELP` | In danh sách lệnh | `HELP` |
 | `CLS` | Xoá màn hình | `CLS` |
 
 **Quy trình một hồ sơ:** `NM` → `APIS` (cho **từng** khách) → `AN` → `SS` → `AP` →
-`SR` (nếu cần) → `FXP` → `TKTL` → `RT#<PNR>` (tuỳ chọn) → `NEXT`.
+`(NACO nếu sửa tên)` → `(SO nếu thu phí dịch vụ)` → `(FO nếu ghi thanh toán)` → `SR` (nếu cần) →
+`FXP` → `TKTL` → `RT#<PNR>` (tuỳ chọn) → `NEXT`.
 
 ### Nhập hành khách & APIS (bắt buộc trước khi tra cứu)
 
@@ -78,6 +90,48 @@ Trước khi được phép tra cứu chuyến (`AN`), bạn phải hoàn tất 
 
 > Nhập đủ tên + APIS cho **toàn bộ** hành khách thì `AN` mới chạy. Các chuyến bay gồm cả
 > tuyến nội địa và quốc tế (SIN, BKK, ICN, KUL, NRT).
+
+### Sửa tên hành khách (NACO) & thu phí dịch vụ
+
+**Đổi tên — `NACO<LINE><TÊN MỚI>`** (Amadeus: name correction). `LINE` là số thứ tự hành
+khách trong hồ sơ (1, 2, 3…):
+
+```
+NACO2MR TRAN/THU HA        ← hành khách số 2, đổi thành TRAN/THU HA (kèm danh xưng mới)
+```
+
+- Theo quy tắc **TIM/IATA**, tên đổi không quá **3 ký tự** (so với tên trước) được miễn phí,
+  không phải xuất lại vé. Đổi nhiều hơn 3 ký tự bị **thu phí đổi tên `NACO` (225.000 VND)**,
+  tự động gộp vào giá khi tính `FXP`.
+- Sau đổi tên, **phải nhập lại APIS** cho hành khách đó (tên trong APIS phải khớp) trước khi
+  tra cứu lại.
+- Có thể gõ `NU…` thay cho `NACO…` (cách ghi tắt trong thực tế).
+
+**Thu phí dịch vụ — `SO <AMOUNT>`** (service fee): thu phí dịch vụ ngay trên màn hình,
+gộp vào tổng tiền khi tính giá và xuất vé:
+
+```
+SO150000                 ← phí dịch vụ 150.000 VND
+FXP                      ← xem phí được liệt kê và cộng vào tổng
+```
+
+**Hình thức thanh toán — `FO <FORM>`**: ghi cách khách thanh toán (tiền mặt / séc / thẻ),
+hiển thị trên PNR và trên ra ruột vé:
+
+```
+FO CASH                  ← tiền mặt
+FO CK                    ← séc (cheque)
+FO CC4111111111111111/0426   ← thẻ tín dụng
+```
+
+### Tra cứu thông tin
+
+- **`EQ<CODE>`** — thông tin tàu bay (equipment): sức chứa, tầm bay, tốc độ, động cơ…
+  `EQ` không kèm mã in danh sách đội tàu của Hưng Hà Airways.
+- **`WEA <CITY>`** — thời tiết **5 ngày** tại điểm đến (mã sân bay), ví dụ `WEA SGN`.
+- **`DA <CITY>`** — giải mã mã sân bay (decode), ví dụ `DA SIN`.
+- **`TQT`** — chi tiết thuế & phí của hồ sơ (chưa gồm giá vé).
+- **`TTK`** — danh sách số vé đã xuất trong ca.
 
 ### Sau khi xuất vé
 
@@ -112,6 +166,10 @@ Sau khi chơi, bạn nên tự tin hơn với:
 - **Đọc bảng tình trạng chỗ** — hiểu `M9`, `K0`, biết giá "từ X" phụ thuộc hạng đặt chỗ còn mở.
 - **Tạo hồ sơ hành khách đúng chuẩn** — danh xưng (MR/MRS/MS/MISS/MSTR), định dạng tên
   `HỌ/TÊN`, nhập **APIS theo chuẩn IATA**, thêm liên hệ, ghi dịch vụ qua SSR.
+- **Sửa tên theo quy tắc TIM/IATA** — `NACO` (≤3 ký tự miễn phí, đổi nhiều hơn thu phí) và
+  cập nhật APIS sau khi đổi tên.
+- **Thu phí dịch vụ & thanh toán** — thu phí `SO` ngay trên màn hình, ghi hình thức thanh toán `FO`.
+- **Tra cứu thông tin** — tàu bay (`EQ`), thời tiết điểm đến (`WEA`), giải mã sân bay (`DA`).
 - **Tra cứu sau bán** — dùng `RT#<PNR>` để kiểm tra ruột vé và đọc thống kê doanh thu.
 - **Chọn đúng loại giá** — so sánh theo tổng chi phí cho nhu cầu thật (hành lý, đổi ngày).
 - **Tính đúng giá, thuế, phí** — phân biệt giá vé với VAT, phí sân bay/an ninh, phí xuất vé.

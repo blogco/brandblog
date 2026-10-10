@@ -342,6 +342,27 @@ body::after{
   function shiftGoal(){ return 5; }
 
   /* ==================================================================
+     2b. SALES REPORTS — NGỮ CẢNH QUẦY & LƯU TRỮ CHỨNG TỪ
+     ================================================================== */
+  var AGENT = { sign:'HH01', no:'074', as:'HH01', dutyCode:'SU', iata:'781', office:'HAN01' };
+  var CURRENCY = 'VND';
+  var TODAY = '15NOV';
+  var TODAY_LONG = '15 NOV 2026';
+
+  var SR_KEY = 'salesRecords';
+  var salesRecords = [];
+  function loadSalesRecords(){
+    try {
+      var raw = localStorage.getItem(SR_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      salesRecords = Array.isArray(arr) ? arr : [];
+    } catch (e) { salesRecords = []; }
+  }
+  function saveSalesRecords(){
+    try { localStorage.setItem(SR_KEY, JSON.stringify(salesRecords)); } catch (e) {}
+  }
+
+  /* ==================================================================
      3. XUẤT MÀN HÌNH (terminal I/O)
      ================================================================== */
   function out(html, cls){
@@ -385,7 +406,7 @@ body::after{
      5. SINH LỊCH BAY (availability) — có seed, đảm bảo khả thi
      ================================================================== */
   var DEP_POOL = [360,420,470,510,560,620,660,720,780,840,900,960,1020,1080,1140];
-  var EQUIP = ['E0.320','E0.321','E0.787','E0.350'];
+  var EQUIP = ['320','321','787','350'];
 
   function makeSchedule(from, to, date, req){
     var key = from + '-' + to + '-' + date;
@@ -743,7 +764,7 @@ body::after{
   }
 
   function blankPnr(){
-    return { locator:null, segs:[], contact:null, ssr:[], priced:null, ttl:null, ticketed:false };
+    return { locator:null, segs:[], contact:null, ssr:[], fees:[], fop:null, priced:null, ttl:null, ticketed:false };
   }
 
   /* ==================================================================
@@ -889,6 +910,223 @@ body::after{
   }
 
   /* ==================================================================
+     10c. LỆNH: NACO (name correction) / SO (phí dịch vụ) / FO (thanh toán)
+     ================================================================== */
+  var FEE_LABEL = { NACO:'ĐỔI TÊN (NACO)', SVC:'DỊCH VỤ (SVC)', NAME:'ĐỔI TÊN (NAME)' };
+  var FOP_LABEL = { CASH:'TIỀN MẶT', CHEQUE:'SÉC (CHEQUE)', CARD:'THẺ TÍN DỤNG', OTHER:'KHÁC' };
+
+  function levDistance(a, b){
+    var m = a.length, n = b.length;
+    if (m === 0) return n; if (n === 0) return m;
+    var d = [];
+    for (var i=0;i<=m;i++){ d[i] = []; d[i][0] = i; }
+    for (var j=0;j<=n;j++) d[0][j] = j;
+    for (i=1;i<=m;i++) for (j=1;j<=n;j++){
+      var cost = a[i-1] === b[j-1] ? 0 : 1;
+      d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + cost);
+    }
+    return d[m][n];
+  }
+
+  function addFee(f){
+    if (!pnr) pnr = blankPnr();
+    f.id = pnr.fees.length + 1;
+    f.label = FEE_LABEL[f.code] || ('PHÍ DỊCH VỤ (' + f.code + ')');
+    pnr.fees.push(f);
+    pnr.priced = null;
+  }
+
+  function doNACO(raw, cmdName){
+    if (!cust){ err('NO ACTIVE CUSTOMER — CHƯA CÓ YÊU CẦU KHÁCH HÀNG'); return; }
+    var s = String(raw).trim();
+    var m = s.match(/^(\d+)\s*(.+)$/);
+    if (!m){
+      err('CHECK FORMAT — ' + cmdName + '<LINE><TÊN MỚI>, VD: ' + cmdName + '2MR NGUYEN/VAN MINH');
+      return;
+    }
+    var line = Number(m[1]);
+    var p = cust.pax[line - 1];
+    if (!p){ err('INVALID LINE — HỒ SƠ CHỈ CÓ ' + cust.pax.length + ' HÀNH KHÁCH'); return; }
+    var nm = parseNM(m[2]);
+    var np = nameParts(nm.name);
+    if (!np){ err('TÊN MỚI KHÔNG HỢP LỆ — HỌ/TÊN, VD: NGUYEN/VAN MINH'); return; }
+    if (nm.title && !titleAllowed(p, nm.title)){
+      err('DANH XƯNG ' + nm.title + ' KHÔNG HỢP LỆ — HÀNH KHÁCH NÀY ' +
+          (p.sex === 'M' ? 'LÀ NAM (MR/MSTR)' : 'LÀ NỮ (MRS/MS/MISS)'));
+      return;
+    }
+    var dup = cust.pax.some(function(x){
+      return x !== p && x.surnameUp === np.sur && x.givenUp.replace(/\s/g,'') === np.giv;
+    });
+    if (dup){ err('TÊN MỚI TRÙNG HÀNH KHÁCH KHÁC TRONG HỒ SƠ'); return; }
+
+    var oldName = (p.title ? p.title + ' ' : '') + p.canon;
+    var dist = levDistance(p.surnameUp + p.givenUp, np.sur + np.giv);
+
+    out('<span class="hl">' + cmdName + m[1] + ' ' + esc(m[2].trim().toUpperCase()) + '</span>');
+    out('  <span class="dim">TÊN CŨ :</span> <span class="rd">' + esc(oldName) + '</span>', 'pre');
+    out('  <span class="dim">TÊN MỚI:</span> <span class="gr">' + esc((nm.title || p.title || '') + ' ' + np.sur + '/' + np.giv) + '</span>', 'pre');
+    if (dist === 0){ ok('TÊN GIỮ NGUYÊN — KHÔNG CÓ THAY ĐỔI'); blank(); return; }
+
+    p.surnameUp = np.sur;
+    p.givenUp = np.giv;
+    p.canon = np.sur + '/' + np.giv;
+    p.display = np.sur + ' ' + np.giv;
+    if (nm.title) p.title = nm.title;
+    p.apisDone = false;          // tên trong APIS phải cập nhật lại
+    if (pnr) pnr.priced = null;
+
+    if (dist <= 3){
+      ok('ĐỔI TÊN TRONG GIỚI HẠN 3 KÝ TỰ (TIM/IATA) — MIỄN PHÍ, KHÔNG CẦN XUẤT LẠI VÉ');
+    } else {
+      if (!pnr) pnr = blankPnr();
+      addFee({ code:'NACO', amt:225000 });
+      ok('TÊN THAY ĐỔI > 3 KÝ TỰ — THU PHÍ ĐỔI TÊN (NACO): 225,000 VND');
+    }
+    out('  <span class="am">CẬP NHẬT LẠI APIS CHO HÀNH KHÁCH NÀY (TÊN TRONG APIS PHẢI KHỚP)</span>', 'pre');
+    hint(nextStepHint());
+    blank();
+  }
+
+  function doSO(raw){
+    var amt = Number(String(raw).replace(/[^0-9]/g,''));
+    if (!amt || amt < 1000 || amt > 5000000){
+      err('CHECK FORMAT — SO<AMOUNT>, VD: SO150000 (1.000 – 5.000.000 VND)');
+      return;
+    }
+    if (!pnr) pnr = blankPnr();
+    addFee({ code:'SVC', amt: amt });
+    out('<span class="hl">SO ' + esc(String(raw).trim().toUpperCase()) + '</span>');
+    ok('ĐÃ THU PHÍ DỊCH VỤ (SVC): ' + money(amt) + ' VND — GỘP VÀO TỔNG KHI TÍNH GIÁ (FXP)');
+    hint(nextStepHint());
+    blank();
+  }
+
+  function doFO(raw){
+    if (!pnr){ err('NO ACTIVE PNR'); return; }
+    var v = String(raw).trim().toUpperCase();
+    if (!v){ err('CHECK FORMAT — FO CASH | FO CK | FO CC<16 SỐ>/<YYMM>'); return; }
+    var tp = 'OTHER';
+    if (/^CASH/.test(v)) tp = 'CASH';
+    else if (/^CK/.test(v) || /^CHEQUE/.test(v)) tp = 'CHEQUE';
+    else if (/^CC\d{11,19}(\/\d{4})?$/.test(v)) tp = 'CARD';
+    else { err('FO KHÔNG HỢP LỆ — DÙNG FO CASH / FO CK / FO CC<16 SỐ>/<YYMM>'); return; }
+    pnr.fop = { type: tp, raw: v, label: FOP_LABEL[tp] };
+    pnr.priced = null;
+    out('<span class="hl">FO ' + esc(v) + '</span>');
+    ok('ĐÃ GHI HÌNH THỨC THANH TOÁN: ' + FOP_LABEL[tp] + ' (' + esc(v) + ')');
+    hint(nextStepHint());
+    blank();
+  }
+
+  /* ==================================================================
+     10d. LỆNH THÔNG TIN: EQ (tàu bay) / WEA (thời tiết) / DA (giải mã)
+         và lệnh phụ trợ: TQT / TTK / RD / XK
+     ================================================================== */
+  var AIRCRAFT = {
+    '320': { type:'AIRBUS A320-200 (A320)', cls:'NARROW-BODY', seats:'150 (12 J / 138 Y)', range:'6,100 KM', cruise:'828 KM/H', span:'35.8 M', length:'37.6 M', engines:'2 x CFM56 (TURBOFAN)' },
+    '321': { type:'AIRBUS A321-200 (A321)', cls:'NARROW-BODY', seats:'196 (16 J / 180 Y)', range:'5,950 KM', cruise:'828 KM/H', span:'35.8 M', length:'44.5 M', engines:'2 x CFM56 / IAE V2500' },
+    '350': { type:'AIRBUS A350-900 (A350)', cls:'WIDE-BODY',   seats:'314 (32 J / 282 Y)', range:'15,000 KM', cruise:'903 KM/H', span:'64.8 M', length:'66.8 M', engines:'2 x ROLLS-ROYCE TRENT XWB' },
+    '787': { type:'BOEING 787-9 DREAMLINER', cls:'WIDE-BODY',   seats:'296 (28 J / 268 Y)', range:'14,140 KM', cruise:'903 KM/H', span:'60.1 M', length:'62.8 M', engines:'2 x GEnX / TRENT 1000' }
+  };
+  function doEQ(code){
+    if (!code){
+      out('<span class="hl">EQ</span>');
+      out('<span class="am"> ĐỘI TÀU BAY — TNHH HUNG HA AIRWAYS</span>', 'pre');
+      out(' ' + rule('-', 56), 'rule pre');
+      Object.keys(AIRCRAFT).sort().forEach(function(c){
+        var a = AIRCRAFT[c];
+        out('  <span class="flt">' + padR(c, 4) + '</span> <span class="wh">' + padR(a.type.split(' (')[0], 27) + '</span> <span class="dim">' + a.seats + '</span>', 'pre');
+      });
+      out(' ' + rule('-', 56), 'rule pre');
+      hint("Chi tiết một loại: 'EQ<CODE>'  ví dụ 'EQ320'");
+      blank();
+      return;
+    }
+    var a = AIRCRAFT[code];
+    if (!a){ err('UNKNOWN EQUIPMENT CODE — GÕ EQ ĐỂ XEM DANH SÁCH ĐỘI TÀU'); return; }
+    out('<span class="hl">EQ' + code + '</span>');
+    out('<span class="am"> THÔNG TIN TÀU BAY — ' + a.type + '</span>', 'pre');
+    out(' ' + rule('-', 52), 'rule pre');
+    out('  <span class="dim">' + padR('PHÂN KHÚC', 16) + '</span> <span class="wh">' + a.cls + '</span>', 'pre');
+    out('  <span class="dim">' + padR('SỨC CHỨA', 16) + '</span> <span class="wh">' + a.seats + '</span>', 'pre');
+    out('  <span class="dim">' + padR('TẦM BAY', 16) + '</span> <span class="wh">' + a.range + '</span>', 'pre');
+    out('  <span class="dim">' + padR('VẬN TỐC', 16) + '</span> <span class="wh">' + a.cruise + '</span>', 'pre');
+    out('  <span class="dim">' + padR('SẢI CÁNH', 16) + '</span> <span class="wh">' + a.span + '</span>', 'pre');
+    out('  <span class="dim">' + padR('CHIỀU DÀI', 16) + '</span> <span class="wh">' + a.length + '</span>', 'pre');
+    out('  <span class="dim">' + padR('ĐỘNG CƠ', 16) + '</span> <span class="wh">' + a.engines + '</span>', 'pre');
+    out(' ' + rule('-', 52), 'rule pre');
+    blank();
+  }
+
+  var CITY_TEMP = { HAN:20, SGN:30, DAD:27, PQC:30, CXR:28, HPH:22, SIN:30, BKK:31, ICN:14, KUL:31, NRT:13 };
+  var WEATHER_COND = ['NẮNG ĐẸP','CÓ MÂY','MƯA RÀO','DÔNG','SƯƠNG MÙ'];
+  function doWEA(code){
+    if (!CITY[code]){ err('UNKNOWN CITY — DÙNG MÃ 3 KÝ TỰ, VD: WEA SGN'); return; }
+    var r = rng(hash('WEA|' + code + '|15NOV'));
+    var base = CITY_TEMP[code] || 26;
+    out('<span class="hl">WEA ' + code + '</span>');
+    out('<span class="am"> THỜI TIẾT 5 NGÀY — ' + CITY[code].name + '</span>', 'pre');
+    out(' ' + rule('-', 58), 'rule pre');
+    for (var i=1;i<=5;i++){
+      var hi = base + randInt(r, -3, 6);
+      var lo = hi - randInt(r, 5, 9);
+      var cond = WEATHER_COND[Math.floor(r() * WEATHER_COND.length) % WEATHER_COND.length];
+      var wind = randInt(r, 5, 28);
+      var hum = randInt(r, 55, 95);
+      out('  <span class="dim">NGÀY ' + i + '</span>  <span class="tm">' + padL(String(hi),3) + '°/' + padL(String(lo),3) + '°C</span>  ' +
+          '<span class="wh">' + padR(cond, 12) + '</span> <span class="dim">gió ' + wind + ' KM/H · độ ẩm ' + hum + '%</span>', 'pre');
+    }
+    out(' ' + rule('-', 58), 'rule pre');
+    blank();
+  }
+
+  function doDA(code){
+    if (!CITY[code]){ err('UNKNOWN CITY CODE — DÙNG 3 KÝ TỰ, VD: DA SIN'); return; }
+    out('<span class="hl">DA ' + code + '</span>');
+    out('  <span class="wh">' + code + ' = ' + CITY[code].name + '</span>  <span class="dim">' + CITY[code].short +
+        ' · ' + (isIntl(code) ? 'QUỐC TẾ' : 'NỘI ĐỊA') + '</span>', 'pre');
+    blank();
+  }
+
+  function doTQT(){
+    if (!pnr || !pnr.segs.length){ err('NO SEGMENT — HÃY DÙNG SS ĐỂ BÁN CHỖ TRƯỚC'); return; }
+    var q = priceAll();
+    out('<span class="hl">TQT</span>');
+    out('<span class="am"> TAX QUOTE — CHI TIẾT THUẾ & PHÍ (CHƯA GỒM GIÁ VÉ)</span>', 'pre');
+    out(' ' + rule('-', 52), 'rule pre');
+    out('  ' + padR('VAT 8%', 30) + ' <span class="tm">' + padL(money(q.vat),15) + '</span>', 'pre');
+    out('  ' + padR('PHÍ SÂN BAY', 30) + ' <span class="tm">' + padL(money(q.airport),15) + '</span>', 'pre');
+    out('  ' + padR('PHÍ AN NINH', 30) + ' <span class="tm">' + padL(money(q.security),15) + '</span>', 'pre');
+    out('  ' + padR('PHÍ XUẤT VÉ', 30) + ' <span class="tm">' + padL(money(q.ticketing),15) + '</span>', 'pre');
+    (pnr.fees || []).forEach(function(f){
+      out('  ' + padR(f.label, 30) + ' <span class="tm">' + padL(money(f.amt),15) + '</span>', 'pre');
+    });
+    out(' ' + rule('-', 52), 'rule pre');
+    out('  <span class="bold am">' + padR('TỔNG THUẾ & PHÍ', 30) + ' ' +
+        padL(money(q.vat + q.airport + q.security + q.ticketing + q.fees), 15) + ' VND</span>', 'pre');
+    out(' ' + rule('-', 52), 'rule pre');
+    hint("Xem đầy đủ giá vé: 'FXP'");
+    blank();
+  }
+
+  function doTTK(){
+    if (!G.log.length){ err('NO TICKET ISSUED — CHƯA CÓ VÉ NÀO ĐƯỢC XUẤT'); return; }
+    out('<span class="hl">TTK</span>');
+    out('<span class="am"> DANH SÁCH VÉ ĐÃ XUẤT — HUNG HA AIRWAYS</span>', 'pre');
+    out(' ' + rule('-', 56), 'rule pre');
+    G.log.forEach(function(t, i){
+      out('  <span class="dim">' + padL(i+1,2) + '</span> <span class="hl">' + padR(t.locator,8) + '</span> ' +
+          '<span class="wh">' + padR(t.ticketNo, 17) + '</span> ' +
+          '<span class="tm">' + padL(money(t.priced.total),12) + ' VND</span> <span class="dim">' + t.time + '</span>', 'pre');
+    });
+    out(' ' + rule('-', 56), 'rule pre');
+    blank();
+  }
+
+  function doRD(){ doRT(null); }
+
+  /* ==================================================================
      11. LỆNH: AP — liên hệ
      ================================================================== */
   function doAP(raw){
@@ -950,12 +1188,14 @@ body::after{
     });
     var pax = p.adt + p.chd + p.inf;
     var legs = Math.max(1, pnr.segs.length);
+    var fees = 0;
+    (pnr.fees || []).forEach(function(f){ fees += f.amt; });
     vat = Math.round(fare * 0.08);
     airport = 100000 * pax * legs;
     security = 10000 * pax * legs;
     var ticketing = 30000 * pax;
-    var total = fare + vat + airport + security + ticketing;
-    return { fare:fare, vat:vat, airport:airport, security:security, ticketing:ticketing, total:total, rows:rows, pax:pax, legs:legs };
+    var total = fare + vat + airport + security + ticketing + fees;
+    return { fare:fare, vat:vat, airport:airport, security:security, ticketing:ticketing, fees:fees, total:total, rows:rows, pax:pax, legs:legs };
   }
 
   function doFXP(){
@@ -984,6 +1224,9 @@ body::after{
     out('  ' + padR('PHÍ SÂN BAY (' + q.pax + ' x 100,000 x ' + q.legs + ')', 30) + ' <span class="tm">' + padL(money(q.airport),15) + '</span>', 'pre');
     out('  ' + padR('PHÍ AN NINH (' + q.pax + ' x 10,000 x ' + q.legs + ')', 30) + ' <span class="tm">' + padL(money(q.security),15) + '</span>', 'pre');
     out('  ' + padR('PHÍ XUẤT VÉ (' + q.pax + ' x 30,000)', 30) + ' <span class="tm">' + padL(money(q.ticketing),15) + '</span>', 'pre');
+    (pnr.fees || []).forEach(function(f){
+      out('  ' + padR(f.label, 30) + ' <span class="tm">' + padL(money(f.amt),15) + '</span>', 'pre');
+    });
     out(' ' + rule('=', 52), 'rule pre');
     out('  <span class="bold am">' + padR('TỔNG PHẢI THU', 30) + ' ' + padL(money(q.total),15) + ' VND</span>', 'pre');
     blank();
@@ -1056,6 +1299,10 @@ body::after{
     out('   <span class="dim">VAT 8%</span>          <span class="tm">' + padL(money(t.priced.vat), 14) + '</span>', 'pre');
     out('   <span class="dim">SÂN BAY+AN NINH</span> <span class="tm">' + padL(money(t.priced.airport + t.priced.security), 14) + '</span>', 'pre');
     out('   <span class="dim">PHÍ XUẤT VÉ</span>     <span class="tm">' + padL(money(t.priced.ticketing), 14) + '</span>', 'pre');
+    (t.fees || []).forEach(function(f){
+      out('   <span class="dim">' + padR(f.label, 14) + '</span> <span class="tm">' + padL(money(f.amt), 14) + '</span>', 'pre');
+    });
+    if (t.fop) out('   <span class="dim">THANH TOÁN</span>   <span class="wh">' + padR(t.fop.label, 11) + '</span> <span class="dim">(' + esc(t.fop.raw) + ')</span>', 'pre');
     out('   <span class="bold gr">TỔNG CỘNG</span>      <span class="bold gr">' + padL(money(t.priced.total), 14) + ' VND</span>', 'pre');
     out('  ' + rule('=', 56), 'rule pre');
     blank();
@@ -1091,6 +1338,24 @@ body::after{
   function doIG(){
     if (!pnr){ err('NO ACTIVE PNR'); return; }
     var held = pnr.segs.reduce(function(a,s){ return a + s.qty; }, 0);
+    if (held > 0) {
+      addSalesRecord({
+        airline: 'HH',
+        docNumber: pnr.locator || '—',
+        total: pnr.priced ? pnr.priced.total : 0,
+        tax: 0,
+        commission: 0,
+        formOfPayment: fpOf(pnr),
+        paxName: (cust && cust.pax[0]) ? cust.pax[0].canon : '',
+        rloc: pnr.locator || '—',
+        transactionType: 'CANX',
+        date: TODAY,
+        agentSign: AGENT.sign,
+        status: 'confirmed',
+        fare: 0,
+        fee: 0
+      });
+    }
     releaseSeats();
     pnr = null;
     out('<span class="hl">IG</span>');
@@ -1163,6 +1428,8 @@ body::after{
     });
     out('   <span class="dim">HÀNH KHÁCH</span> ' + paxCount + '  ·  <span class="dim">LIÊN HỆ</span> ' + esc(pnr.contact), 'pre');
     if (pnr.ssr.length) out('   <span class="dim">DỊCH VỤ</span>   ' + pnr.ssr.join(' · '), 'pre');
+    if (pnr.fees.length) out('   <span class="dim">PHÍ DỊCH VỤ</span> ' + pnr.fees.map(function(f){ return f.label + ' ' + money(f.amt) + ' VND'; }).join(' + '), 'pre');
+    if (pnr.fop) out('   <span class="dim">THANH TOÁN</span>  ' + pnr.fop.label + ' (' + esc(pnr.fop.raw) + ')', 'pre');
     out('  ' + rule('-', 56), 'rule pre');
     out('   <span class="bold gr">ĐÃ THU: ' + money(q.total) + ' VND</span>', 'pre');
     out('  ' + rule('=', 56), 'rule pre');
@@ -1182,8 +1449,28 @@ body::after{
       segs: pnr.segs.slice(),
       contact: pnr.contact,
       ssr: pnr.ssr.slice(),
+      fees: pnr.fees.slice(),
+      fop: pnr.fop ? { type:pnr.fop.type, raw:pnr.fop.raw, label:pnr.fop.label } : null,
       priced: pnr.priced,
       classLabel: classLabel
+    });
+
+    // ghi chứng từ bán vé vào sổ sales reports (localStorage)
+    addSalesRecord({
+      airline: 'HH',
+      docNumber: ticketNo,
+      total: q.total,
+      tax: q.vat + q.airport + q.security,
+      commission: Math.round(q.fare * 0.05),
+      formOfPayment: fpOf(pnr),
+      paxName: cust.pax[0].canon,
+      rloc: pnr.locator,
+      transactionType: 'TKTT',
+      date: TODAY,
+      agentSign: AGENT.sign,
+      status: 'confirmed',
+      fare: q.fare,
+      fee: q.ticketing + (q.fees || 0)
     });
 
     out('   <span class="am bold">TÙY CHỌN TIẾP THEO</span>', 'pre');
@@ -1238,9 +1525,190 @@ body::after{
     G.rep = Math.min(100, G.rep + 2);
     out('  <span class="am">HOÀN VÉ PNR ' + t.locator + ' (hạng ' + cls + ', điều kiện ' + refund + ')</span>', 'pre');
     ok('ĐÃ HOÀN: ' + money(amt) + ' VND (sau phí hoàn)');
+    addSalesRecord({
+      airline: 'HH',
+      docNumber: t.ticketNo,
+      total: amt,
+      tax: 0,
+      commission: 0,
+      formOfPayment: 'CASH',
+      paxName: (t.pax && t.pax[0]) ? t.pax[0].canon : '',
+      rloc: t.locator,
+      transactionType: 'RFND',
+      date: TODAY,
+      agentSign: AGENT.sign,
+      status: 'confirmed',
+      fare: 0,
+      fee: 0
+    });
     G.log.pop();
     blank();
     updateHUD();
+  }
+
+  /* ==================================================================
+     16b. BÁO CÁO BÁN HÀNG — TJQ (QUERY) / TJD (DAILY)
+     ================================================================== */
+  function displayOnTerminal(html, cls){ return out(html, cls); }
+  function displayError(msg){
+    displayOnTerminal('<span class="rd bold"> ' + esc(msg) + '</span>');
+    blank();
+  }
+
+  function nextSeq(){
+    var max = 0;
+    salesRecords.forEach(function(r){ if ((Number(r.seq) || 0) > max) max = Number(r.seq); });
+    return max + 1;
+  }
+  function addSalesRecord(rec){
+    rec.seq = nextSeq();
+    rec.status = rec.status || 'confirmed';
+    rec.date = rec.date || TODAY;
+    rec.agentSign = rec.agentSign || AGENT.sign;
+    salesRecords.push(rec);
+    saveSalesRecords();
+    return rec;
+  }
+  function fpOf(p){
+    var t = (p && p.fop) ? p.fop.type : 'CASH';
+    return ({ CASH:'CASH', CARD:'CCVI', CHEQUE:'CK', OTHER:'OTHS' })[t] || 'CASH';
+  }
+  function num2(n){
+    n = Number(n) || 0;
+    var neg = n < 0; n = Math.abs(n);
+    var s = n.toFixed(2).split('.');
+    return (neg ? '-' : '') + s[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + s[1];
+  }
+  function dayKey(d){ return String(d || TODAY).toUpperCase().replace(/\s+/g, ''); }
+  function docsFor(d){
+    var k = dayKey(d);
+    return salesRecords.filter(function(r){ return dayKey(r.date) === k; });
+  }
+  function fmtCols(vals, widths){
+    var parts = [];
+    for (var i = 0; i < vals.length; i++){
+      var v = String(vals[i]);
+      parts.push(/^-?[\d,]+(\.\d{2})?$/.test(v) ? padL(v, widths[i]) : padR(v, widths[i]));
+    }
+    return parts.join(' ');
+  }
+
+  /* ---- TJQ: QUERY REPORT ---- */
+  var TJQ_W = [4,3,3,14,13,11,11,4,12,4,8,5];
+  var TJQ_H = ['SEQ','NO','A/L','DOC NUMBER','TOTAL','DOC TAX','COMM','FP','PAX NAME','AS','RLOC','TRNC'];
+
+  function tjqLine(r, i){
+    var conf = r.status === 'confirmed';
+    var sign = r.transactionType === 'TKTT' ? 1 : -1;
+    var trnc = r.transactionType || '';
+    var cells = [
+      tag(padR(String(r.seq) + (conf ? '*' : ''), TJQ_W[0]), conf ? 'gr' : 'dim'),
+      tag(padR(AGENT.no, TJQ_W[1]), 'dim'),
+      tag(padR(r.airline || 'HH', TJQ_W[2]), 'flt'),
+      tag(padR(r.docNumber || '—', TJQ_W[3]), 'hl'),
+      tag(padL(num2(sign * (r.total || 0)), TJQ_W[4]), 'tm'),
+      tag(padL(num2(r.tax || 0), TJQ_W[5]), 'dim'),
+      tag(padL(num2(r.commission || 0), TJQ_W[6]), 'dim'),
+      tag(padR(r.formOfPayment || 'CASH', TJQ_W[7]), 'wh'),
+      tag(padR(r.paxName || '—', TJQ_W[8]), 'wh'),
+      tag(padR(r.agentSign || AGENT.as, TJQ_W[9]), conf ? 'gr' : 'am'),
+      tag(padR(r.rloc || '—', TJQ_W[10]), 'am'),
+      tag(padR(trnc, TJQ_W[11]), trnc === 'TKTT' ? 'gr' : 'rd')
+    ];
+    return cells.join(' ');
+    function tag(txt, cls){ return '<span class="' + cls + '">' + esc(txt) + '</span>'; }
+  }
+
+  function handleTJQ(allAgents){
+    if (allAgents && AGENT.dutyCode !== 'SU'){
+      displayError('NOT AUTHORIZED FOR THIS FUNCTION');
+      return;
+    }
+    displayOnTerminal('<span class="hl">' + (allAgents ? 'TJQ/SOF' : 'TJQ') + '</span>');
+    displayOnTerminal('<span class="am">AGY NO - ' + AGENT.iata + '    QUERY REPORT ' + TODAY + '</span>', 'pre');
+    displayOnTerminal('<span class="am">CURRENCY ' + CURRENCY + '   OFFICE – ' + AGENT.office + '</span>', 'pre');
+    displayOnTerminal('<span class="dim">SELECTION: AGENT - ' + AGENT.sign + '   ' + TODAY_LONG + '</span>', 'pre');
+
+    var rows = docsFor(TODAY).filter(function(r){ return allAgents || r.agentSign === AGENT.sign; });
+    if (!rows.length){
+      displayError('NO DOCUMENT FOUND FOR THIS DATE');
+      return;
+    }
+    blank();
+    displayOnTerminal('<span class="rule">' + rule('-', 103) + '</span>', 'pre');
+    displayOnTerminal('<span class="hl">' + esc(fmtCols(TJQ_H, TJQ_W)) + '</span>', 'pre');
+    displayOnTerminal('<span class="rule">' + rule('-', 103) + '</span>', 'pre');
+    rows.forEach(function(r, i){ displayOnTerminal(tjqLine(r, i), 'pre'); });
+    displayOnTerminal('<span class="rule">' + rule('-', 103) + '</span>', 'pre');
+    displayOnTerminal('<span class="dim">' + rows.length + ' DOCUMENT(S)   (*) CONFIRMED</span>', 'pre');
+    blank();
+    hint("Xem doanh thu ngày: 'TJD' · ngày khác: 'TJD/D-<DDMMM>' · quay lại lịch trình: 'AN…'");
+    blank();
+  }
+
+  /* ---- TJD: DAILY REPORT ---- */
+  function handleTJD(dateArg){
+    var date = dateArg || TODAY;
+    var rows = docsFor(date);
+    if (!rows.length){
+      displayError('NO SALES RECORD FOR THIS DATE');
+      return;
+    }
+    displayOnTerminal('<span class="hl">TJD' + (dateArg ? '/D-' + date : '') + '</span>');
+    displayOnTerminal('<span class="am">AGY NO - ' + AGENT.iata + '    DAILY REPORT ' + date + '</span>', 'pre');
+    displayOnTerminal('<span class="am">CURRENCY ' + CURRENCY + ' ' + date + TRAVEL_YEAR + '</span>', 'pre');
+    blank();
+
+    // ---- PAYMENTS (nhóm theo hình thức thanh toán) ----
+    var order = [], map = {};
+    rows.forEach(function(r){
+      var fp = r.formOfPayment || 'CASH';
+      if (!map[fp]){ map[fp] = { n:0, sales:0, refunds:0 }; order.push(fp); }
+      var g = map[fp]; g.n++;
+      if (r.transactionType === 'TKTT') g.sales += (r.total || 0);
+      else if (r.transactionType === 'RFND') g.refunds += (r.total || 0);
+    });
+    var tN = 0, tS = 0, tR = 0, wP = [13, 11, 13, 13, 13];
+    displayOnTerminal('<span class="hl">' + esc(fmtCols(['PAYMENTS','X DOCUM','SALES','REFUNDS','BALANCE'], wP)) + '</span>', 'pre');
+    order.forEach(function(fp){
+      var g = map[fp];
+      tN += g.n; tS += g.sales; tR += g.refunds;
+      displayOnTerminal('<span class="wh">' + esc(fmtCols([fp, g.n, num2(g.sales), num2(g.refunds), num2(g.sales - g.refunds)], wP)) + '</span>', 'pre');
+    });
+    displayOnTerminal('<span class="am bold">' + esc(fmtCols(['TOT', tN, num2(tS), num2(tR), num2(tS - tR)], wP)) + '</span>', 'pre');
+    blank();
+
+    // ---- AMOUNTS + DOCUMENT VOLUME ----
+    var fare = 0, tax = 0, fee = 0, doc = 0, comm = 0, refunded = 0;
+    var issued = 0, cancelled = 0, amtSold = 0;
+    rows.forEach(function(r){
+      if (r.transactionType === 'TKTT'){
+        issued++;
+        fare += r.fare || 0; tax += r.tax || 0; fee += r.fee || 0;
+        doc += r.total || 0; comm += r.commission || 0; amtSold += r.total || 0;
+      } else if (r.transactionType === 'CANX'){
+        cancelled++; amtSold -= (r.total || 0);
+      } else if (r.transactionType === 'RFND'){
+        refunded += r.total || 0;
+      }
+    });
+    displayOnTerminal('<span class="wh">FARE AMOUNT: ' + num2(fare) + '</span>', 'pre');
+    displayOnTerminal('<span class="wh">TAX AMOUNT: ' + num2(tax) + '</span>', 'pre');
+    displayOnTerminal('<span class="wh">FEE AMOUNT: ' + num2(fee) + '</span>', 'pre');
+    displayOnTerminal('<span class="wh">DOC AMOUNT: ' + num2(doc) + '</span>', 'pre');
+    displayOnTerminal('<span class="wh">COMM AMOUNT: ' + num2(comm) + '</span>', 'pre');
+    blank();
+
+    displayOnTerminal('<span class="am bold">DOCUMENT VOLUME</span>', 'pre');
+    var wV = [10, 13, 8, 14];
+    displayOnTerminal('<span class="hl">' + esc(fmtCols(['ISSUED','CANCELLED','SOLD','AMT DOC SOLD'], wV)) + '</span>', 'pre');
+    displayOnTerminal('<span class="wh">' + esc(fmtCols([issued, cancelled, issued - cancelled, num2(amtSold)], wV)) + '</span>', 'pre');
+    blank();
+
+    displayOnTerminal('<span class="wh bold">REMIT AMOUNT: ' + num2(doc - refunded - comm) + '</span>', 'pre');
+    blank();
+    hint("Ngày khác: 'TJD/D-<DDMMM>' · theo agent: 'TJQ' · quay lại lịch trình: 'AN…'");
+    blank();
   }
 
   /* ==================================================================
@@ -1251,12 +1719,15 @@ body::after{
     if (!raw) return;
     var cmd = raw.toUpperCase();
 
-    // thời gian trôi theo thao tác
-    advanceTime(2);
-    if (G.over) return;
+    // thời gian trôi theo thao tác (báo cáo chỉ để tra cứu — không tiêu tốn thời gian game)
+    var isReport = /^(TJQ|TJD)/.test(cmd);
+    if (!isReport){
+      advanceTime(2);
+      if (G.over) return;
+    }
 
-    // Sau khi xuất vé: chỉ cho tra cứu lại hoặc sang khách kế tiếp
-    if (G.awaitingNext && !/^(RT|NEXT|N|HELP|HE|\?|CLS|CLEAR|RF)/.test(cmd)){
+    // Sau khi xuất vé: chỉ cho tra cứu lại, thông tin, báo cáo hoặc sang khách kế tiếp
+    if (G.awaitingNext && !/^(RT|RD|TTK|EQ|WEA|DA|NEXT|N|HELP|HE|\?|CLS|CLEAR|RF|TJQ|TJD)/.test(cmd)){
       err("VÉ ĐÃ XUẤT — GÕ 'RT#<PNR>' ĐỂ XEM LẠI HOẶC 'NEXT' ĐỂ SANG KHÁCH KẾ TIẾP");
       blank();
       return;
@@ -1268,6 +1739,21 @@ body::after{
       clearScreen();
     } else if (cmd === 'NEXT' || cmd === 'N'){
       doNEXT();
+    } else if (/^TJQ\/SOF$/.test(cmd)){
+      handleTJQ(true);
+    } else if (/^TJQ$/.test(cmd)){
+      handleTJQ(false);
+    } else if (/^TJD(?:\/D-?(\d{2}[A-Z]{3}(?:\d{4})?))?$/.test(cmd)){
+      var td = cmd.match(/^TJD(?:\/D-?(\d{2}[A-Z]{3}(?:\d{4})?))?$/);
+      handleTJD(td[1] ? td[1].slice(0, 5) : null);
+    } else if (/^NACO(\s|$|\d)/.test(cmd)){
+      doNACO(raw.replace(/^NACO\s*/i, ''), 'NACO');
+    } else if (/^NU(\s|$|\d)/.test(cmd)){
+      doNACO(raw.replace(/^NU\s*/i, ''), 'NU');
+    } else if (/^SO(\s|$|\d)/.test(cmd)){
+      doSO(raw.replace(/^SO\s*/i, ''));
+    } else if (/^FO(\s|$|\d)/.test(cmd)){
+      doFO(raw.replace(/^FO\s*/i, ''));
     } else if (/^APIS(\s|$)/.test(cmd)){
       doAPIS(raw.replace(/^APIS\s*/i, ''));
     } else if (/^AN\s*(\d{2})([A-Z]{3})([A-Z]{3})([A-Z]{3})(\/\w+)?$/.test(cmd)){
@@ -1285,11 +1771,25 @@ body::after{
       doSR(cmd.match(/^SR\s*([A-Z]{3,4})$/)[1]);
     } else if (cmd === 'FXP'){
       doFXP();
+    } else if (cmd === 'TQT'){
+      doTQT();
     } else if (cmd === 'TKTL' || cmd === 'TKOK' || cmd === 'TTP'){
       doTicketing();
+    } else if (cmd === 'TTK'){
+      doTTK();
+    } else if (/^EQ\s*(\d{3})?$/.test(cmd)){
+      doEQ(cmd.match(/^EQ\s*(\d{3})?$/)[1] || null);
+    } else if (/^WEA\s*([A-Z]{3})?$/.test(cmd)){
+      doWEA(cmd.match(/^WEA\s*([A-Z]{3})?$/)[1] || null);
+    } else if (/^DA\s*([A-Z]{3})$/.test(cmd)){
+      doDA(cmd.match(/^DA\s*([A-Z]{3})$/)[1]);
     } else if (/^RT\s*#?\s*([A-Z0-9]{4,8})?$/.test(cmd)){
       var rt = cmd.match(/^RT\s*#?\s*([A-Z0-9]{4,8})?$/);
       doRT(rt[1] || null);
+    } else if (cmd === 'RD'){
+      doRD();
+    } else if (/^XK\s*(\d+)$/.test(cmd)){
+      doXE(Number(cmd.match(/^XK\s*(\d+)$/)[1]));
     } else if (/^XE\s*(\d+)$/.test(cmd)){
       doXE(Number(cmd.match(/^XE\s*(\d+)$/)[1]));
     } else if (cmd === 'IG'){
@@ -1391,21 +1891,34 @@ body::after{
      ================================================================== */
   var CMD_REF = [
     ['NM1<MR|MS> <HỌ>/<TÊN>', 'Nhập tên hành khách + danh xưng (bắt buộc, trước AN)', 'NM1MR NGUYEN/VAN MINH'],
+    ['NACO<LINE><TÊN MỚI>', 'Sửa tên hành khách (name correction)', 'NACO2MR TRAN/THU HA'],
     ['APIS <TYPE>/.../<TÊN>', 'Nhập dữ liệu hành khách APIS (chuẩn IATA)', 'APIS P/VN/B1234567/VN/12MAR1985/M/15MAR2030/NGUYEN/VAN MINH'],
     ['AN<DDMMM><ORG><DST>', 'Xem chuyến bay & tình trạng chỗ (sau khi đủ tên + APIS)', 'AN10NOVHANSGN'],
     ['SS<QTY><CLASS><LINE>', 'Bán (giữ) chỗ từ dòng hiển thị', 'SS3M1'],
-    ['AP <PHONE>',            'Thêm liên hệ', 'AP 0912345678'],
-    ['SR <CODE>',             'Yêu cầu dịch vụ đặc biệt (SSR)', 'SR CHML'],
-    ['FXP',                   'Tính giá vé, thuế và phí', 'FXP'],
-    ['TKTL',                  'Phát hành vé điện tử', 'TKTL'],
-    ['RT',                    'Xem lại PNR đang mở', 'RT'],
-    ['RT#<PNR>',              'Tra ruột vé đã xuất + thống kê doanh thu', 'RT#ABC123'],
-    ['NEXT',                  'Tiếp nhận khách mua vé kế tiếp', 'NEXT'],
-    ['XE<LINE>',              'Xoá một chặng trong PNR', 'XE1'],
-    ['IG',                    'Bỏ PNR hiện tại (ignore)', 'IG'],
-    ['RF',                    'Hoàn vé gần nhất (refund)', 'RF'],
-    ['HELP',                  'In danh sách lệnh', 'HELP'],
-    ['CLS',                   'Xoá màn hình', 'CLS']
+    ['XK<LINE> / XE<LINE>',  'Huỷ / xoá một chặng đã giữ', 'XK1'],
+    ['SO <AMOUNT>',          'Thu phí dịch vụ (gộp vào tổng khi tính giá)', 'SO150000'],
+    ['FO <FORM>',            'Hình thức thanh toán', 'FO CASH'],
+    ['AP <PHONE>',           'Thêm liên hệ', 'AP 0912345678'],
+    ['SR <CODE>',            'Yêu cầu dịch vụ đặc biệt (SSR)', 'SR CHML'],
+    ['FXP',                  'Tính giá vé, thuế, phí và d/vụ', 'FXP'],
+    ['TQT',                  'Chỉ xem thuế & phí (chưa gồm giá vé)', 'TQT'],
+    ['TKTL',                 'Phát hành vé điện tử', 'TKTL'],
+    ['TTK',                  'Danh sách số vé đã xuất', 'TTK'],
+    ['RT',                   'Xem lại PNR đang mở', 'RT'],
+    ['RD',                   'Hiển thị lại PNR (redisplay)', 'RD'],
+    ['RT#<PNR>',             'Tra ruột vé đã xuất + thống kê doanh thu', 'RT#ABC123'],
+    ['EQ',                   'Thông tin tàu bay (equipment)', 'EQ320'],
+    ['WEA <CITY>',           'Thời tiết 5 ngày tại điểm đến', 'WEA SGN'],
+    ['DA <CITY>',            'Giải mã mã sân bay (decode)', 'DA SIN'],
+    ['NEXT',                 'Tiếp nhận khách mua vé kế tiếp', 'NEXT'],
+    ['IG',                   'Bỏ PNR hiện tại (ignore)', 'IG'],
+    ['RF',                   'Hoàn vé gần nhất (refund)', 'RF'],
+    ['TJQ',                  'Báo cáo chứng từ hôm nay (agent)', 'TJQ'],
+    ['TJQ/SOF',              'Báo cáo toàn văn phòng (cần quyền SU)', 'TJQ/SOF'],
+    ['TJD',                  'Báo cáo doanh thu hôm nay', 'TJD'],
+    ['TJD/D-<DDMMM>',        'Báo cáo doanh thu một ngày', 'TJD/D-13NOV'],
+    ['HELP',                 'In danh sách lệnh', 'HELP'],
+    ['CLS',                  'Xoá màn hình', 'CLS']
   ];
 
   function printHelp(){
@@ -1418,7 +1931,10 @@ body::after{
     out(' ' + rule('-', 76), 'rule pre');
     out('  <span class="dim">Danh xưng: MR/MSTR (Nam) · MRS/MS/MISS (Nữ).</span>', 'pre');
     out('  <span class="dim">APIS: &lt;TYPE&gt;/&lt;ISSUE&gt;/&lt;DOCNO&gt;/&lt;NAT&gt;/&lt;DOB&gt;/&lt;SEX&gt;/&lt;EXP&gt;/&lt;SURNAME&gt;/&lt;GIVEN&gt;  (DOB/EXP = DDMMMYYYY)</span>', 'pre');
-    out('  <span class="dim">Quy trình: NM → APIS → AN → SS → AP → (SR) → FXP → TKTL → (RT#PNR) → NEXT</span>', 'pre');
+    out('  <span class="dim">Đổi tên: NACO&lt;LINE&gt;&lt;TÊN MỚI&gt; — đổi ≤3 ký tự miễn phí; &gt;3 ký tự thu phí (NACO).</span>', 'pre');
+    out('  <span class="dim">Thông tin: EQ&lt;CODE&gt; tàu bay · WEA&lt;CITY&gt; thời tiết 5 ngày · DA&lt;CITY&gt; giải mã sân bay.</span>', 'pre');
+    out('  <span class="dim">Quy trình: NM → APIS → AN → SS → AP → (SO/SR/FO) → FXP → TKTL → (RT#PNR) → NEXT</span>', 'pre');
+    out('  <span class="dim">Báo cáo: TJQ (agent) · TJQ/SOF (toàn VP) · TJD (ngày) · TJD/D-&lt;DDMMM&gt; (ngày cụ thể).</span>', 'pre');
     blank();
   }
 
@@ -1442,6 +1958,7 @@ body::after{
      20. KHỞI ĐỘNG
      ================================================================== */
   function boot(){
+    loadSalesRecords();
     renderRef();
     blank();
     out('  ' + rule('=', 58), 'hl pre');
