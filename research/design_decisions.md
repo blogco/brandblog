@@ -125,6 +125,27 @@ template, with Fuse.js fuzzy search, category filters, a browser-only "add term"
 devices. Acceptable for a personal study tool; the design keeps the data layer behind a
 small adapter so it can move to an API later.
 
+## 12. Pastenote — post-it board
+
+A public notice board at `/pastenote/` where pasted links, images and text become
+3M Post-it style sticky notes.
+
+- **Page-scoped styling.** The Post-it look lives in `theme/static/css/pastenote.css`,
+  linked only from `theme/templates/pastenote.html` — *not* in `src/input.css`. This keeps
+  the paper texture, tilt and handwriting out of the shared design system.
+- **New font (documented here as required).** Notes use the Google Font **Caveat** for
+  the handwriting feel, with `Kalam, "Segoe Print", "Comic Sans MS", cursive` fallbacks.
+  Page chrome keeps the site UI font stack.
+- **Two palettes, on purpose.** The *paper* colours are 3M-inspired
+  (Canary yellow `#FFE066` default, plus blue / pink / green / orange / purple) and are
+  independent of the brand palette. The *page chrome* (hero, buttons, focus rings) uses
+  the Sembcorp green tokens only (`#006C53` / `#005B48` / `#E6F1EE`) so the page matches
+  the rest of the site.
+- **Data & sync.** `content/data/pastenote.json` is embedded at build time into
+  `PASTENOTE_NOTES`; live edits auto-save to `localStorage` (`pastenote_notes`) and can be
+  committed back via the GitHub Contents API with a Personal Access Token typed at
+  runtime (never committed). See `wireframes/pastenote.md`.
+
 ## Open questions / future work
 
 - Optional: add Pelican `sitemap` + `feed` plugins for richer SEO.

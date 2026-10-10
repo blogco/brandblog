@@ -95,6 +95,7 @@ MENUITEMS = [
     ("News", "news/"),
     ("Branding", "branding/"),
     ("Từ điển Cargo", "cargo-dictionary/"),
+    ("Pastenote", "pastenote/"),
 ]
 
 NAV_UTILITY = [
@@ -116,6 +117,7 @@ FOOTER_COLUMNS = [
             ("Home", ""),
             ("News & Insights", "news/"),
             ("Branding", "branding/"),
+            ("Pastenote", "pastenote/"),
         ],
     ),
     (
@@ -195,5 +197,33 @@ CARGO_COUNT = len(CARGO_DICTIONARY)
 # Personal Access Token entered in-browser (never stored in this repo). Writes
 # commit the updated glossary to this repository, then GitHub Actions rebuilds
 # and redeploys the site. Public info only — not a secret.
+CARGO_COUNT = len(CARGO_DICTIONARY)
+
+# GitHub repository backing the "live" write features of the dictionary page.
+# Add / edit / delete / import are admin-only: users unlock them with a
+# GitHub Personal Access Token typed at runtime (kept in memory, never committed),
+# then writes commit `content/data/cargo_dictionary.json` back to the repo
+# (GitHub REST API) and the live site rebuilds.
 CARGO_GITHUB_REPO = "blogco/brandblog"
 CARGO_GITHUB_BRANCH = "main"
+
+# ---------------------------------------------------------------------------
+# Pastenote (3M Post-it board)
+#
+# A public notice board at /pastenote/. Pasted links, images and text become
+# sticky notes that auto-save to the browser (localStorage). An admin can sync
+# the merged set back to content/data/pastenote.json with a GitHub token typed
+# at runtime (never committed). The seed/last-known board is embedded at build
+# time so the page paints instantly and works offline.
+# ---------------------------------------------------------------------------
+try:
+    with open(
+        os.path.join(BASE_DIR, "content", "data", "pastenote.json"), encoding="utf-8"
+    ) as _pastenote_file:
+        PASTENOTE_NOTES = json.load(_pastenote_file)
+except (FileNotFoundError, json.JSONDecodeError):
+    PASTENOTE_NOTES = []
+
+PASTENOTE_GITHUB_REPO = "blogco/brandblog"
+PASTENOTE_GITHUB_BRANCH = "main"
+PASTENOTE_FILE_PATH = "content/data/pastenote.json"
