@@ -95,6 +95,7 @@ MENUITEMS = [
     ("News", "news/"),
     ("Branding", "branding/"),
     ("Từ điển Cargo", "cargo-dictionary/"),
+    ("Cargo Simulator", "cargo-simulator/"),
     ("Pastenote", "pastenote/"),
 ]
 

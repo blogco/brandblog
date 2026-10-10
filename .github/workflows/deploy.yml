@@ -49,6 +49,14 @@ jobs:
       - name: Build site with Pelican
         run: pelican content -s publishconf.py -o output
 
+      # ---- Bundled mini games ---------------------------------------------
+      # cargo-simulator/ lives outside content/, so Pelican ignores it.
+      # Copy it into the published tree so it ships with the site.
+      - name: Copy Cargo Operations Simulator into the published site
+        run: |
+          mkdir -p output/cargo-simulator
+          cp -R cargo-simulator/. output/cargo-simulator/
+
       # ---- Publish --------------------------------------------------------
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
