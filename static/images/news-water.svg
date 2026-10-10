@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Water">
+  <defs>
+    <linearGradient id="wa1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0E846D"/>
+      <stop offset="1" stop-color="#003429"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#wa1)"/>
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-width="3">
+    <path d="M0 300 C120 260 200 340 320 300 C440 260 520 340 640 300 C720 275 770 300 800 290"/>
+    <path d="M0 360 C120 320 200 400 320 360 C440 320 520 400 640 360 C720 335 770 360 800 350"/>
+    <path d="M0 420 C120 380 200 460 320 420 C440 380 520 460 640 420 C720 395 770 420 800 410"/>
+  </g>
+  <path d="M520 120 C520 120 570 175 570 205 A50 50 0 0 1 470 205 C470 175 520 120 520 120 Z" fill="#7ED0FF" opacity="0.6"/>
+</svg>

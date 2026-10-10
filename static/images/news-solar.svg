@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Solar">
+  <defs>
+    <linearGradient id="s1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0E846D"/>
+      <stop offset="1" stop-color="#003429"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#s1)"/>
+  <circle cx="620" cy="120" r="56" fill="#FFB27A" opacity="0.5"/>
+  <g fill="#ffffff" fill-opacity="0.14" stroke="#ffffff" stroke-opacity="0.3" stroke-width="2">
+    <path d="M140 360 L420 300 L470 400 L190 460 Z"/>
+    <path d="M200 318 L250 418M260 306 L310 406M320 294 L370 394M380 282 L430 382"/>
+  </g>
+  <path d="M0 460 C200 430 360 470 560 445 C680 430 740 460 800 450 L800 500 L0 500 Z" fill="#004E3E" opacity="0.85"/>
+</svg>
