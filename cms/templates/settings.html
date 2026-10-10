@@ -4,16 +4,16 @@
 {% block content %}
 <div class="mx-auto max-w-3xl space-y-6" x-data="settingsPage()">
   <header>
-    <h1 class="text-[28px] leading-tight"><i class="fa fa-cog mr-2 text-ericsson-blue"></i>{{ t('settings.title') }}</h1>
+    <h1 class="text-[28px] leading-tight"><i class="fa fa-cog mr-2 text-sembcorp-green"></i>{{ t('settings.title') }}</h1>
   </header>
 
   <!-- Paths -->
   <section class="cms-card p-5">
     <h2 class="mb-4 text-lg">{{ t('settings.paths') }}</h2>
     <dl class="space-y-2 text-sm">
-      <div class="flex justify-between gap-4"><dt class="text-gray-500">{{ t('settings.content_folder') }}</dt><dd class="truncate font-mono text-xs text-ericsson-black">{{ paths.content }}</dd></div>
-      <div class="flex justify-between gap-4"><dt class="text-gray-500">{{ t('settings.media_folder') }}</dt><dd class="truncate font-mono text-xs text-ericsson-black">{{ paths.media }}</dd></div>
-      <div class="flex justify-between gap-4"><dt class="text-gray-500">{{ t('settings.theme_folder') }}</dt><dd class="truncate font-mono text-xs text-ericsson-black">{{ paths.theme }}</dd></div>
+      <div class="flex justify-between gap-4"><dt class="text-gray-500">{{ t('settings.content_folder') }}</dt><dd class="truncate font-mono text-xs text-sembcorp-ink">{{ paths.content }}</dd></div>
+      <div class="flex justify-between gap-4"><dt class="text-gray-500">{{ t('settings.media_folder') }}</dt><dd class="truncate font-mono text-xs text-sembcorp-ink">{{ paths.media }}</dd></div>
+      <div class="flex justify-between gap-4"><dt class="text-gray-500">{{ t('settings.theme_folder') }}</dt><dd class="truncate font-mono text-xs text-sembcorp-ink">{{ paths.theme }}</dd></div>
     </dl>
   </section>
 
@@ -38,14 +38,14 @@
         <div class="relative">
           <input id="token" class="cms-input pr-10 font-mono text-xs" :type="showToken ? 'text' : 'password'"
                  x-model="token" placeholder="{{ masked_token or 'ghp_…' }}">
-          <button type="button" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-ericsson-black" @click="showToken = !showToken">
+          <button type="button" class="absolute inset-y-0 right-0 px-3 text-gray-400 hover:text-sembcorp-ink" @click="showToken = !showToken">
             <i class="fa" :class="showToken ? 'fa-eye-slash' : 'fa-eye'"></i>
           </button>
         </div>
         <p class="mt-1 text-[11px] text-gray-400">
           {{ t('settings.token_hint') }} ·
           <span x-text="tokenSource"></span>
-          <span class="ml-1 text-ericsson-blue" x-show="hasToken" x-cloak><i class="fa fa-lock"></i> configured</span>
+          <span class="ml-1 text-sembcorp-green" x-show="hasToken" x-cloak><i class="fa fa-lock"></i> configured</span>
         </p>
       </div>
       <div class="sm:col-span-2">
@@ -62,7 +62,7 @@
       <div>
         <label class="cms-label">{{ t('settings.primary_color') }}</label>
         <div class="flex items-center gap-2">
-          <input type="color" class="h-9 w-12 rounded border border-ericsson-border" x-model="cfg.primary_color">
+          <input type="color" class="h-9 w-12 rounded border border-sembcorp-line" x-model="cfg.primary_color">
           <input class="cms-input font-mono text-xs" x-model="cfg.primary_color">
         </div>
       </div>
@@ -70,7 +70,7 @@
         <label class="cms-label" for="font">{{ t('settings.font') }}</label>
         <select id="font" class="cms-select" x-model="cfg.font">
           <option value="Helvetica Neue">Helvetica Neue</option>
-          <option value="Ericsson Hilda">Ericsson Hilda</option>
+          <option value="Frutiger">Frutiger</option>
           <option value="Arial">Arial</option>
         </select>
       </div>

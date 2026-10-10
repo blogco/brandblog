@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" role="img" aria-label="AI and energy">
   <defs>
     <linearGradient id="ai1" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#001A2E"/>
-      <stop offset="1" stop-color="#1A8FF3"/>
+      <stop offset="0" stop-color="#003429"/>
+      <stop offset="1" stop-color="#0E846D"/>
     </linearGradient>
   </defs>
   <rect width="800" height="500" fill="url(#ai1)"/>
@@ -10,7 +10,7 @@
     <rect x="300" y="170" width="200" height="160" rx="16"/>
     <path d="M340 170 V130M400 170 V130M460 170 V130M340 330 V370M400 330 V370M460 330 V370M300 210 H260M300 250 H260M300 290 H260M500 210 H540M500 250 H540M500 290 H540"/>
   </g>
-  <circle cx="400" cy="250" r="34" fill="#3AA0F5" opacity="0.5"/>
+  <circle cx="400" cy="250" r="34" fill="#0095FF" opacity="0.5"/>
   <path d="M400 234 L390 252 H404 L394 270" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="640" cy="120" r="46" fill="#FAD22D" opacity="0.35"/>
+  <circle cx="640" cy="120" r="46" fill="#FF6400" opacity="0.35"/>
 </svg>

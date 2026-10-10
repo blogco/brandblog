@@ -50,62 +50,15 @@
     });
   }
 
-  var PER_PAGE = 6;
-  var currentPage = 1;
-  var pagination = document.getElementById("pagination");
-
-  function renderPagination(total) {
-    if (!pagination) return;
-    var pages = Math.ceil(total / PER_PAGE);
-    pagination.innerHTML = "";
-    if (pages <= 1) {
-      pagination.classList.add("hidden");
-      return;
-    }
-    pagination.classList.remove("hidden");
-
-    function pageBtn(label, page, opts) {
-      opts = opts || {};
-      var b = document.createElement("button");
-      b.type = "button";
-      b.textContent = label;
-      b.className =
-        "rounded-none border px-4 py-2 text-sm font-bold transition-colors " +
-        (opts.active
-          ? "border-ericsson-blue bg-ericsson-blue text-white"
-          : "border-ericsson-border text-ericsson-gray hover:border-ericsson-blue hover:text-ericsson-blue") +
-        (opts.disabled ? " cursor-not-allowed opacity-50" : "");
-      if (opts.active) b.setAttribute("aria-current", "page");
-      if (opts.disabled) {
-        b.disabled = true;
-      } else if (!opts.active) {
-        b.addEventListener("click", function () {
-          currentPage = page;
-          applyFilters();
-        });
-      }
-      return b;
-    }
-
-    pagination.appendChild(pageBtn("Prev", currentPage - 1, { disabled: currentPage === 1 }));
-    for (var p = 1; p <= pages; p++) {
-      pagination.appendChild(pageBtn(String(p), p, { active: p === currentPage }));
-    }
-    pagination.appendChild(pageBtn("Next", currentPage + 1, { disabled: currentPage === pages }));
-  }
-
   function applyFilters() {
-    var matches = cards.filter(cardMatches);
+    var visible = 0;
     cards.forEach(function (card) {
-      card.classList.add("hidden");
+      var show = cardMatches(card);
+      card.classList.toggle("hidden", !show);
+      if (show) visible += 1;
     });
-    var start = (currentPage - 1) * PER_PAGE;
-    matches.slice(start, start + PER_PAGE).forEach(function (card) {
-      card.classList.remove("hidden");
-    });
-    if (countEl) countEl.textContent = String(matches.length);
-    if (noResults) noResults.classList.toggle("hidden", matches.length !== 0);
-    renderPagination(matches.length);
+    if (countEl) countEl.textContent = String(visible);
+    if (noResults) noResults.classList.toggle("hidden", visible !== 0);
   }
 
   function setActive(group, value) {
@@ -126,7 +79,6 @@
       var btn = event.target.closest(".filter-btn");
       if (!btn) return;
       setActive(group, btn.getAttribute("data-filter-value"));
-      currentPage = 1;
       applyFilters();
     });
   });
@@ -136,30 +88,12 @@
   sidebarTopics.forEach(function (btn) {
     btn.addEventListener("click", function () {
       setActive("topic", btn.getAttribute("data-sidebar-topic"));
-      currentPage = 1;
       applyFilters();
       if (root) root.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
 
   if (cards.length) applyFilters();
-
-  /* ------------------------------------------------------------------ *
-   * Header search panel
-   * ------------------------------------------------------------------ */
-  var searchToggle = document.getElementById("search-toggle");
-  var searchPanel = document.getElementById("search-panel");
-  if (searchToggle && searchPanel) {
-    searchToggle.addEventListener("click", function () {
-      var expanded = searchToggle.getAttribute("aria-expanded") === "true";
-      searchToggle.setAttribute("aria-expanded", String(!expanded));
-      searchPanel.classList.toggle("hidden", expanded);
-      if (!expanded) {
-        var field = searchPanel.querySelector("input");
-        if (field) field.focus();
-      }
-    });
-  }
 
   /* ------------------------------------------------------------------ *
    * Branding: copy colour hex to clipboard

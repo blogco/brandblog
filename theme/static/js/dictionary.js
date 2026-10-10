@@ -476,37 +476,6 @@
   var adminStateChip = document.getElementById("dict-admin-state");
   var syncBtn = document.getElementById("dict-sync");
 
-  /* Shared modal show/hide used by the auth dialog (the add/edit modal keeps
-   * its own openModal/closeModal below). Body scroll + focus are restored
-   * only when no other modal is left open. */
-  function anyModalOpen() {
-    return (modal && !modal.classList.contains("hidden")) ||
-      (authModal && !authModal.classList.contains("hidden"));
-  }
-
-  function showModalShell(rootEl, overlayEl, panelEl, focusEl) {
-    lastFocused = document.activeElement;
-    rootEl.classList.remove("hidden");
-    document.body.style.overflow = "hidden";
-    window.requestAnimationFrame(function () {
-      if (overlayEl) overlayEl.classList.add("is-open");
-      if (panelEl) panelEl.classList.add("is-open");
-    });
-    if (focusEl) window.setTimeout(function () { focusEl.focus(); }, 60);
-  }
-
-  function hideModalShell(rootEl, overlayEl, panelEl) {
-    if (overlayEl) overlayEl.classList.remove("is-open");
-    if (panelEl) panelEl.classList.remove("is-open");
-    window.setTimeout(function () {
-      if (rootEl) rootEl.classList.add("hidden");
-      if (!anyModalOpen()) {
-        document.body.style.overflow = "";
-        if (lastFocused && typeof lastFocused.focus === "function") lastFocused.focus();
-      }
-    }, 300);
-  }
-
   function authHeaders(token) {
     return {
       Authorization: "token " + token,
@@ -515,7 +484,7 @@
   }
 
   function verifyToken(token) {
-    return window.fetch(config.apiBase + "/repos/" + config.repo, {
+    return window.fetch(config.apiBase + "/repos/" + encodeURIComponent(config.repo), {
       headers: authHeaders(token)
     }).then(function (res) {
       if (res.status === 401) {
@@ -545,13 +514,15 @@
     pendingAdminAction = null;
   }
 
-  function grantAdmin(token, queuedAction) {
+  function grantAdmin(token) {
     adminToken = token;
     isAdmin = true;
     setAdminVisuals();
     if (lastFocused && typeof lastFocused.focus === "function") lastFocused.focus();
     toast("🔓 Đã mở quyền quản trị — giờ bạn có thể thêm / sửa / xoá thuật ngữ.", "success");
-    if (typeof queuedAction === "function") queuedAction();
+    var action = pendingAdminAction;
+    pendingAdminAction = null;
+    if (typeof action === "function") action();
   }
 
   function logoutAdmin() {
@@ -606,9 +577,8 @@
       verifyToken(token)
         .then(function () {
           if (submitBtn) submitBtn.disabled = false;
-          var queued = pendingAdminAction;
           closeAuthModal();
-          grantAdmin(token, queued);
+          grantAdmin(token);
         })
         .catch(function (err) {
           if (submitBtn) submitBtn.disabled = false;
@@ -695,7 +665,7 @@
   }
 
   function fileApiUrl() {
-    return config.apiBase + "/repos/" + config.repo + "/contents/" + FILE_PATH;
+    return config.apiBase + "/repos/" + encodeURIComponent(config.repo) + "/contents/" + FILE_PATH;
   }
 
   function applyMutation(mutator, message, successText) {
@@ -741,17 +711,9 @@
   var fab = document.getElementById("dict-fab");
   var requiredFields = ["english", "vietnamese", "korean"];
   var editingId = null;
-  var modalCloseTimer = null;
 
   function openModal(mode) {
     lastFocused = document.activeElement;
-    /* A close is still fading out — cancel it so a re-open keeps the form
-     * (e.g. edit prefill) intact instead of being reset by the stale timer. */
-    if (modalCloseTimer) {
-      window.clearTimeout(modalCloseTimer);
-      modalCloseTimer = null;
-    }
-    if (mode === "add") resetForm(); // fresh form when adding a new term
     modal.classList.remove("hidden");
     document.body.style.overflow = "hidden";
     window.requestAnimationFrame(function () {
@@ -778,8 +740,7 @@
     modalOverlay.classList.remove("is-open");
     modalPanel.classList.remove("is-open");
     document.body.style.overflow = "";
-    if (modalCloseTimer) window.clearTimeout(modalCloseTimer);
-    modalCloseTimer = window.setTimeout(function () {
+    window.setTimeout(function () {
       modal.classList.add("hidden");
       resetForm();
     }, 300);
