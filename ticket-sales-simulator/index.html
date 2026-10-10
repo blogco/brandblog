@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ticket Sales Simulator — Amadeus Terminal</title>
-<meta name="description" content="Game mô phỏng quầy vé máy bay trên giao diện terminal Amadeus: gõ lệnh AN, SS, NM, AP, SR, FXP, TKTL để tra cứu, bán chỗ, tạo PNR và xuất vé.">
+<meta name="description" content="Game mô phỏng quầy vé máy bay trên giao diện terminal Amadeus: nhập tên + APIS (chuẩn IATA), gõ lệnh AN, SS, AP, SR, FXP, TKTL để tra cứu, bán chỗ, tạo PNR và xuất vé; tra lại vé bằng RT#PNR rồi NEXT sang khách kế tiếp.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23000033'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='16' fill='%2300ffff' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
 <style>
 /* =======================================================================
@@ -270,12 +270,23 @@ body::after{
     DAD: { code:'DAD', short:'Đà Nẵng',        name:'DA NANG INTL' },
     PQC: { code:'PQC', short:'Phú Quốc',       name:'PHU QUOC INTL' },
     CXR: { code:'CXR', short:'Nha Trang',      name:'CAM RANH INTL' },
-    HPH: { code:'HPH', short:'Hải Phòng',      name:'CAT BI INTL' }
+    HPH: { code:'HPH', short:'Hải Phòng',      name:'CAT BI INTL' },
+    SIN: { code:'SIN', short:'Singapore',      name:'SINGAPORE CHANGI' },
+    BKK: { code:'BKK', short:'Bangkok',        name:'BANGKOK SUVARNABHUMI' },
+    ICN: { code:'ICN', short:'Seoul',          name:'SEOUL INCHEON INTL' },
+    KUL: { code:'KUL', short:'Kuala Lumpur',   name:'KUALA LUMPUR INTL' },
+    NRT: { code:'NRT', short:'Tokyo',          name:'TOKYO NARITA INTL' }
   };
+  var INTL = { SIN:true, BKK:true, ICN:true, KUL:true, NRT:true };
+  function isIntl(code){ return !!INTL[code]; }
   var DUR = {
     'HAN-SGN':135,'SGN-HAN':130,'HAN-DAD':80,'DAD-HAN':75,'DAD-SGN':85,'SGN-DAD':85,
     'SGN-PQC':65,'PQC-SGN':65,'HAN-CXR':110,'CXR-HAN':110,'HAN-HPH':70,'HPH-HAN':70,
-    'HPH-SGN':130,'SGN-HPH':130
+    'HPH-SGN':130,'SGN-HPH':130,
+    'HAN-SIN':195,'SIN-HAN':190,'SGN-SIN':130,'SIN-SGN':125,
+    'SGN-BKK':95,'BKK-SGN':90,'HAN-BKK':130,'BKK-HAN':125,
+    'HAN-ICN':260,'ICN-HAN':255,'SGN-NRT':360,'NRT-SGN':350,
+    'HAN-KUL':200,'KUL-HAN':195
   };
   function duration(from,to){ return DUR[from+'-'+to] || 100; }
 
@@ -318,12 +329,13 @@ body::after{
     served: 0,
     shift: 1,
     over: false,
-    legCount: 0        // tổng số chặng đã xuất
+    legCount: 0,       // tổng số chặng đã xuất
+    log: [],           // nhật ký vé đã xuất (tra cứu bằng RT#<PNR>)
+    awaitingNext: false
   };
   var cust = null;      // khách hiện tại
   var pnr = null;       // hồ sơ đang mở
   var lastAN = null;    // lần hiển thị chuyến gần nhất (để SS tham chiếu dòng)
-  var lastTicket = null;
   var history = [];
   var histIdx = -1;
 
@@ -441,7 +453,7 @@ body::after{
   /* ==================================================================
      6. KHÁCH HÀNG (archetype)
      ================================================================== */
-  var ROUTES = [['HAN','SGN'],['SGN','HAN'],['HAN','DAD'],['DAD','SGN'],['SGN','PQC'],['HAN','CXR'],['HPH','SGN']];
+  var ROUTES = [['HAN','SGN'],['SGN','HAN'],['HAN','DAD'],['DAD','SGN'],['SGN','PQC'],['HAN','CXR'],['HPH','SGN'],['HAN','SIN'],['SGN','SIN'],['SGN','BKK'],['HAN','BKK'],['HAN','ICN'],['SGN','NRT'],['HAN','KUL']];
   var DATES = ['10NOV','11NOV','12NOV','15NOV','18NOV','20NOV','22NOV','25NOV'];
 
   var ARCHETYPES = [
@@ -469,27 +481,48 @@ body::after{
     { id:'infant', minDiff:3, trip:'OW', party:{adt:2,chd:1,inf:1}, needs:{bag:true,flex:false}, special:null, cutoff:null,
       say:function(c){ return 'Gia đình tôi đi ' + CITY[c.legs[0].to].short + ' ngày ' + c.legs[0].date + ' gồm 2 người lớn, 1 bé 6 tuổi và 1 em bé 14 tháng. Cần 23kg hành lý.'; } },
 
-    { id:'group', minDiff:3, trip:'OW', party:{adt:4,chd:0,inf:0}, needs:{bag:true,flex:false}, special:null, cutoff:900,
-      say:function(c){ return 'Đoàn tôi 4 người đi ' + CITY[c.legs[0].to].short + ' ngày ' + c.legs[0].date + ', ai cũng có hành lý ký gửi, cần tới trước 15 giờ.'; } },
+    { id:'group', minDiff:3, trip:'OW', party:{adt:3,chd:0,inf:0}, needs:{bag:true,flex:false}, special:null, cutoff:900,
+      say:function(c){ return 'Đoàn tôi 3 người đi ' + CITY[c.legs[0].to].short + ' ngày ' + c.legs[0].date + ', ai cũng có hành lý ký gửi, cần tới trước 15 giờ.'; } },
 
     { id:'vip', minDiff:4, trip:'OW', party:{adt:1,chd:0,inf:0}, needs:{bag:true,flex:true}, special:'WCHR', cutoff:null,
       say:function(c){ return 'Tôi đi ' + CITY[c.legs[0].to].short + ' ngày ' + c.legs[0].date + ', cần vé linh hoạt, hành lý 23kg, và tôi đi cùng xe lăn — nhờ hỗ trợ đặc biệt.'; } },
 
-    { id:'lateFamily', minDiff:4, trip:'OW', party:{adt:3,chd:2,inf:0}, needs:{bag:true,flex:false}, special:'CHML', cutoff:810,
-      say:function(c){ return 'Gia đình 5 người đi ' + CITY[c.legs[0].to].short + ' ngày ' + c.legs[0].date + ', 3 người lớn 2 trẻ em, cần hành lý ký gửi, suất ăn cho bé và tới trước 13 giờ 30.'; } }
+    { id:'lateFamily', minDiff:4, trip:'OW', party:{adt:3,chd:1,inf:0}, needs:{bag:true,flex:false}, special:'CHML', cutoff:810,
+      say:function(c){ return 'Gia đình 4 người đi ' + CITY[c.legs[0].to].short + ' ngày ' + c.legs[0].date + ', 3 người lớn 1 trẻ em, cần hành lý ký gửi, suất ăn cho bé và tới trước 13 giờ 30.'; } }
   ];
 
   var _r = Math.random;
   function choose(arr){ return arr[Math.floor(_r()*arr.length) % arr.length]; }
 
-  function person(female, surname){
-    var given = female ? choose(F_GIVEN) : choose(M_GIVEN);
+  function person(female, surname, used){
+    var pool = female ? F_GIVEN : M_GIVEN;
+    var avail = [];
+    for (var i=0;i<pool.length;i++){ if ((used||[]).indexOf(i) < 0) avail.push(i); }
+    if (!avail.length){ for (var j=0;j<pool.length;j++) avail.push(j); }
+    var idx = avail[Math.floor(_r()*avail.length) % avail.length];
+    if (used) used.push(idx);
+    var given = pool[idx];
     return {
       surnameVi: surname.vi, surnameUp: surname.up,
       givenVi: given.vi, givenUp: given.up,
+      female: female,
       display: surname.vi + ' ' + given.vi,
       canon: surname.up + '/' + given.up
     };
+  }
+
+  var MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  var TRAVEL_YEAR = 2026;
+  function genDoc(p){
+    var age = p.type === 'ADT' ? (24 + Math.floor(_r()*30)) : (p.type === 'CHD' ? 6 : 1);
+    var y = TRAVEL_YEAR - age;
+    var mi = Math.floor(_r()*12), dd = 1 + Math.floor(_r()*28);
+    p.dob = p2(dd) + MON[mi] + y;
+    p.docType = 'P';
+    p.docIssue = 'VN';
+    p.docNo = choose(['B','C']) + String(1000000 + Math.floor(_r()*8999999));
+    p.nationality = 'VN';
+    p.docExpiry = p2(dd) + MON[mi] + (TRAVEL_YEAR + 3 + Math.floor(_r()*7));
   }
 
   function makeCustomer(){
@@ -509,16 +542,21 @@ body::after{
     var pax = [];
     var famSurname = choose(SURNAMES);
     var total = party.adt + party.chd + party.inf;
+    var usedM = [], usedF = [];
     for (var i=0;i<total;i++){
       var isChd = i >= party.adt && i < party.adt + party.chd;
       var isInf = i >= party.adt + party.chd;
       var female = (i % 2 === 1);
-      var p = person(female, famSurname);
+      var p = person(female, famSurname, female ? usedF : usedM);
       p.type = isInf ? 'INF' : (isChd ? 'CHD' : 'ADT');
       p.age = isInf ? 1 : (isChd ? 6 : null);
-      p.entered = false;
+      p.sex = female ? 'F' : 'M';
+      p.entered = false;      // đã nhập tên + danh xưng (NM)
+      p.apisDone = false;     // đã nhập APIS
+      p.title = null;         // danh xưng: MR/MRS/MS/MISS/MSTR
       pax.push(p);
     }
+    pax.forEach(function(p){ genDoc(p); });
     // người đặt (khách đại diện) — giới tính theo người lớn đầu tiên
     var lead = pax[0];
 
@@ -568,19 +606,25 @@ body::after{
 
     out('  ' + rule('-', 58), 'rule pre');
     out('   HÀNH TRÌNH : ' + legTxt, 'wh pre');
+    if (cust.legs.some(function(l){ return isIntl(l.to); }))
+      out('   LƯU Ý      : TUYẾN QUỐC TẾ — HỘ CHIẾU &amp; APIS BẮT BUỘC', 'am pre');
     out('   LOẠI VÉ    : ' + (cust.trip==='RT' ? 'KHỨ HỒI' : 'MỘT CHIỀU'), 'wh pre');
     out('   HÀNH KHÁCH : ' + paxTxt + '   ·   GHẾ CẦN BÁN: ' + (cust.party.adt + cust.party.chd), 'wh pre');
     out('   YÊU CẦU    : ' + needs.join(' · '), 'wh pre');
     if (cust.cutoff) out('   PHẢI TỚI TRƯỚC: ' + fmtClock(cust.cutoff), 'wh pre');
     out('   DỊCH VỤ ĐẶC BIỆT: ' + (cust.special ? cust.special : '—'), 'wh pre');
     out('  ' + rule('-', 58), 'rule pre');
-    out('   HÀNH KHÁCH CẦN NHẬP PNR (định dạng HỌ/TÊN, viết hoa, không dấu):', 'am pre');
+    out('   BƯỚC 1 — NHẬP HÀNH KHÁCH (tên + danh xưng) &amp; APIS (chuẩn IATA):', 'am pre');
     cust.pax.forEach(function(p, i){
       var tag = p.type === 'ADT' ? 'ADT' : (p.type === 'CHD' ? ('CHD · ' + p.age + ' tuổi') : 'INF · ' + p.age + ' tuổi, không ghế');
-      out('     ' + (i+1) + '. ' + padR(p.display, 22) + '  · ' + tag, 'wh pre');
+      out('     ' + (i+1) + '. ' + padR(p.display, 22) + '  · ' + tag + ' · ' + (p.sex === 'M' ? 'Nam' : 'Nữ'), 'wh pre');
+      out('        HC ' + p.docType + ' · số ' + p.docNo + ' · cấp ' + p.docIssue + ' · Q.tịch ' + p.nationality +
+          ' · sinh ' + p.dob + ' · ' + p.sex + ' · HH ' + p.docExpiry, 'dim pre');
     });
     out('  ' + rule('-', 58), 'rule pre');
-    hint("Bắt đầu: gõ 'AN" + cust.legs[0].date + cust.legs[0].from + cust.legs[0].to + "' để xem chuyến.");
+    hint("Danh xưng: MR/MSTR (Nam) · MRS/MS/MISS (Nữ). Nhập tên, vd: 'NM1MR NGUYEN/VAN MINH'");
+    hint("Nhập APIS, vd: 'APIS P/VN/B1234567/VN/12MAR1985/M/15MAR2030/NGUYEN/VAN MINH'");
+    hint("Đủ tên + APIS mới tra cứu chuyến: 'AN" + cust.legs[0].date + cust.legs[0].from + cust.legs[0].to + "'");
     blank();
     updateHUD();
   }
@@ -595,6 +639,16 @@ body::after{
      8. LỆNH: AN — hiển thị chuyến bay
      ================================================================== */
   function doAN(date, from, to){
+    var noName = cust ? cust.pax.filter(function(p){ return !p.entered; }) : [];
+    var noApis = cust ? cust.pax.filter(function(p){ return !p.apisDone; }) : [];
+    if (noName.length || noApis.length){
+      err('HỒ SƠ HÀNH KHÁCH CHƯA ĐỦ — PHẢI NHẬP TÊN + APIS TRƯỚC KHI TRA CỨU CHUYẾN');
+      if (noName.length) out('<span class="rd">&nbsp;&nbsp;&nbsp;&nbsp;- CÒN ' + noName.length + ' HÀNH KHÁCH CHƯA NHẬP TÊN (NM)</span>');
+      if (noApis.length) out('<span class="rd">&nbsp;&nbsp;&nbsp;&nbsp;- CÒN ' + noApis.length + ' HÀNH KHÁCH CHƯA NHẬP APIS</span>');
+      hint('Xem dữ liệu hành khách ở khối yêu cầu phía trên.');
+      blank();
+      return;
+    }
     if (!CITY[from] || !CITY[to]){ err('UNKNOWN CITY CODE — KIỂM TRA LẠI MÃ SÂN BAY'); return; }
     if (from === to){ err('ORIGIN AND DESTINATION ARE THE SAME'); return; }
 
@@ -676,15 +730,9 @@ body::after{
         '<span class="equip">' + seg.equip + '</span>', 'pre');
     blank();
     ok('SEGMENT ĐÃ GIỮ — PNR ' + pnr.locator + ' · HẠN XUẤT VÉ (TTL) ' + fmtClock(pnr.ttl));
-    hint('Nhập tên hành khách: ' + paxNameHint());
+    hint(nextStepHint());
     blank();
     updateHUD();
-  }
-
-  function paxNameHint(){
-    var next = cust.pax.filter(function(p){ return !p.entered; })[0];
-    if (!next) return "'AP <SỐ ĐIỆN THOẠI>' ĐỂ THÊM LIÊN HỆ";
-    return "'NM1" + next.canon + "'";
   }
 
   function locator(){
@@ -695,7 +743,7 @@ body::after{
   }
 
   function blankPnr(){
-    return { locator:null, segs:[], pax:[], contact:null, ssr:[], priced:null, ttl:null, ticketed:false };
+    return { locator:null, segs:[], contact:null, ssr:[], priced:null, ttl:null, ticketed:false };
   }
 
   /* ==================================================================
@@ -711,13 +759,29 @@ body::after{
     return { sur:sur, giv:giv };
   }
 
+  function parseNM(rest){
+    var s = String(rest).trim().replace(/^\d+\s*/, '');
+    var m = s.match(/^(MR|MRS|MS|MISS|MSTR)\.?\s+(.+)$/i);
+    if (m) return { title: m[1].toUpperCase(), name: m[2].trim() };
+    var m2 = s.match(/^(.+?)\s+(MR|MRS|MS|MISS|MSTR)\.?$/i);
+    if (m2) return { title: m2[2].toUpperCase(), name: m2[1].trim() };
+    return { title: null, name: s };
+  }
+  function titleAllowed(p, title){
+    if (p.sex === 'M') return title === 'MR' || title === 'MSTR';
+    return title === 'MRS' || title === 'MS' || title === 'MISS';
+  }
+
   function doNM(raw){
     if (!cust){ err('NO ACTIVE CUSTOMER — CHƯA CÓ YÊU CẦU KHÁCH HÀNG'); return; }
-    if (!pnr){ err('NO ACTIVE PNR — HÃY BÁN CHỖ TRƯỚC BẰNG SS'); return; }
-
-    var np = nameParts(raw);
+    var nm = parseNM(raw);
+    var np = nameParts(nm.name);
     if (!np){
       err('CHECK FORMAT — TÊN PHẢI CÓ DẠNG HỌ/TÊN, VÍ DỤ: NGUYEN/VAN MINH');
+      return;
+    }
+    if (!nm.title){
+      err('THIẾU DANH XƯNG — THÊM MR/MRS/MS/MISS/MSTR, VÍ DỤ: NM1MR ' + np.sur + '/' + np.giv);
       return;
     }
     var found = null;
@@ -729,19 +793,98 @@ body::after{
       err('TÊN KHÔNG KHỚP DANH SÁCH — XEM LẠI TÊN HÀNH KHÁCH TRONG YÊU CẦU');
       return;
     }
+    if (!titleAllowed(found, nm.title)){
+      err('DANH XƯNG ' + nm.title + ' KHÔNG HỢP LỆ — HÀNH KHÁCH NÀY ' +
+          (found.sex === 'M' ? 'LÀ NAM (MR/MSTR)' : 'LÀ NỮ (MRS/MS/MISS)'));
+      return;
+    }
     found.entered = true;
-    pnr.pax.push({ canon:found.canon, type:found.type, ref:found });
-    pnr.priced = null;
+    found.title = nm.title;
+    if (pnr) pnr.priced = null;
 
-    out('<span class="hl">NM1' + esc(raw) + '</span>');
-    pnr.pax.forEach(function(p, i){
+    out('<span class="hl">NM1' + esc(nm.title + ' ' + nm.name) + '</span>');
+    cust.pax.forEach(function(p, i){
       var tag = p.type === 'ADT' ? 'ADT' : (p.type === 'CHD' ? 'CHD' : 'INF');
-      out('  <span class="dim">' + padL(i+1,2) + '</span>  <span class="wh">' + padR(p.canon,22) + '</span> <span class="am">' + tag + '</span>', 'pre');
+      out('  <span class="dim">' + padL(i+1,2) + '</span>  <span class="wh">' + padR((p.title ? p.title + ' ' : '') + p.canon, 26) + '</span> ' +
+          '<span class="am">' + tag + '</span> ' + (p.apisDone ? '<span class="gr">APIS OK</span>' : '<span class="dim">APIS —</span>'), 'pre');
     });
     blank();
-    var remaining = cust.pax.filter(function(p){ return !p.entered; }).length;
-    if (remaining > 0){ ok('ĐÃ THÊM TÊN — CÒN ' + remaining + ' HÀNH KHÁCH'); hint('Tiếp tục: ' + paxNameHint()); }
-    else { ok('ĐÃ ĐỦ TÊN HÀNH KHÁCH'); hint("Thêm liên hệ: 'AP <SỐ ĐIỆN THOẠI>'"); }
+    var remN = cust.pax.filter(function(p){ return !p.entered; }).length;
+    var remA = cust.pax.filter(function(p){ return !p.apisDone; }).length;
+    if (remN > 0) ok('ĐÃ THÊM TÊN — CÒN ' + remN + ' HÀNH KHÁCH CHƯA NHẬP TÊN');
+    else if (remA > 0) ok('ĐÃ ĐỦ TÊN — CÒN ' + remA + ' HÀNH KHÁCH CHƯA NHẬP APIS');
+    else ok('ĐÃ ĐỦ TÊN + APIS — CÓ THỂ TRA CỨU CHUYẾN');
+    hint(nextStepHint());
+    blank();
+  }
+
+  /* ==================================================================
+     10b. LỆNH: APIS — dữ liệu hành khách trước chuyến (chuẩn IATA)
+     ================================================================== */
+  function doAPIS(raw){
+    if (!cust){ err('NO ACTIVE CUSTOMER — CHƯA CÓ YÊU CẦU KHÁCH HÀNG'); return; }
+    var s = String(raw).trim();
+    if (!s){
+      err('THIẾU DỮ LIỆU APIS — ĐỊNH DẠNG: APIS <TYPE>/<ISSUE>/<DOCNO>/<NAT>/<DOB>/<SEX>/<EXP>/<SURNAME>/<GIVEN>');
+      hint('VÍ DỤ: APIS P/VN/B1234567/VN/12MAR1985/M/15MAR2030/NGUYEN/VAN MINH');
+      return;
+    }
+    var parts = s.split('/').map(function(x){ return x.trim().toUpperCase(); });
+    if (parts.length < 9){
+      err('APIS THIẾU TRƯỜNG — CẦN 9 TRƯỜNG: TYPE/ISSUE/DOCNO/NAT/DOB/SEX/EXP/SURNAME/GIVEN');
+      return;
+    }
+    var type=parts[0], issue=parts[1], docNo=parts[2], nat=parts[3],
+        dob=parts[4], sex=parts[5], exp=parts[6], surname=parts[7], given=parts.slice(8).join(' ');
+    var er = null;
+    if (!/^[A-Z]$/.test(type)) er = 'TYPE PHẢI LÀ 1 KÝ TỰ (P = PASSPORT, I = ID CARD)';
+    else if (!/^[A-Z]{2}$/.test(issue)) er = 'MÃ NƠI CẤP PHẢI LÀ 2 KÝ TỰ (VD: VN)';
+    else if (!/^[A-Z0-9]{5,}$/.test(docNo)) er = 'SỐ GIẤY TỜ KHÔNG HỢP LỆ';
+    else if (!/^[A-Z]{2}$/.test(nat)) er = 'MÃ QUỐC TỊCH PHẢI LÀ 2 KÝ TỰ (VD: VN)';
+    else if (!/^\d{2}[A-Z]{3}\d{4}$/.test(dob)) er = 'NGÀY SINH PHẢI THEO DDMMMYYYY (VD: 12MAR1985)';
+    else if (sex !== 'M' && sex !== 'F') er = 'GIỚI TÍNH PHẢI LÀ M HOẶC F';
+    else if (!/^\d{2}[A-Z]{3}\d{4}$/.test(exp)) er = 'NGÀY HẾT HẠN PHẢI THEO DDMMMYYYY (VD: 15MAR2030)';
+    if (er){ err(er); return; }
+
+    var np = nameParts(surname + '/' + given);
+    if (!np){ err('TÊN TRONG APIS KHÔNG HỢP LỆ — HỌ/TÊN, VÍ DỤ: NGUYEN/VAN MINH'); return; }
+
+    var found = null;
+    cust.pax.forEach(function(p){
+      if (found) return;
+      if (p.surnameUp === np.sur && p.givenUp.replace(/\s/g,'') === np.giv) found = p;
+    });
+    if (!found){ err('APIS KHÔNG KHỚP HÀNH KHÁCH NÀO — XEM LẠI HỌ/TÊN'); return; }
+    if (!found.entered){ err('HÀNH KHÁCH ' + found.canon + ' CHƯA NHẬP TÊN — DÙNG NM TRƯỚC, RỒI NHẬP APIS'); return; }
+    if (found.apisDone){ err('APIS CHO ' + found.canon + ' ĐÃ CÓ — KHÔNG NHẬP LẠI'); return; }
+
+    var checks = [
+      [type,  found.docType,     'LOẠI GIẤY TỜ'],
+      [issue, found.docIssue,    'NƠI CẤP'],
+      [docNo, found.docNo,       'SỐ GIẤY TỜ'],
+      [nat,   found.nationality, 'QUỐC TỊCH'],
+      [dob,   found.dob,         'NGÀY SINH'],
+      [sex,   found.sex,         'GIỚI TÍNH'],
+      [exp,   found.docExpiry,   'NGÀY HẾT HẠN']
+    ];
+    for (var i=0;i<checks.length;i++){
+      if (checks[i][0] !== checks[i][1]){
+        err('APIS SAI ' + checks[i][2] + ' — ĐÚNG LÀ ' + checks[i][1]);
+        return;
+      }
+    }
+
+    found.apisDone = true;
+    if (pnr) pnr.priced = null;
+
+    out('<span class="hl">APIS ' + esc(s.toUpperCase()) + '</span>');
+    out('  <span class="gr">+</span> <span class="wh">' + padR(found.canon, 22) + '</span> ' +
+        '<span class="dim">' + docNo + ' · ' + nat + ' · ' + dob + ' · ' + sex + ' · HH ' + exp + '</span>', 'pre');
+    blank();
+    var remA = cust.pax.filter(function(p){ return !p.apisDone; }).length;
+    if (remA > 0) ok('ĐÃ LƯU APIS — CÒN ' + remA + ' HÀNH KHÁCH CHƯA NHẬP APIS');
+    else ok('ĐÃ ĐỦ APIS CHO TOÀN BỘ HÀNH KHÁCH');
+    hint(nextStepHint());
     blank();
   }
 
@@ -763,9 +906,12 @@ body::after{
 
   function nextStepHint(){
     if (!cust) return 'CHỜ KHÁCH TIẾP THEO';
-    var needNames = cust.pax.some(function(p){ return !p.entered; });
-    if (!pnr || !pnr.segs.length) return "BÁN CHỖ: 'SS<QTY><CLASS><LINE>'";
-    if (needNames) return 'NHẬP TÊN: ' + paxNameHint();
+    if (G.awaitingNext) return "GÕ 'RT#<PNR>' ĐỂ XEM LẠI VÉ HOẶC 'NEXT' ĐỂ SANG KHÁCH KẾ TIẾP";
+    var noName = cust.pax.filter(function(p){ return !p.entered; });
+    if (noName.length) return "NHẬP TÊN + DANH XƯNG: 'NM1MR <HỌ>/<TÊN>' (còn " + noName.length + ' khách)';
+    var noApis = cust.pax.filter(function(p){ return !p.apisDone; });
+    if (noApis.length) return "NHẬP APIS: 'APIS P/<cấp>/<số>/<Q.tịch>/<sinh>/<M|F>/<hết hạn>/<HỌ>/<TÊN>' (còn " + noApis.length + ')';
+    if (!pnr || !pnr.segs.length) return "TRA CỨU CHUYẾN: 'AN" + cust.legs[0].date + cust.legs[0].from + cust.legs[0].to + "'";
     if (!pnr.contact) return "THÊM LIÊN HỆ: 'AP <SỐ ĐIỆN THOẠI>'";
     if (cust.special && pnr.ssr.indexOf(cust.special) < 0) return "THÊM DỊCH VỤ: 'SR " + cust.special + "'";
     if (!pnr.priced) return "TÍNH GIÁ: 'FXP'";
@@ -848,24 +994,78 @@ body::after{
   /* ==================================================================
      14. LỆNH: RT / XE / IG
      ================================================================== */
-  function doRT(){
-    if (!pnr){ err('NO ACTIVE PNR'); return; }
+  function doRT(arg){
+    var locator = arg ? String(arg).toUpperCase().replace(/^#/, '') : null;
+    if (locator){
+      var t = null;
+      G.log.forEach(function(x){ if (x.locator === locator) t = x; });
+      if (!t){ err('PNR ' + locator + ' KHÔNG TÌM THẤY — KIỂM TRA LẠI SỐ PNR'); return; }
+      out('<span class="hl">RT#' + locator + '</span>');
+      renderTicket(t);
+      return;
+    }
+    if (!pnr){
+      if (G.log.length){ out('<span class="hl">RT</span>'); renderTicket(G.log[G.log.length-1]); return; }
+      err('NO ACTIVE PNR'); return;
+    }
     out('<span class="hl">RT</span>');
     out('<span class="am"> --- PNR ' + (pnr.locator||'—') + ' ---</span>', 'pre');
     if (!pnr.segs.length) out('  <span class="dim">(chưa có chặng)</span>', 'pre');
     pnr.segs.forEach(function(sg, i){
       out('  <span class="am">' + padL(i+1,2) + '</span> <span class="flt">' + padR(sg.no,6) + '</span> <span class="hl">' + sg.cls + '</span> ' + padR(sg.date,6) + ' ' + sg.from + sg.to + ' <span class="gr">HK' + sg.qty + '</span>', 'pre');
     });
-    if (!pnr.pax.length) out('  <span class="dim">(chưa có tên hành khách)</span>', 'pre');
-    pnr.pax.forEach(function(p, i){
-      out('  <span class="am">' + padL(i+1,2) + '</span> <span class="wh">' + p.canon + '</span> <span class="dim">' + p.type + '</span>', 'pre');
+    var named = cust ? cust.pax : [];
+    if (!named.length) out('  <span class="dim">(chưa có hành khách)</span>', 'pre');
+    named.forEach(function(p, i){
+      out('  <span class="am">' + padL(i+1,2) + '</span> <span class="wh">' + (p.title ? p.title + ' ' : '') + p.canon + '</span> ' +
+          '<span class="dim">' + p.type + (p.apisDone ? ' · APIS OK' : ' · APIS —') + '</span>', 'pre');
     });
-    out('  <span class="dim">AP</span> ' + (pnr.contact ? '<span class="wh">' + pnr.contact + '</span>' : '<span class="red">—</span>'), 'pre');
+    out('  <span class="dim">AP</span> ' + (pnr.contact ? '<span class="wh">' + pnr.contact + '</span>' : '<span class="rd">—</span>'), 'pre');
     if (pnr.ssr.length) out('  <span class="dim">SSR</span> <span class="wh">' + pnr.ssr.join(' · ') + '</span>', 'pre');
     out('  <span class="dim">TTL</span> ' + (pnr.ttl ? '<span class="am">' + fmtClock(pnr.ttl) + '</span>' : '—'), 'pre');
     if (pnr.priced) out('  <span class="dim">TOTAL</span> <span class="gr">' + money(pnr.priced.total) + ' VND</span>', 'pre');
     blank();
     hint(nextStepHint());
+    blank();
+  }
+
+  function renderTicket(t){
+    out('  ' + rule('=', 56), 'rule pre');
+    out('   <span class="am bold">CHI TIẾT VÉ ĐIỆN TỬ  ·  HUNG HA AIRWAYS</span>', 'pre');
+    out('  ' + rule('-', 56), 'rule pre');
+    out('   <span class="dim">PNR</span>      <span class="hl bold">' + t.locator + '</span>', 'pre');
+    out('   <span class="dim">E-TICKET</span> <span class="wh">' + t.ticketNo + '</span>', 'pre');
+    out('   <span class="dim">NGÀY XUẤT</span> <span class="wh">15NOV · ' + t.time + '</span>', 'pre');
+    out('  ' + rule('-', 56), 'rule pre');
+    out('   <span class="am bold">HÀNH KHÁCH</span>', 'pre');
+    t.pax.forEach(function(p){
+      out('     <span class="wh">' + padR((p.title ? p.title + ' ' : '') + p.canon, 26) + '</span> <span class="dim">' + p.type + '</span>', 'pre');
+    });
+    out('  ' + rule('-', 56), 'rule pre');
+    out('   <span class="am bold">HÀNH TRÌNH</span>', 'pre');
+    t.segs.forEach(function(sg){
+      out('     <span class="flt">' + padR(sg.no,6) + '</span> <span class="hl">' + padR(sg.cls,2) + '</span> ' +
+          padR(sg.from + '→' + sg.to, 8) + ' ' + padR(sg.date,6) + ' ' +
+          '<span class="tm">' + fmtTime(sg.dep) + '-' + fmtTime(sg.arr) + '</span> <span class="gr">' + sg.qty + ' PAX</span>', 'pre');
+    });
+    out('  ' + rule('-', 56), 'rule pre');
+    out('   <span class="dim">LIÊN HỆ</span> ' + esc(t.contact) + '   <span class="dim">SSR</span> ' + (t.ssr.length ? esc(t.ssr.join(' · ')) : '—'), 'pre');
+    out('   <span class="dim">HẠNG VÉ</span> ' + esc(t.classLabel), 'pre');
+    out('  ' + rule('-', 56), 'rule pre');
+    out('   <span class="dim">GIÁ VÉ</span>          <span class="tm">' + padL(money(t.priced.fare), 14) + '</span>', 'pre');
+    out('   <span class="dim">VAT 8%</span>          <span class="tm">' + padL(money(t.priced.vat), 14) + '</span>', 'pre');
+    out('   <span class="dim">SÂN BAY+AN NINH</span> <span class="tm">' + padL(money(t.priced.airport + t.priced.security), 14) + '</span>', 'pre');
+    out('   <span class="dim">PHÍ XUẤT VÉ</span>     <span class="tm">' + padL(money(t.priced.ticketing), 14) + '</span>', 'pre');
+    out('   <span class="bold gr">TỔNG CỘNG</span>      <span class="bold gr">' + padL(money(t.priced.total), 14) + ' VND</span>', 'pre');
+    out('  ' + rule('=', 56), 'rule pre');
+    blank();
+    out('   <span class="am bold">THỐNG KÊ DOANH THU</span>', 'pre');
+    out('   DOANH THU CA NÀY : <span class="gr">' + money(G.cash) + ' VND</span>', 'pre');
+    out('   VÉ ĐÃ XUẤT      : ' + G.tickets + '   ·   CHẶNG: ' + G.legCount, 'pre');
+    out('   KHÁCH ĐÃ PHỤC VỤ : ' + G.served + ' · CA ' + G.shift + '   ·   UY TÍN: ' + G.rep + '/100', 'pre');
+    out('  ' + rule('=', 56), 'rule pre');
+    blank();
+    if (G.awaitingNext) hint("GÕ 'NEXT' ĐỂ TIẾP NHẬN KHÁCH KẾ TIẾP");
     blank();
   }
 
@@ -918,7 +1118,9 @@ body::after{
     if (!pnr || !pnr.segs.length){ err('NO ACTIVE PNR — HÃY DÙNG AN + SS ĐỂ BÁN CHỖ'); return; }
     var missing = [];
     var needNames = cust.pax.filter(function(p){ return !p.entered; });
+    var needApis  = cust.pax.filter(function(p){ return !p.apisDone; });
     if (needNames.length) missing.push('THIẾU ' + needNames.length + ' TÊN HÀNH KHÁCH (NM)');
+    if (needApis.length)  missing.push('THIẾU ' + needApis.length + ' APIS HÀNH KHÁCH');
     if (!pnr.contact) missing.push('THIẾU LIÊN HỆ (AP)');
     if (cust.special && pnr.ssr.indexOf(cust.special) < 0) missing.push('THIẾU SSR ' + cust.special + ' (SR)');
     cust.legs.forEach(function(l){
@@ -938,7 +1140,8 @@ body::after{
     var q = pnr.priced;
     pnr.ticketed = true;
     G.cash += q.total;
-    G.tickets += pnr.pax.length;
+    var paxCount = cust.pax.length;
+    G.tickets += paxCount;
     G.legCount += pnr.segs.length;
 
     var grade = gradeSale();
@@ -946,6 +1149,7 @@ body::after{
     if (grade.bonus) G.cash += grade.bonus;
 
     var ticketNo = '781-' + String(1000000000 + Math.floor(_r()*8999999999)).slice(0,10);
+    var classLabel = pnr.segs.map(function(sg){ return sg.cls + ' (' + CLASS[sg.cls].label + ')'; }).join(' / ');
 
     out('<span class="hl">TKTL</span>');
     blank();
@@ -957,7 +1161,7 @@ body::after{
     pnr.segs.forEach(function(sg){
       out('   <span class="wh">' + padR(sg.no,6) + ' ' + sg.cls + ' ' + sg.from + sg.to + ' ' + sg.date + '</span>  <span class="dim">' + fmtTime(sg.dep) + '-' + fmtTime(sg.arr) + '</span>', 'pre');
     });
-    out('   <span class="dim">HÀNH KHÁCH</span> ' + pnr.pax.length + '  ·  ' + '<span class="dim">LIÊN HỆ</span> ' + esc(pnr.contact), 'pre');
+    out('   <span class="dim">HÀNH KHÁCH</span> ' + paxCount + '  ·  <span class="dim">LIÊN HỆ</span> ' + esc(pnr.contact), 'pre');
     if (pnr.ssr.length) out('   <span class="dim">DỊCH VỤ</span>   ' + pnr.ssr.join(' · '), 'pre');
     out('  ' + rule('-', 56), 'rule pre');
     out('   <span class="bold gr">ĐÃ THU: ' + money(q.total) + ' VND</span>', 'pre');
@@ -969,15 +1173,29 @@ body::after{
     else out('   <span class="dim">' + esc(grade.msg) + '</span>', 'pre');
     blank();
 
-    lastTicket = { cls: pnr.segs[0].cls, total: q.total, locator: pnr.locator, refund: CLASS[pnr.segs[0].cls].refund };
+    // lưu nhật ký vé để tra cứu lại bằng RT#<PNR>
+    G.log.push({
+      locator: pnr.locator,
+      ticketNo: ticketNo,
+      time: fmtClock(G.clock),
+      pax: cust.pax.map(function(p){ return { title:p.title, canon:p.canon, type:p.type }; }),
+      segs: pnr.segs.slice(),
+      contact: pnr.contact,
+      ssr: pnr.ssr.slice(),
+      priced: pnr.priced,
+      classLabel: classLabel
+    });
 
-    var done = { locator: pnr.locator, total: q.total };
+    out('   <span class="am bold">TÙY CHỌN TIẾP THEO</span>', 'pre');
+    out('   <span class="hl">RT#' + pnr.locator + '</span>  xem ruột vé, chi tiết &amp; thống kê doanh thu', 'pre');
+    out('   <span class="hl">NEXT</span>            tiếp nhận khách mua vé kế tiếp', 'pre');
+    blank();
+
     pnr = null;
     lastAN = null;
-    cust.served = true;
-
-    G.served++;
-    nextCustomerOrShift();
+    if (cust) cust.served = true;
+    G.awaitingNext = true;
+    updateHUD();
   }
 
   function gradeSale(){
@@ -1006,19 +1224,21 @@ body::after{
      16. LỆNH: RF — hoàn vé
      ================================================================== */
   function doRF(){
-    if (!lastTicket){ err('NO TICKET TO REFUND'); return; }
-    var t = lastTicket;
+    if (!G.log.length){ err('NO TICKET TO REFUND'); return; }
+    var t = G.log[G.log.length-1];
+    var cls = t.segs[0].cls;
+    var refund = CLASS[cls].refund;
     out('<span class="hl">RF</span>');
-    if (t.refund === 'NON-REF' || t.refund === 'NO'){
-      err('HẠNG ' + t.cls + ' KHÔNG HOÀN ĐƯỢC GIÁ VÉ — CHỈ CÓ THỂ XÉT HOÀN THUẾ, PHÍ CHƯA SỬ DỤNG');
+    if (refund === 'NON-REF'){
+      err('HẠNG ' + cls + ' KHÔNG HOÀN ĐƯỢC GIÁ VÉ — CHỈ CÓ THỂ XÉT HOÀN THUẾ, PHÍ CHƯA SỬ DỤNG');
       blank(); return;
     }
-    var amt = t.refund === 'REFUNDABLE' ? Math.round(t.total*0.85) : Math.round(t.total*0.7);
+    var amt = refund === 'REFUNDABLE' ? Math.round(t.priced.total*0.85) : Math.round(t.priced.total*0.7);
     G.cash -= amt;
     G.rep = Math.min(100, G.rep + 2);
-    out('  <span class="am">HOÀN VÉ PNR ' + t.locator + ' (hạng ' + t.cls + ', điều kiện ' + t.refund + ')</span>', 'pre');
+    out('  <span class="am">HOÀN VÉ PNR ' + t.locator + ' (hạng ' + cls + ', điều kiện ' + refund + ')</span>', 'pre');
     ok('ĐÃ HOÀN: ' + money(amt) + ' VND (sau phí hoàn)');
-    lastTicket = null;
+    G.log.pop();
     blank();
     updateHUD();
   }
@@ -1035,10 +1255,21 @@ body::after{
     advanceTime(2);
     if (G.over) return;
 
+    // Sau khi xuất vé: chỉ cho tra cứu lại hoặc sang khách kế tiếp
+    if (G.awaitingNext && !/^(RT|NEXT|N|HELP|HE|\?|CLS|CLEAR|RF)/.test(cmd)){
+      err("VÉ ĐÃ XUẤT — GÕ 'RT#<PNR>' ĐỂ XEM LẠI HOẶC 'NEXT' ĐỂ SANG KHÁCH KẾ TIẾP");
+      blank();
+      return;
+    }
+
     if (cmd === 'HELP' || cmd === 'HE' || cmd === '?'){
       printHelp();
     } else if (cmd === 'CLS' || cmd === 'CLEAR'){
       clearScreen();
+    } else if (cmd === 'NEXT' || cmd === 'N'){
+      doNEXT();
+    } else if (/^APIS(\s|$)/.test(cmd)){
+      doAPIS(raw.replace(/^APIS\s*/i, ''));
     } else if (/^AN\s*(\d{2})([A-Z]{3})([A-Z]{3})([A-Z]{3})(\/\w+)?$/.test(cmd)){
       var m = cmd.match(/^AN\s*(\d{2})([A-Z]{3})([A-Z]{3})([A-Z]{3})(\/\w+)?$/);
       doAN(m[1] + m[2], m[3], m[4]);
@@ -1056,8 +1287,9 @@ body::after{
       doFXP();
     } else if (cmd === 'TKTL' || cmd === 'TKOK' || cmd === 'TTP'){
       doTicketing();
-    } else if (cmd === 'RT'){
-      doRT();
+    } else if (/^RT\s*#?\s*([A-Z0-9]{4,8})?$/.test(cmd)){
+      var rt = cmd.match(/^RT\s*#?\s*([A-Z0-9]{4,8})?$/);
+      doRT(rt[1] || null);
     } else if (/^XE\s*(\d+)$/.test(cmd)){
       doXE(Number(cmd.match(/^XE\s*(\d+)$/)[1]));
     } else if (cmd === 'IG'){
@@ -1095,6 +1327,7 @@ body::after{
      18. KHÁCH TIẾP THEO / BÁO CÁO CA / KẾT THÚC
      ================================================================== */
   function nextCustomerOrShift(){
+    G.awaitingNext = false;
     updateHUD();
     if (G.rep <= 0){ gameOver(); return; }
     if (G.served % shiftGoal() === 0){
@@ -1106,6 +1339,19 @@ body::after{
     pnr = null;
     lastAN = null;
     setTimeout(function(){ renderCustomer(); input.focus(); }, 220);
+  }
+
+  function doNEXT(){
+    if (!G.awaitingNext){
+      err('CHƯA CÓ VÉ VỪA XUẤT — HÃY PHỤC VỤ KHÁCH HIỆN TẠI TRƯỚC');
+      hint(nextStepHint());
+      blank();
+      return;
+    }
+    out('<span class="hl">NEXT</span>');
+    G.awaitingNext = false;
+    G.served++;
+    nextCustomerOrShift();
   }
 
   function shiftReport(){
@@ -1144,14 +1390,17 @@ body::after{
      19. TRỢ GIÚP
      ================================================================== */
   var CMD_REF = [
-    ['AN<DDMMM><ORG><DST>', 'Xem chuyến bay & tình trạng chỗ', 'AN10NOVHANSGN'],
+    ['NM1<MR|MS> <HỌ>/<TÊN>', 'Nhập tên hành khách + danh xưng (bắt buộc, trước AN)', 'NM1MR NGUYEN/VAN MINH'],
+    ['APIS <TYPE>/.../<TÊN>', 'Nhập dữ liệu hành khách APIS (chuẩn IATA)', 'APIS P/VN/B1234567/VN/12MAR1985/M/15MAR2030/NGUYEN/VAN MINH'],
+    ['AN<DDMMM><ORG><DST>', 'Xem chuyến bay & tình trạng chỗ (sau khi đủ tên + APIS)', 'AN10NOVHANSGN'],
     ['SS<QTY><CLASS><LINE>', 'Bán (giữ) chỗ từ dòng hiển thị', 'SS3M1'],
-    ['NM1<SURNAME>/<GIVEN>', 'Nhập tên hành khách', 'NM1NGUYEN/VAN MINH'],
     ['AP <PHONE>',            'Thêm liên hệ', 'AP 0912345678'],
     ['SR <CODE>',             'Yêu cầu dịch vụ đặc biệt (SSR)', 'SR CHML'],
     ['FXP',                   'Tính giá vé, thuế và phí', 'FXP'],
     ['TKTL',                  'Phát hành vé điện tử', 'TKTL'],
-    ['RT',                    'Xem lại toàn bộ PNR', 'RT'],
+    ['RT',                    'Xem lại PNR đang mở', 'RT'],
+    ['RT#<PNR>',              'Tra ruột vé đã xuất + thống kê doanh thu', 'RT#ABC123'],
+    ['NEXT',                  'Tiếp nhận khách mua vé kế tiếp', 'NEXT'],
     ['XE<LINE>',              'Xoá một chặng trong PNR', 'XE1'],
     ['IG',                    'Bỏ PNR hiện tại (ignore)', 'IG'],
     ['RF',                    'Hoàn vé gần nhất (refund)', 'RF'],
@@ -1167,7 +1416,9 @@ body::after{
       out('  <span class="am">' + padR(r[0], 24) + '</span> <span class="wh">' + padR(r[1], 34) + '</span> <span class="gr">' + r[2] + '</span>', 'pre');
     });
     out(' ' + rule('-', 76), 'rule pre');
-    out('  <span class="dim">Quy trình: AN → SS → NM → AP → (SR) → FXP → TKTL</span>', 'pre');
+    out('  <span class="dim">Danh xưng: MR/MSTR (Nam) · MRS/MS/MISS (Nữ).</span>', 'pre');
+    out('  <span class="dim">APIS: &lt;TYPE&gt;/&lt;ISSUE&gt;/&lt;DOCNO&gt;/&lt;NAT&gt;/&lt;DOB&gt;/&lt;SEX&gt;/&lt;EXP&gt;/&lt;SURNAME&gt;/&lt;GIVEN&gt;  (DOB/EXP = DDMMMYYYY)</span>', 'pre');
+    out('  <span class="dim">Quy trình: NM → APIS → AN → SS → AP → (SR) → FXP → TKTL → (RT#PNR) → NEXT</span>', 'pre');
     blank();
   }
 
@@ -1202,8 +1453,8 @@ body::after{
     out('   DATE .......... 15NOV  ·  TIME ' + fmtClock(G.clock), 'dim pre');
     out('  ' + rule('-', 58), 'rule pre');
     out('   <span class="am">Bạn là nhân viên quầy vé.</span>', 'pre');
-    out('   <span class="wh">Phục vụ từng khách: tra cứu chuyến, bán đúng hạng, tạo PNR,</span>', 'pre');
-    out('   <span class="wh">tính giá rồi xuất vé. Giữ điểm uy tín trên 0.</span>', 'pre');
+    out('   <span class="wh">Phục vụ từng khách: nhập tên + APIS → tra cứu chuyến → bán đúng</span>', 'pre');
+    out('   <span class="wh">hạng → tạo PNR → tính giá → xuất vé → RT#&lt;PNR&gt; → NEXT.</span>', 'pre');
     out('  ' + rule('-', 58), 'rule pre');
     hint("Gõ 'HELP' để xem danh sách lệnh. Bảng lệnh cũng nằm bên phải.");
     blank();
