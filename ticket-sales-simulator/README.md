@@ -150,11 +150,31 @@ Xuất vé xong hệ thống **không tự chuyển khách**. Bạn có hai lự
 - **Hạn xuất vé (TTL):** sau khi giữ chỗ, bạn có 30 phút game để xuất vé. Mỗi lệnh trôi 2 phút.
   Hết hạn, chỗ tự động bị nhả và giá có thể đã đổi — đúng như thực tế.
 
+### Tình huống bất khả kháng
+
+Sau mỗi giao dịch hoàn tất (**TKTL** xuất vé / **RF** hoàn vé), có **35%** xác suất nổ ra
+một **tình huống bất khả kháng** — system alert nền đỏ, chữ vàng, viền nhấp nháy, kèm tiếng
+"beep". Khách hàng, chuyến bay, record locator trong cảnh báo được lấy từ hồ sơ thực tế của bạn.
+
+Mỗi sự cố đưa ra **2–3 hướng xử lý** (gõ số `1/2/3` hoặc bấm nút trên màn hình). Mỗi hướng
+tác động tới **3 chỉ số KPI** của ca:
+
+- **DOANH THU** — cộng/trừ vào doanh thu ca (đơn vị nghìn VND);
+- **UY TÍN** (0–100) — xử lý hợp tình hợp lý thì tăng, vụng về thì khiếu nại;
+- **CĂNG THẲNG** (0–100, mới) — chỉ số áp lực quầy, hiển thị trên thanh HUD.
+
+8 tình huống mô phỏng theo sự cố thật ở quầy vé: khách **nợ thuế bị cấm xuất cảnh**, **hủy vé
+phút chót vì bệnh**, **đổi ý đòi hoàn tiền**, **lỗi hệ thống vé biến mất**, **trùng tên danh
+sách cấm bay**, **chuyến bay quá tải (overbooked)**, **hộ chiếu hết hạn**, **sai tên trên vé**.
+Khi sự cố đang chờ, bạn **phải xử lý xong mới được gõ lệnh khác** (kể cả `NEXT`).
+
 ### Điểm số & độ khó
 
-- **Doanh thu** tích luỹ theo từng vé đã xuất; **điểm uy tín** (0–100) lên/xuống theo chất
-  lượng phục vụ: bán đúng nhu cầu thì tăng, bán sai (thiếu hành lý, không đổi ngày được,
-  chuyến tới muộn hơn giờ khách cần) thì bị khiếu nại và trừ điểm.
+- **Doanh thu** tích luỹ theo từng vé đã xuất (bị trừ khi hoàn vé, khiếu nại, bồi thường qua
+  tình huống bất khả kháng); **điểm uy tín** (0–100) lên/xuống theo chất lượng phục vụ:
+  bán đúng nhu cầu thì tăng, bán sai (thiếu hành lý, không đổi ngày được, chuyến tới muộn hơn
+  giờ khách cần) thì bị khiếu nại và trừ điểm. **Chỉ số căng thẳng** tăng khi xử lý sự cố
+  kém và hạ khi xử lý khéo.
 - Cứ **5 khách** là một **ca làm việc**: in báo cáo ca rồi tăng độ khó (nhiều khách hơn,
   phát sinh khứ hồi, trẻ nhỏ, em bé, yêu cầu dịch vụ đặc biệt).
 - Uy tín về **0** là kết thúc ca. Chơi lại bằng cách gõ `CLS` rồi tải lại trang.
