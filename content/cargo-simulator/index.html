@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ICHM Cargo Door-to-Door Simulator</title>
+<meta name="description" content="An interactive learning game that walks one shipment through the IATA Cargo Handling Manual (ICHM) Master Operating Plan — door-to-door, 10 phases.">
+<meta name="theme-color" content="#004E3E">
+<!-- Self-contained: all CSS and JS are inlined. No CDNs, no build step, no network calls. -->
+<style>
+  :root{
+    --green:#006C53; --green-dark:#005B48; --green-darker:#004E3E; --green-light:#0E846D;
+    --wash:#E6F1EE; --blue:#0095FF; --orange:#FF6400;
+    --ink:#1A1A1A; --body:#464646; --mist:#F5F6F5; --line:#E5E7E6; --white:#fff;
+    --ok:#0E846D; --ok-bg:#E6F1EE; --bad:#B91C1C; --bad-bg:#FDECEC; --warn:#B45309; --warn-bg:#FEF4E6;
+    --radius:12px; --radius-sm:8px;
+    --shadow:0 1px 2px rgba(26,26,26,.06), 0 16px 40px -18px rgba(0,108,83,.32);
+    --font:Frutiger,"Helvetica Neue",Helvetica,Arial,ui-sans-serif,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; font-family:var(--font); color:var(--ink); background:var(--mist);
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{margin:0; line-height:1.22; letter-spacing:-.01em}
+  p{margin:0}
+  button{font-family:inherit; font-size:inherit; cursor:pointer}
+  a{color:var(--green)}
+  .muted{color:var(--body)}
+  .small{font-size:.82rem}
+  .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+  /* ---------- Layout ---------- */
+  .topbar{position:sticky;top:0;z-index:40;background:var(--green-darker);color:#fff;box-shadow:0 1px 0 rgba(0,0,0,.12)}
+  .topbar-inner{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand-mark{width:38px;height:38px;flex:0 0 auto;border-radius:10px;background:var(--green);display:grid;place-items:center;font-weight:800;font-size:.7rem;letter-spacing:.04em;color:#fff;border:1px solid rgba(255,255,255,.18)}
+  .brand-txt{min-width:0}
+  .brand-title{font-size:1rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand-sub{font-size:.68rem;text-transform:uppercase;letter-spacing:.14em;color:rgba(255,255,255,.62)}
+  .score-pill{flex:0 0 auto;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:6px 14px}
+  .score-pill b{color:#fff;font-size:.95rem}
+  .score-pill span{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.66)}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:22px 16px 130px}
+
+  /* ---------- Progress rail ---------- */
+  .rail-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+  .rail-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--green)}
+  .rail-count{font-size:.82rem;color:var(--body)}
+  .rail-track{height:8px;border-radius:999px;background:#DDE3E0;overflow:hidden}
+  .rail-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--green-light));border-radius:999px;transition:width .4s ease}
+  .rail-dots{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+  .dot{flex:1 1 auto;min-width:34px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 4px;font-size:.7rem;font-weight:700;color:var(--body);text-align:center;transition:all .15s ease}
+  .dot:hover{border-color:var(--green-light);color:var(--green)}
+  .dot.is-current{background:var(--green);border-color:var(--green);color:#fff}
+  .dot.is-done{background:var(--wash);border-color:#BFDAD1;color:var(--green-dark)}
+  .dot:disabled{opacity:.45;cursor:not-allowed}
+
+  /* ---------- Cards ---------- */
+  .card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .card + .card{margin-top:18px}
+  .card-pad{padding:22px}
+  @media(min-width:768px){.card-pad{padding:28px}}
+
+  .chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 12px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+  .chip-group{background:var(--wash);color:var(--green-dark)}
+  .chip-phase{background:var(--green-darker);color:#fff}
+  .chip-vi{background:var(--mist);color:var(--body)}
+
+  .phase-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .phase-title{margin-top:14px;font-size:1.5rem;font-weight:800}
+  .phase-vi{margin-top:4px;font-size:.9rem;color:var(--body);font-style:italic}
+  @media(min-width:768px){.phase-title{font-size:1.85rem}}
+
+  .prose{margin-top:14px;color:var(--body);font-size:1rem}
+  .prose strong{color:var(--ink)}
+  .prose p + p{margin-top:10px}
+
+  .facts{display:grid;grid-template-columns:1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius-sm);overflow:hidden;margin-top:18px}
+  @media(min-width:560px){.facts{grid-template-columns:1fr 1fr}}
+  .fact{background:#fff;padding:10px 14px}
+  .fact dt{font-size:.66rem;text-transform:uppercase;letter-spacing:.12em;color:var(--body)}
+  .fact dd{margin:2px 0 0;font-weight:600;color:var(--ink);font-size:.92rem}
+
+  .terms{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .term{background:var(--mist);border:1px solid var(--line);border-radius:var(--radius-sm);padding:6px 10px;font-size:.78rem;color:var(--body)}
+  .term b{color:var(--ink)}
+
+  .ichm-ref{margin-top:16px;border-left:3px solid var(--green);background:var(--wash);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:10px 14px;font-size:.85rem;color:var(--green-dark)}
+
+  /* ---------- Question ---------- */
+  .q{margin-top:20px;border-top:1px dashed var(--line);padding-top:18px}
+  .q-label{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:var(--green)}
+  .q-prompt{margin-top:6px;font-size:1.08rem;font-weight:700;color:var(--ink)}
+  .q-help{margin-top:6px;font-size:.85rem;color:var(--body)}
+
+  .opts{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;background:#fff;border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:13px 15px;color:var(--body);transition:border-color .15s ease,background .15s ease,transform .12s ease}
+  .opt:hover{border-color:var(--green-light);background:#FBFDFC}
+  .opt:focus-visible{outline:3px solid rgba(0,149,255,.45);outline-offset:2px}
+  .opt .mark{flex:0 0 auto;width:26px;height:26px;border-radius:7px;border:1.5px solid #C6CFCB;display:grid;place-items:center;font-weight:800;font-size:.78rem;color:transparent;background:#fff}
+  .opt[aria-pressed="true"]{border-color:var(--green);background:var(--wash);color:var(--ink)}
+  .opt[aria-pressed="true"] .mark{background:var(--green);border-color:var(--green);color:#fff}
+  .opt[data-state="ok"]{border-color:var(--ok);background:var(--ok-bg)}
+  .opt[data-state="ok"] .mark{background:var(--ok);border-color:var(--ok);color:#fff}
+  .opt[data-state="bad"]{border-color:var(--bad);background:var(--bad-bg)}
+  .opt[data-state="bad"] .mark{background:var(--bad);border-color:var(--bad);color:#fff}
+  .opt[data-state="miss"]{border-color:var(--warn);background:var(--warn-bg)}
+  .opt[data-state="miss"] .mark{background:var(--warn);border-color:var(--warn);color:#fff}
+  .opt-body{min-width:0}
+  .opt-label{font-weight:600;color:var(--ink)}
+  .opt-why{margin-top:4px;font-size:.82rem;color:var(--body)}
+
+  /* ---------- Ordering task ---------- */
+  .order{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
+  .order li{display:flex;gap:12px;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:11px 13px}
+  .order li[data-state="ok"]{border-color:var(--ok);background:var(--ok-bg)}
+  .order li[data-state="bad"]{border-color:var(--bad);background:var(--bad-bg)}
+  .order .pos{flex:0 0 auto;width:28px;height:28px;border-radius:999px;background:var(--green-darker);color:#fff;font-weight:800;font-size:.8rem;display:grid;place-items:center}
+  .order .txt{flex:1 1 auto;min-width:0;color:var(--ink);font-weight:600;font-size:.93rem}
+  .order .move{flex:0 0 auto;display:flex;gap:6px}
+  .icon-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:var(--ink);display:grid;place-items:center;font-size:1rem;line-height:1}
+  .icon-btn:hover:not(:disabled){border-color:var(--green);color:var(--green)}
+  .icon-btn:disabled{opacity:.4;cursor:not-allowed}
+
+  /* ---------- Feedback ---------- */
+  .fb{margin-top:16px;border-radius:var(--radius-sm);padding:15px 17px;border:1px solid}
+  .fb h4{font-size:.78rem;text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px}
+  .fb p{font-size:.92rem;color:var(--body)}
+  .fb p + p{margin-top:8px}
+  .fb.is-ok{background:var(--ok-bg);border-color:#B9DACF}
+  .fb.is-ok h4{color:var(--green-dark)}
+  .fb.is-bad{background:var(--bad-bg);border-color:#F0C4C4}
+  .fb.is-bad h4{color:var(--bad)}
+  .fb.is-miss{background:var(--warn-bg);border-color:#F0D6A8}
+  .fb.is-miss h4{color:var(--warn)}
+  .fb ul{margin:8px 0 0;padding-left:18px;font-size:.88rem;color:var(--body)}
+  .fb li{margin:4px 0}
+  .fb .ichm{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(0,0,0,.12);font-size:.85rem;color:var(--body)}
+  .fb .ichm b{color:var(--ink)}
+
+  /* ---------- Buttons ---------- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:8px;border:1.5px solid transparent;padding:11px 20px;font-weight:700;font-size:.92rem;transition:all .15s ease}
+  .btn:focus-visible{outline:3px solid rgba(0,149,255,.45);outline-offset:2px}
+  .btn-primary{background:var(--green);color:#fff}
+  .btn-primary:hover:not(:disabled){background:var(--green-dark)}
+  .btn-primary:disabled{background:#AEB9B4;cursor:not-allowed}
+  .btn-outline{background:#fff;border-color:var(--line);color:var(--ink)}
+  .btn-outline:hover:not(:disabled){border-color:var(--green);color:var(--green)}
+  .btn-outline:disabled{opacity:.45;cursor:not-allowed}
+  .btn-ghost{background:transparent;color:var(--body)}
+  .btn-ghost:hover{color:var(--green)}
+  .btn-lg{padding:13px 26px;font-size:1rem}
+  .q-actions{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .q-status{font-size:.82rem;font-weight:700}
+  .q-status.ok{color:var(--green)}
+
+  /* ---------- Start / end ---------- */
+  .hero{background:linear-gradient(160deg,var(--green-darker),var(--green));color:#fff;border-radius:var(--radius);padding:30px;overflow:hidden;position:relative}
+  .hero h1{font-size:1.9rem;font-weight:800;max-width:22ch}
+  .hero p{margin-top:12px;color:rgba(255,255,255,.86);max-width:62ch}
+  @media(min-width:768px){.hero{padding:44px}.hero h1{font-size:2.5rem}}
+  .hero-actions{margin-top:22px;display:flex;gap:12px;flex-wrap:wrap}
+  .grid-3{display:grid;gap:14px;margin-top:18px}
+  @media(min-width:640px){.grid-3{grid-template-columns:repeat(3,1fr)}}
+  .mini{border:1px solid var(--line);border-radius:var(--radius-sm);padding:16px;background:#fff}
+  .mini h3{font-size:.95rem;font-weight:800}
+  .mini p{margin-top:6px;font-size:.85rem;color:var(--body)}
+  .mini .num{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--wash);color:var(--green-dark);font-weight:800;font-size:.82rem;margin-bottom:8px}
+
+  .steps-list{margin:14px 0 0;padding-left:20px;color:var(--body);font-size:.92rem}
+  .steps-list li{margin:8px 0}
+
+  .score-hero{text-align:center;padding:26px}
+  .score-num{font-size:3.4rem;font-weight:800;color:var(--green);line-height:1}
+  .score-total{font-size:1.1rem;color:var(--body);font-weight:600}
+  .tier{display:inline-block;margin-top:12px;padding:6px 16px;border-radius:999px;background:var(--wash);color:var(--green-dark);font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.1em}
+  .review{width:100%;border-collapse:collapse;margin-top:20px;font-size:.9rem}
+  .review th,.review td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+  .review th{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--body)}
+  .review td.pts{font-weight:800;color:var(--green);white-space:nowrap}
+  .review td.st{white-space:nowrap}
+  .badge-ok{color:var(--ok);font-weight:700}
+  .badge-part{color:var(--warn);font-weight:700}
+
+  /* ---------- Footer nav ---------- */
+  .footnav{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(255,255,255,.97);border-top:1px solid var(--line);backdrop-filter:blur(6px);box-shadow:0 -8px 24px -18px rgba(0,0,0,.4)}
+  .footnav-inner{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .footnav .center{font-size:.82rem;color:var(--body);text-align:center;flex:1 1 auto}
+  .footnav .center b{color:var(--ink)}
+
+  .gamefoot{margin-top:22px;text-align:center;font-size:.75rem;color:var(--body)}
+  .notice{background:#fff;border:1px dashed var(--line);border-radius:var(--radius-sm);padding:14px 16px;font-size:.82rem;color:var(--body);margin-top:18px}
+
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  .fade-in{animation:fade .4s ease-out both}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">ICHM</div>
+        <div class="brand-txt">
+          <div class="brand-title">Cargo Door-to-Door Simulator</div>
+          <div class="brand-sub">IATA Cargo Handling Manual · MOP</div>
+        </div>
+      </div>
+      <div class="score-pill" title="Points earned">
+        <span>Score</span><b id="score-value">0</b>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" id="app" aria-live="polite"></main>
+
+  <div id="footnav"></div>
+
+  <script>
+  "use strict";
+
+  /* =========================================================================
+     ICHM Cargo Door-to-Door Simulator
+     A single-shipment walkthrough of the IATA Cargo Handling Manual (ICHM)
+     Master Operating Plan (MOP): 5 activity groups, 10 interactive phases.
+     Pure vanilla JS. No dependencies, no network.
+     ========================================================================= */
+
+  /* -------------------- Shipment under simulation ---------------------- */
+  var SHIPMENT = {
+    awb: "180-12345675",
+    shipper: "Hanoi Precision Components JSC (Noi Bai IP, Hanoi)",
+    consignee: "Pacific Devices Inc., Los Angeles, CA",
+    origin: "HAN — Hanoi Noi Bai",
+    destination: "LAX — Los Angeles",
+    route: "HAN - ICN - LAX",
+    flightOrigin: "KE846 (HAN-ICN)",
+    flightMain: "KE017 (ICN-LAX)",
+    commodity: "Lithium-ion battery packs — UN3480, Class 9 (DG)",
+    pieces: "12 cartons",
+    gross: "486.0 kg",
+    dims: "60 x 40 x 40 cm each",
+    volume: "1.152 m3",
+    chargeable: "486.0 kg (actual > volumetric 192 kg)",
+    service: "Time-definite Express — deliver before 14:00 local",
+    lat: "LAT for KE846 = 21:30 (departure 23:30)",
+    uld: "AKE container (LD3) — max gross 1,588 kg",
+    screening: "Regulated Agent (RA) acceptance — known consignor"
+  };
+
+  /* -------------------- Phase content ---------------------- */
+  /* Question types:
+       single -> pick exactly one option (option.ok flags the right one)
+       multi  -> pick every correct option (select all that apply)
+       order  -> sequence the items into the correct order
+  */
+  var PHASES = [
+    {
+      n: 1,
+      name: "Booking & Planning",
+      nameVi: "Đặt chỗ và lập kế hoạch",
+      group: "Origin Forwarder",
+      groupNo: 1,
+      goal: "Turn a booking request into a firm, correctly rated and routed air cargo booking.",
+      brief: [
+        "A booking request lands in your inbox. <strong>Hanoi Precision Components JSC</strong> needs 12 cartons of lithium-ion battery packs moved door-to-door from Hanoi to a consignee in Los Angeles. The consignee's assembly line is stopped: if the shipment is not delivered before <strong>14:00 local</strong>, the line stays down for another 24 hours at roughly USD 80,000 of lost output.",
+        "The commodity is <strong>UN3480 lithium-ion batteries, Class 9 dangerous goods</strong>. Not every aircraft type, ULD position or route accepts UN3480, and the carrier needs lead time to approve, plan and secure the load.",
+        "As the origin forwarder you confirm the shipment data, choose the service level, reserve capacity and agree the routing before anything moves."
+      ],
+      facts: [
+        ["Air Waybill", SHIPMENT.awb],
+        ["Route", SHIPMENT.route],
+        ["Commodity", SHIPMENT.commodity],
+        ["Gross weight", SHIPMENT.gross],
+        ["Pieces", SHIPMENT.pieces],
+        ["Deadline", "LAX delivery before 14:00 local"]
+      ],
+      terms: [["AWB", "Vận đơn hàng không"], ["DG", "Hàng nguy hiểm"], ["Rating", "Tính cước"]],
+      ichm: "Group 1 – Origin Forwarder. Processes: booking & space allocation, routing, rate quoting, and dangerous goods acceptance planning.",
+      questions: [
+        {
+          id: "1a",
+          type: "single",
+          prompt: "How should you book this shipment?",
+          help: "One option reflects correct ICHM booking and DG planning.",
+          options: [
+            { label: "Book it as General cargo and tender the DG at the airport without advance notice — the airline can sort it out at acceptance.", why: "Dangerous goods cannot be 'walked up'. UN3480 needs carrier approval in advance, a DG declaration, and a load plan (NOTOC) before it can fly. Tender it blind and it will be offloaded." },
+            { label: "Book a time-definite Express service on the through HAN–ICN–LAX routing, and file the DG booking and notification with the carrier in advance.", ok: true },
+            { label: "Book General cargo and split the 12 cartons across two different flights to reduce the weight per aircraft.", why: "Splitting for weight is unnecessary here (486 kg is small) and it breaks the shipment. Splitting also creates multiple AWB/pieces to reconcile and delays a time-critical delivery." }
+          ],
+          explain: "Correct. A time-critical shipment with a hard deadline is booked as a **time-definite Express / premium service**, which reserves prioritised capacity and a delivery commitment. Because the goods are **UN3480 dangerous goods**, the booking must be lodged in advance so the carrier can confirm the aircraft/position accepts it, check the packing instruction (PI 965), and prepare the NOTOC for the captain.",
+          hint: "Think about the deadline first — and remember DG never travels on a 'walk-up' basis."
+        }
+      ]
+    },
+    {
+      n: 2,
+      name: "Pick-up & Receiving",
+      nameVi: "Lấy hàng và tiếp nhận",
+      group: "Origin Forwarder",
+      groupNo: 1,
+      goal: "Verify cargo readiness at the shipper's dock and control the handover into your custody.",
+      brief: [
+        "Your driver is at the shipper's loading dock to collect the shipment. The pick-up receipt is the moment <strong>custody transfers</strong> from shipper to forwarder — once it is signed without qualification, you own the problems.",
+        "At the dock you find 12 cartons with Class 9 labels. But the AWB says <strong>462.0 kg</strong> gross while the shipper's scale reads <strong>486.0 kg</strong> — a 24 kg gap. One carton also has a <strong>dented corner</strong>.",
+        "The shipper's staff are pressing you to sign and go, promising to 'email the right paperwork later'."
+      ],
+      facts: [
+        ["AWB stated weight", "462.0 kg"],
+        ["Shipper scale reading", "486.0 kg"],
+        ["Difference", "24.0 kg"],
+        ["Packaging", "12 cartons, one with a dented corner"],
+        ["Labels", "Class 9 lithium battery labels present"]
+      ],
+      terms: [["Cargo readiness", "Sự sẵn sàng của hàng"], ["Acceptance", "Chấp nhận vận chuyển"], ["Custody", "Quyền giữ hàng"]],
+      ichm: "Group 1 – Origin Forwarder. Processes: pick-up / receipt from shipper, verification of cargo readiness, packaging and the shipper's declaration.",
+      questions: [
+        {
+          id: "2a",
+          type: "single",
+          prompt: "What is the correct action at the shipper's dock?",
+          help: "You are deciding whether to accept the shipment into your custody.",
+          options: [
+            { label: "Accept as-is and sign the pick-up receipt; the carrier re-weighs everything anyway, and you can fix the paperwork later.", why: "Signing a clean receipt transfers custody and the liability to you. The 24 kg gap against the AWB becomes an undocumented weight/charge discrepancy, and whoever signed as accepted owns it." },
+            { label: "Refuse the shipment outright and send the truck back empty.", why: "Too blunt. A discrepancy is resolvable at the dock. Rejecting outright delays a time-critical shipment for a correctable documentation and packing issue." },
+            { label: "Do not sign as accepted yet. Record the weight discrepancy and the carton damage, have the shipper correct the AWB and repack the damaged carton, then re-verify before signing the pick-up receipt.", ok: true }
+          ],
+          explain: "Correct. Custody transfers on the handover record. You **note the discrepancy, get the documents corrected and the damaged carton repacked, then re-verify** before signing. This is the ICHM discipline of a controlled handover: never accept a known mismatch into your custody without documenting it, because that record is your protection at every later handover.",
+          hint: "A discrepancy discovered before the signature is a fix; the same discrepancy discovered later is your liability."
+        }
+      ]
+    },
+    {
+      n: 3,
+      name: "Export Preparation",
+      nameVi: "Chuẩn bị xuất khẩu",
+      group: "Origin Forwarder",
+      groupNo: 1,
+      goal: "Assemble a complete, accurate export documentation and handling package.",
+      brief: [
+        "Back at the warehouse, the corrected shipment must be made export-ready. Air cargo cannot be tendered to the carrier with incomplete or inaccurate documents.",
+        "For this shipment that means the correct <strong>document set</strong>, correct <strong>marking and labelling</strong> (Class 9 lithium battery label, UN number, consignee/shipper marks, handling labels), and a <strong>security status</strong> consistent with what the carrier will accept.",
+        "The AWB is the contract of carriage and the customs document — everything else must agree with it."
+      ],
+      facts: [
+        ["AWB", SHIPMENT.awb + " (corrected to 486.0 kg)"],
+        ["Handling labels", "Class 9 lithium battery + UN3480"],
+        ["Security status", SHIPMENT.screening],
+        ["Customs", "Export declaration required"]
+      ],
+      terms: [["SLI", "Chỉ thị lô hàng của shipper"], ["DGD", "Giấy khai báo hàng nguy hiểm"], ["Manifest", "Bản lược khai hàng hóa"]],
+      ichm: "Group 1 – Origin Forwarder. Processes: export documentation, marking & labelling, dangerous goods declaration, security status and customs preparation.",
+      questions: [
+        {
+          id: "3a",
+          type: "multi",
+          prompt: "Select every document/record that must be complete and correct before the shipment is tendered to the carrier.",
+          help: "Select all that apply. Some options are distractors.",
+          options: [
+            { label: "Air Waybill (AWB) with accurate pieces, weight, commodity and special-handling codes", ok: true },
+            { label: "Shipper's Letter of Instruction (SLI) supporting the AWB data", ok: true },
+            { label: "Dangerous Goods Declaration (DGD) for the UN3480 lithium batteries", ok: true },
+            { label: "Commercial invoice and packing list for customs", ok: true },
+            { label: "A security declaration / known-consignor or regulated-agent record", ok: true },
+            { label: "A hand-written note from the driver confirming the cargo is fine", ok: false, why: "A driver's note is not a transport document and carries no legal or customs weight. Acceptance runs on the AWB and the formal declarations, not on informal notes." },
+            { label: "Nothing — the airline generates all paperwork at acceptance", ok: false, why: "The carrier cannot generate the shipper's declarations. The forwarder and shipper are responsible for accurate export documentation; the carrier verifies and accepts it." }
+          ],
+          explain: "Correct. The export package is the **AWB + SLI + DGD + commercial invoice/packing list + security record**, all mutually consistent. The DGD is mandatory for UN3480; customs needs the commercial documents; and the security status must match what the carrier's screening regime accepts. A single mismatch turns a shipment into a discrepancy at acceptance.",
+          hint: "Documents must mutually agree — the AWB is the spine that everything else supports."
+        }
+      ]
+    },
+    {
+      n: 4,
+      name: "Transfer & Acceptance",
+      nameVi: "Chuyển giao và chấp nhận",
+      group: "Origin Carrier",
+      groupNo: 2,
+      goal: "Accept the shipment against ICHM acceptance standards and control the handover to the carrier.",
+      brief: [
+        "You tender the shipment to the carrier at HAN cargo. The carrier's acceptance agent now performs the formal checks that transfer responsibility for the consignment onto the airline.",
+        "The agent must reconcile the <strong>AWB against the physical cargo</strong>, weigh and measure it, confirm the <strong>security status</strong>, inspect <strong>packaging and labelling</strong>, and validate the <strong>dangerous goods</strong> paperwork and packaging approval.",
+        "If everything agrees, the carrier signs the AWB as received. If not, the discrepancy is recorded before acceptance."
+      ],
+      facts: [
+        ["AWB", SHIPMENT.awb],
+        ["Declared gross", SHIPMENT.gross],
+        ["Chargeable weight", SHIPMENT.chargeable],
+        ["Screening", SHIPMENT.screening],
+        ["ULD", SHIPMENT.uld]
+      ],
+      terms: [["RA / KC", "Đại lý kiểm soát / Người gửi tin cậy"], ["Chargeable weight", "Trọng lượng tính cước"], ["Discrepancy", "Sai lệch"]],
+      ichm: "Group 2 – Origin Carrier. Processes: physical acceptance, weighing & measuring, security screening, and discrepancy handling before the AWB is signed.",
+      questions: [
+        {
+          id: "4a",
+          type: "multi",
+          prompt: "Select every check the carrier must complete before signing the AWB as received.",
+          help: "Select all that apply. Some options describe shortcuts that are not permitted.",
+          options: [
+            { label: "Reconcile the AWB against the physical cargo — pieces, weight, dimensions, commodity, special-handling codes", ok: true },
+            { label: "Weigh and (where relevant) measure the shipment and confirm the chargeable weight", ok: true },
+            { label: "Verify the security status (RA/KC) and validate the DG paperwork and packaging approval", ok: true },
+            { label: "Inspect packaging, markings and labels for damage, leakage or missing labels", ok: true },
+            { label: "Accept on the forwarder's word because the acceptance dock is busy", ok: false, why: "Acceptance is the carrier's own risk gate. Delegating it to the forwarder's word removes the control and the carrier becomes liable for whatever it accepted." },
+            { label: "Remove the Class 9 labels so the shipment can move on a passenger aircraft", ok: false, why: "Stripping DG labels to speed handling is a serious safety and legal breach. It misdeclares dangerous goods and endangers the aircraft — never permissible." }
+          ],
+          explain: "Correct. ICHM acceptance is a formal, documented gate: **visual and documentary reconciliation, weighing/measuring, security verification, and packaging/DG validation**. Only when the physical cargo and the AWB agree is the AWB signed as received. Any mismatch is handled as a discrepancy before acceptance.",
+          hint: "Acceptance exists to catch problems on the ground — never to be waived for speed."
+        }
+      ]
+    },
+    {
+      n: 5,
+      name: "ULD Build-Up",
+      nameVi: "Đóng hàng vào ULD",
+      group: "Origin Carrier",
+      groupNo: 2,
+      goal: "Build the shipment up safely and correctly so it can be loaded and secured on the aircraft.",
+      brief: [
+        "The shipment is accepted. The planner now decides how to prepare 486 kg and 1.152 m3 of dangerous goods for the ramp.",
+        "A <strong>unit load device (ULD)</strong> is the standard way to consolidate cargo: it protects the freight, keeps the DG in a controlled position, and lets the ramp move one unit instead of loose pieces.",
+        "Build-up follows strict principles — inspect the ULD, put the heaviest items at the base, keep within the ULD's maximum gross weight, secure with nets/doors, and record which AWB is in which ULD."
+      ],
+      facts: [
+        ["Shipment", SHIPMENT.pieces + " / " + SHIPMENT.gross + " / " + SHIPMENT.volume],
+        ["Candidate ULD", SHIPMENT.uld],
+        ["ULD max gross", "1,588 kg (LD3)"],
+        ["Utilisation after build", "approx. 31% of max gross"],
+        ["DG position", "agreed with load control per NOTOC"]
+      ],
+      terms: [["ULD", "Thiết bị chứa hàng"], ["Build-up", "Đóng hàng (lên ULD)"], ["Weight & balance", "Cân bằng trọng tải"]],
+      ichm: "Group 2 – Origin Carrier. Processes: ULD selection & serviceability, build-up, securing, and ULD/AWB record keeping.",
+      questions: [
+        {
+          id: "5a",
+          type: "single",
+          prompt: "How should this shipment be prepared for the ramp?",
+          help: "Choose the build-up method that matches the shipment and the DG requirements.",
+          options: [
+            { label: "Loose-load the 12 cartons directly into the aircraft hold.", why: "Loose loading is used for bulk or oversize pieces that cannot be unitised, not for a compact 12-carton DG consignment. It exposes the freight to damage and makes DG segregation and handling far harder to control." },
+            { label: "Build up on a serviceable AKE container (LD3), keep the DG within the agreed position and limits, secure it, and label the ULD.", ok: true },
+            { label: "Split the cargo across two pallets to 'balance' the aircraft.", why: "Splitting a small consignment does not balance an aircraft and creates two units to track. Weight and balance is planned by load control on the loadsheet, not by splitting one shipment arbitrarily." }
+          ],
+          explain: "Correct. At 486 kg and 1.152 m3 the shipment is a clean fit for an **AKE (LD3) ULD**, well within its 1,588 kg maximum gross weight. Unitising protects the cargo, keeps the dangerous goods in one controlled position, and speeds ramp handling. Build-up principles then govern how the pieces are stacked and secured.",
+          hint: "Match the shipment to the right unit — compact, palletisable DG cargo belongs in a ULD."
+        },
+        {
+          id: "5b",
+          type: "order",
+          prompt: "Arrange the ULD build-up steps in the correct ICHM sequence.",
+          help: "Use the arrows to reorder. Start by checking the equipment, and finish by recording what you built.",
+          items: [
+            "Inspect the ULD for serviceability — no damage, nets and locks intact.",
+            "Place the heaviest cartons on the ULD base and spread the weight evenly.",
+            "Build up in layers, keep the DG in the agreed position and label the outside of the ULD.",
+            "Secure the load with the net / close the container and record the ULD-to-AWB mapping.",
+            "Weigh the built-up ULD and record the actual weight for load control."
+          ],
+          startOrder: [2, 0, 4, 1, 3],
+          explain: "Correct sequence. ICHM build-up logic: **verify the equipment first**, then **distribute heavy items at the base** so the unit is stable, **build up and label** the DG, **secure** it, and finally **weigh and record** the ULD so load control has the true figure. Securing an unserviceable or unweighed unit is how load-related incidents start.",
+          hint: "Serviceability first, stability second, security third, and records last."
+        }
+      ]
+    },
+    {
+      n: 6,
+      name: "Flight Loading & Departure",
+      nameVi: "Xếp chuyến bay và khởi hành",
+      group: "Transport Carrier",
+      groupNo: 3,
+      goal: "Load the ULD against the load plan and LAT, and close out the flight legally.",
+      brief: [
+        "The built-up AKE is ready on the floor. Load control issues the load plan (the <strong>LIR</strong>) placing the ULD at position <strong>41L</strong> of KE846 to ICN, and confirms the <strong>weight and balance</strong> on the loadsheet.",
+        "The <strong>LAT (Latest Acceptance Time)</strong> for KE846 is <strong>21:30</strong>; departure is 23:30. It is now <strong>21:20</strong>.",
+        "Because the shipment contains dangerous goods, a <strong>NOTOC (Notification to Captain)</strong> must accompany the load so the crew knows exactly what is on board and where."
+      ],
+      facts: [
+        ["Flight", SHIPMENT.flightOrigin],
+        ["ULD position", "41L (per LIR)"],
+        ["LAT", SHIPMENT.lat],
+        ["Time now", "21:20 (10 min inside LAT)"],
+        ["DG", "UN3480 — NOTOC required"]
+      ],
+      terms: [["LAT", "Hạn chót nhận hàng"], ["LIR", "Lệnh xếp hàng"], ["NOTOC", "Thông báo cho cơ trưởng"], ["Loadsheet", "Bảng tải trọng"]],
+      ichm: "Group 3 – Transport Carrier. Processes: load planning (LIR/loadsheet), weight & balance, LAT control, and dangerous goods notification (NOTOC).",
+      questions: [
+        {
+          id: "6a",
+          type: "single",
+          prompt: "The ULD is ready at 21:20. What do you do?",
+          help: "Consider both the time window and the load instruction.",
+          options: [
+            { label: "Load the ULD at position 41L and update the loadsheet — you are inside LAT and following the LIR.", ok: true },
+            { label: "Wait and send it on the next flight to be safe.", why: "You are ten minutes inside the LAT with a valid load instruction. Holding it wastes the Express commitment for no operational reason and breaks the time-definite promise." },
+            { label: "Load it even if you slip past 21:30, because the Express deadline matters more than the cut-off.", why: "LAT is a hard operational cut-off tied to loadsheet finalisation, weight & balance and the departure sequence. Breaching it to save one shipment destabilises the whole flight's close-out and is not permitted." }
+          ],
+          explain: "Correct. You are **inside the LAT** and the ULD position matches the **LIR**, so you load it and reflect it on the loadsheet. ICHM flight-loading discipline ties the physical load to the paperwork: the LIR says where, the weight & balance says the aircraft is safe, the LAT protects the close-out, and the NOTOC tells the captain about the dangerous goods.",
+          hint: "Inside LAT + valid instruction = load it. Cutting the corner in either direction creates a problem."
+        },
+        {
+          id: "6b",
+          type: "single",
+          prompt: "Which notification must accompany this dangerous goods load before departure?",
+          help: "The crew must be told what is on board.",
+          options: [
+            { label: "A NOTOC (Notification to Captain) listing the UN3480 dangerous goods and their position.", ok: true },
+            { label: "A verbal briefing to the dispatcher only.", why: "A verbal, undocumented briefing does not meet the dangerous goods notification requirement. The captain needs a written notification identifying the DG and its location." },
+            { label: "No notification — lithium batteries are not really dangerous goods.", why: "UN3480 lithium-ion batteries are Class 9 dangerous goods. They must be declared, packaged, loaded and notified per the regulations; treating them as ordinary cargo is a serious breach." }
+          ],
+          explain: "Correct. Dangerous goods loaded must be documented on the **NOTOC** and given to the captain, identifying the UN number, class, quantity and location on the aircraft. This is a hard requirement of the dangerous goods regulations and part of ICHM flight close-out.",
+          hint: "If it is DG, the captain must hold a written notification with its position."
+        }
+      ]
+    },
+    {
+      n: 7,
+      name: "Arrival & Unload",
+      nameVi: "Đến và dỡ hàng",
+      group: "Destination Carrier",
+      groupNo: 4,
+      goal: "Break down the ULD and reconcile the physical cargo against the manifest — noting any discrepancy.",
+      brief: [
+        "KE017 arrives at LAX. The ramp unloads the AKE and moves it to the breakdown area.",
+        "Breakdown is a reconciliation: the physical pieces, weights and condition are checked against the <strong>manifest</strong> and the AWB. Every difference must be captured at this point, because once cargo leaves the breakdown area the trail is cold.",
+        "You count <strong>12 cartons</strong> (matching the manifest), but one carton shows a <strong>crushed corner</strong> and a <strong>torn Class 9 label</strong>."
+      ],
+      facts: [
+        ["Flight", SHIPMENT.flightMain],
+        ["Manifest pieces", "12 cartons"],
+        ["Counted pieces", "12 cartons (matches)"],
+        ["Condition", "1 carton crushed, torn DG label"],
+        ["ULD seal", "Intact on arrival"]
+      ],
+      terms: [["Breakdown", "Dỡ hàng khỏi ULD"], ["Manifest", "Bản lược khai"], ["Cargo Damage Report", "Biên bản hàng hỏng"]],
+      ichm: "Group 4 – Destination Carrier. Processes: aircraft unloading, ULD breakdown, reconciliation against the manifest, and damage/discrepancy reporting.",
+      questions: [
+        {
+          id: "7a",
+          type: "single",
+          prompt: "You find damage during breakdown. What is the correct action?",
+          help: "The moment of discovery defines the quality of the evidence later.",
+          options: [
+            { label: "Finish the breakdown and mention the damage at the end of the day.", why: "Delay destroys the evidence trail. Condition must be recorded where and when it is found; a note hours later is weak for any claim." },
+            { label: "Stop, photograph the damage, record a Cargo Damage Report / discrepancy against the AWB, notify the carrier and forwarder, then continue the breakdown with the record attached.", ok: true },
+            { label: "Reject the whole ULD back to the ramp and refuse responsibility.", why: "Pieces are counted and match — only one carton is damaged. Rejecting the entire unit is disproportionate and disrupts the shipment; the right move is to document the damage precisely and continue." }
+          ],
+          explain: "Correct. Damage is recorded **at discovery**: photographs, a written Cargo Damage Report/discrepancy, notification to the carrier and forwarder, and the record carried with the shipment. In ICHM arrival and breakdown, condition and count are the two facts that must be captured while the cargo is still in the breakdown area — that record is the foundation of any later claim.",
+          hint: "Capture the facts where they are found — condition and count, with evidence."
+        }
+      ]
+    },
+    {
+      n: 8,
+      name: "Check-in & Warehouse",
+      nameVi: "Nhập kho và kiểm tra",
+      group: "Destination Carrier",
+      groupNo: 4,
+      goal: "Check the cargo in, store it correctly, and respect customs control before any release.",
+      brief: [
+        "The shipment is checked into the destination warehouse. Because it is <strong>UN3480 dangerous goods</strong>, it goes into a <strong>segregated DG storage area</strong>, not general storage.",
+        "Customs shows the entry as <strong>'held — documentation pending'</strong>. Under customs control, cargo in a bonded area cannot be released to the consignee's forwarder until customs clears it.",
+        "The destination forwarder, keen to meet the 14:00 delivery, asks you to release the cargo now and 'sort the paperwork afterwards'."
+      ],
+      facts: [
+        ["Storage", "Segregated DG area"],
+        ["Customs status", "Held — documentation pending"],
+        ["Physical condition", "11 cartons sound, 1 carton damaged (already reported)"],
+        ["Consignee deadline", "14:00 local today"]
+      ],
+      terms: [["Bonded storage", "Kho ngoại quan"], ["Customs release", "Thông quan"], ["DG storage", "Kho hàng nguy hiểm"]],
+      ichm: "Group 4 – Destination Carrier. Processes: cargo check-in, warehouse storage (including dangerous goods segregation), and customs status control before release.",
+      questions: [
+        {
+          id: "8a",
+          type: "single",
+          prompt: "Customs has not released the shipment and the forwarder wants it now. What do you do?",
+          help: "Deadline pressure does not override customs control.",
+          options: [
+            { label: "Release it now so the forwarder can make the deadline, and fix the customs paperwork afterwards.", why: "Releasing bonded cargo before customs clearance is illegal and exposes the carrier to enforcement action and liability. No commercial deadline overrides customs control." },
+            { label: "Hold the shipment in the segregated DG storage area until customs releases it, and tell the forwarder the status and reason.", ok: true },
+            { label: "Return the shipment to origin.", why: "Nothing warrants a return. The shipment is simply awaiting customs clearance; the correct handling is to hold it correctly and keep all parties informed." }
+          ],
+          explain: "Correct. While customs shows the entry as held, the cargo stays under customs control in **bonded storage** — and because it is DG, in a **segregated dangerous goods area**. The destination carrier's job is to protect the cargo, respect the storage rules, and keep the forwarder informed of status. Release happens only on customs clearance.",
+          hint: "Customs controls release. Handle, store and communicate — but do not release early."
+        }
+      ]
+    },
+    {
+      n: 9,
+      name: "Transfer to Destination Forwarder",
+      nameVi: "Chuyển giao cho giao nhận đến",
+      group: "Destination Forwarder",
+      groupNo: 5,
+      goal: "Take over the shipment at destination, verify documents and condition, and record any exception.",
+      brief: [
+        "Customs clears the shipment. The carrier transfers it to you, the destination forwarder, against the AWB and the arrival records.",
+        "You verify the <strong>papers against the pieces</strong>, and the <strong>condition against the arrival report</strong>. The earlier damage is already on record: one carton crushed, documented in a Cargo Damage Report.",
+        "The handover record you sign now determines who carries the damaged piece and on what basis a claim can be pursued."
+      ],
+      facts: [
+        ["Pieces", "12 (matches AWB)"],
+        ["Documents", "AWB + arrival/damage report present"],
+        ["Condition", "1 carton damaged — already documented"],
+        ["Customs", "Cleared"]
+      ],
+      terms: [["Handover", "Bàn giao"], ["Exception", "Ngoại lệ / sai lệch"], ["Claim", "Khiếu nại"]],
+      ichm: "Group 5 – Destination Forwarder. Processes: transfer/handover from the carrier, verification of documents and condition, and exception handling.",
+      questions: [
+        {
+          id: "9a",
+          type: "single",
+          prompt: "How do you handle the transfer?",
+          help: "The condition issue is known and already documented.",
+          options: [
+            { label: "Accept the transfer and sign, but record the existing damage as an exception and keep the damage report attached to the handover; notify the consignee and, if needed, the insurer.", ok: true },
+            { label: "Accept and sign a clean record to avoid delaying delivery — the damage was already reported earlier anyway.", why: "A clean signature at handover severs your ability to claim. Every custody change must record the actual condition; signing clean despite known damage typically makes the damage your problem." },
+            { label: "Refuse the handover and leave the shipment with the carrier.", why: "Refusing a mostly-sound shipment over a documented single-carton issue blocks the delivery and helps no one. The correct path is to accept with the exception recorded." }
+          ],
+          explain: "Correct. You accept the transfer with the **condition recorded as an exception** and the damage report attached to the handover. ICHM transfer discipline: each handover documents count and condition, so responsibility for a known defect is unambiguous and any claim can still be pursued. Signing clean erases that record.",
+          hint: "You can accept cargo that has a known defect — just never sign it clean."
+        }
+      ]
+    },
+    {
+      n: 10,
+      name: "Delivery & POD",
+      nameVi: "Giao hàng và biên bản giao nhận",
+      group: "Destination Forwarder",
+      groupNo: 5,
+      goal: "Deliver to the consignee and close the carriage with a valid Proof of Delivery.",
+      brief: [
+        "The final leg: load the truck, produce a run sheet, and deliver to Pacific Devices Inc. before 14:00.",
+        "The <strong>Proof of Delivery (POD)</strong> is what closes the carriage. It proves the shipment was delivered, on what date and to whom, and it captures the condition at handover — which matters because one carton is still damaged.",
+        "A proper POD names the consignee, is signed and stamped, records date/time and piece count, and notes any exception."
+      ],
+      facts: [
+        ["Consignee", SHIPMENT.consignee],
+        ["Pieces delivered", "12 (1 damaged, documented)"],
+        ["Deadline", "Before 14:00 local"],
+        ["Run sheet", "Prepared at the warehouse"]
+      ],
+      terms: [["POD", "Biên bản giao hàng"], ["Run sheet", "Phiếu giao hàng"], ["Consignee", "Người nhận hàng"]],
+      ichm: "Group 5 – Destination Forwarder. Processes: final delivery, run sheet management, Proof of Delivery, and close-out of the carriage.",
+      questions: [
+        {
+          id: "10a",
+          type: "single",
+          prompt: "Which of these is a valid Proof of Delivery?",
+          help: "Think about what would stand up if the carriage were later disputed.",
+          options: [
+            { label: "A driver's note reading 'left at front desk'.", why: "A note that does not identify the consignee, the pieces or a signature proves left cargo, not delivered cargo. It does not close the carriage or support a claim." },
+            { label: "A POD showing the consignee's name, a signature, the date/time, the consignee's stamp, the piece count, and any damage/exception noted.", ok: true },
+            { label: "A photo of the cartons on the loading dock.", why: "A photo alone is supporting evidence, not a Proof of Delivery. It shows the cargo existed, not that the consignee received it." }
+          ],
+          explain: "Correct. A valid POD identifies **who received it, when, how many pieces, and in what condition**, with a signature and consignee stamp. It is the closing document of the carriage and the trigger for invoicing; the damage/exception line ties the earlier Cargo Damage Report to the delivery and preserves the claim.",
+          hint: "A POD must prove delivery to a named consignee, with count and condition."
+        },
+        {
+          id: "10b",
+          type: "single",
+          prompt: "At the door, the consignee refuses to sign because one carton is damaged. What is the correct action?",
+          help: "Balance delivery completion with protecting the claim.",
+          options: [
+            { label: "Insist on a signature and leave without noting anything.", why: "Forcing a signature and hiding the reason defeats the purpose of the POD and can void the claim. The exception must be recorded." },
+            { label: "Note the refusal and the reason on the POD/run sheet, deliver the accepted pieces, retain the disputed piece per procedure, and raise the claim.", ok: true },
+            { label: "Take the entire shipment back to the warehouse and cancel the delivery.", why: "Cancelling the whole delivery over one disputed carton is disproportionate and needlessly delays ten sound pieces. Record the exception and complete delivery of what is accepted." }
+          ],
+          explain: "Correct. The consignee has the right to note and refuse a damaged piece. You **record the refusal and reason on the POD**, complete delivery of the accepted pieces, retain the disputed piece as procedure requires, and escalate a claim. This protects the consignee's rights and the forwarder's evidence simultaneously.",
+          hint: "Record the exception, deliver what is accepted, and preserve the evidence."
+        }
+      ]
+    }
+  ];
+
+  /* -------------------- State ---------------------- */
+  var TOTAL_QUESTIONS = PHASES.reduce(function (sum, p) { return sum + p.questions.length; }, 0);
+  var MAX_SCORE = TOTAL_QUESTIONS * 10;
+
+  var state = {
+    screen: "start",
+    phaseIndex: 0,
+    maxReached: 0,
+    results: [] // one per question, in order
+  };
+
+  function resetState() {
+    state.screen = "start";
+    state.phaseIndex = 0;
+    state.maxReached = 0;
+    state.results = [];
+    PHASES.forEach(function (p) {
+      p.questions.forEach(function (q) {
+        var answer = { selected: null, order: null, done: false, wrong: 0, points: 0 };
+        if (q.type === "multi") { answer.selected = []; }
+        if (q.type === "order") { answer.order = q.startOrder.slice(); }
+        state.results.push(answer);
+      });
+    });
+  }
+
+  function resultsFor(phaseIndex) {
+    var from = 0;
+    for (var i = 0; i < phaseIndex; i++) { from += PHASES[i].questions.length; }
+    var count = PHASES[phaseIndex].questions.length;
+    return state.results.slice(from, from + count);
+  }
+  function globalResultIndex(phaseIndex, qIndex) {
+    var from = 0;
+    for (var i = 0; i < phaseIndex; i++) { from += PHASES[i].questions.length; }
+    return from + qIndex;
+  }
+  function totalScore() {
+    return state.results.reduce(function (s, r) { return s + r.points; }, 0);
+  }
+  function phaseDone(phaseIndex) {
+    return resultsFor(phaseIndex).every(function (r) { return r.done; });
+  }
+  function totalWrong() {
+    return state.results.reduce(function (s, r) { return s + r.wrong; }, 0);
+  }
+
+  /* -------------------- Helpers ---------------------- */
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  /* Minimal, safe markdown: **bold** -> <strong> (input is authored, escaped first). */
+  function rich(s) {
+    return esc(s).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  }
+
+  var app = document.getElementById("app");
+  var footnav = document.getElementById("footnav");
+
+  function render(top) {
+    var y = window.scrollY;
+    if (state.screen === "start") { app.innerHTML = screenStart(); }
+    else if (state.screen === "phase") { app.innerHTML = screenPhase(); }
+    else if (state.screen === "end") { app.innerHTML = screenEnd(); }
+    footnav.innerHTML = screenFootnav();
+    document.getElementById("score-value").textContent = totalScore();
+    if (top) { window.scrollTo(0, 0); } else { window.scrollTo(0, y); }
+  }
+
+  /* -------------------- Screens ---------------------- */
+  function screenStart() {
+    return '' +
+    '<section class="hero fade-in">' +
+      '<p class="chip chip-vi" style="background:rgba(255,255,255,.14);color:#fff">Air cargo learning game</p>' +
+      '<h1 style="margin-top:14px">ICHM Cargo Door-to-Door Simulator</h1>' +
+      '<p>Move one real shipment — 12 cartons of lithium-ion batteries — through the full air cargo chain, from a booking request in Hanoi to a signed Proof of Delivery in Los Angeles. Ten phases follow the IATA Cargo Handling Manual (ICHM) Master Operating Plan.</p>' +
+      '<div class="hero-actions">' +
+        '<button class="btn btn-primary btn-lg" data-action="start">Start the simulation</button>' +
+      '</div>' +
+    '</section>' +
+    '<section class="card card-pad fade-in" style="margin-top:18px">' +
+      '<h2 style="font-size:1.15rem">The shipment</h2>' +
+      factGrid([
+        ["Air Waybill", SHIPMENT.awb],
+        ["Shipper", SHIPMENT.shipper],
+        ["Consignee", SHIPMENT.consignee],
+        ["Route", SHIPMENT.route],
+        ["Commodity", SHIPMENT.commodity],
+        ["Gross weight", SHIPMENT.gross + " / " + SHIPMENT.volume],
+        ["Flight", SHIPMENT.flightOrigin + " then " + SHIPMENT.flightMain],
+        ["Service", SHIPMENT.service]
+      ]) +
+      '<div class="ichm-ref"><b>How to play:</b> each phase presents a real operational situation and one or more decisions. Choose, then check your decision for immediate feedback grounded in the ICHM. Correct answers score points; wrong answers explain the risk and let you try again. Correct a decision on the first try for full marks.</div>' +
+    '</section>' +
+    '<section class="grid-3 fade-in">' +
+      '<div class="mini"><span class="num">1</span><h3>Origin Forwarder</h3><p>Booking &amp; planning, pick-up &amp; receiving, export preparation. Phases 1–3.</p></div>' +
+      '<div class="mini"><span class="num">2</span><h3>Origin Carrier</h3><p>Transfer &amp; acceptance and ULD build-up at the airport of departure. Phases 4–5.</p></div>' +
+      '<div class="mini"><span class="num">3</span><h3>Transport Carrier</h3><p>Flight loading, weight &amp; balance, LAT control and departure. Phase 6.</p></div>' +
+      '<div class="mini"><span class="num">4</span><h3>Destination Carrier</h3><p>Arrival &amp; unload, breakdown, check-in and warehouse. Phases 7–8.</p></div>' +
+      '<div class="mini"><span class="num">5</span><h3>Destination Forwarder</h3><p>Transfer, final delivery and Proof of Delivery. Phases 9–10.</p></div>' +
+      '<div class="mini" style="background:var(--wash);border-color:#BFDAD1"><h3>Scoring</h3><p>' + TOTAL_QUESTIONS + ' decisions · max ' + MAX_SCORE + ' points. A wrong attempt costs 3 points (a phase decision is worth at least 2). Your errors are logged on the results screen.</p></div>' +
+    '</section>' +
+    '<p class="gamefoot">Educational simulation based on the IATA Cargo Handling Manual (ICHM) Master Operating Plan. Simplified for learning — always follow your carrier\'s current regulations and national law.</p>';
+  }
+
+  function factGrid(rows) {
+    var out = '<dl class="facts">';
+    rows.forEach(function (r) {
+      out += '<div class="fact"><dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd></div>';
+    });
+    return out + '</dl>';
+  }
+
+  function termChips(terms) {
+    if (!terms || !terms.length) { return ""; }
+    var out = '<div class="terms" aria-label="Key terminology (English – Vietnamese)">';
+    terms.forEach(function (t) {
+      out += '<span class="term"><b>' + esc(t[0]) + '</b> · ' + esc(t[1]) + '</span>';
+    });
+    return out + '</div>';
+  }
+
+  function questionBlock(phase, phaseIndex, q, qIndex) {
+    var ri = globalResultIndex(phaseIndex, qIndex);
+    var res = state.results[ri];
+    var out = '<div class="q" id="q-' + phaseIndex + '-' + qIndex + '">';
+    out += '<p class="q-label">Decision' + (phase.questions.length > 1 ? " " + (qIndex + 1) + " of " + phase.questions.length : "") + '</p>';
+    out += '<p class="q-prompt">' + rich(q.prompt) + '</p>';
+    if (q.help) { out += '<p class="q-help">' + esc(q.help) + '</p>'; }
+
+    if (q.type === "order") {
+      out += renderOrder(q, ri, res, phaseIndex, qIndex);
+    } else {
+      out += '<div class="opts" role="group" aria-label="Answer options">';
+      q.options.forEach(function (opt, oi) {
+        var pressed = q.type === "multi"
+          ? (res.selected.indexOf(oi) !== -1)
+          : (res.selected === oi);
+        var st = "";
+        var showWhy = false;
+        if (res.done) {
+          if (opt.ok) { st = ' data-state="ok"'; showWhy = true; }
+          else if (pressed) { st = ' data-state="bad"'; showWhy = true; }
+          else { st = ' style="opacity:.5"'; }
+        }
+        out += '<button type="button" class="opt" data-action="' + (q.type === "multi" ? "toggle" : "select") + '" data-q="' + qIndex + '" data-o="' + oi + '" aria-pressed="' + (pressed ? "true" : "false") + '"' + st + '>' +
+          '<span class="mark" aria-hidden="true">' + (q.type === "multi" ? "✓" : String.fromCharCode(65 + oi)) + '</span>' +
+          '<span class="opt-body"><span class="opt-label">' + esc(opt.label) + '</span>' +
+          ((showWhy && opt.why) ? '<span class="opt-why">' + esc(opt.why) + '</span>' : '') +
+          '</span></button>';
+      });
+      out += '</div>';
+    }
+
+    out += '<div class="q-actions">';
+    if (!res.done) {
+      out += '<button class="btn btn-primary" data-action="check" data-q="' + qIndex + '" data-p="' + phaseIndex + '"' + (canCheck(q, res) ? "" : " disabled") + '>Check decision</button>';
+    } else {
+      out += '<span class="q-status ok">✓ Decision recorded — ' + res.points + ' pt' + (res.points === 1 ? "" : "s") + '</span>';
+    }
+    out += '</div>';
+
+    if (res.done) { out += feedbackBlock(q, phase, res, true); }
+    else if (res.lastWrongHtml) { out += res.lastWrongHtml; }
+
+    return out + '</div>';
+  }
+
+  function renderOrder(q, ri, res, phaseIndex, qIndex) {
+    var out = '<ul class="order" aria-label="Sequence the steps">';
+    res.order.forEach(function (itemIdx, pos) {
+      var st = "";
+      if (res.done) { st = (itemIdx === pos) ? ' data-state="ok"' : ' data-state="bad"'; }
+      out += '<li' + st + '>' +
+        '<span class="pos" aria-hidden="true">' + (pos + 1) + '</span>' +
+        '<span class="txt">' + esc(q.items[itemIdx]) + '</span>' +
+        '<span class="move">' +
+          '<button type="button" class="icon-btn" data-action="up" data-p="' + phaseIndex + '" data-q="' + qIndex + '" data-i="' + pos + '" aria-label="Move item up"' + (pos === 0 || res.done ? " disabled" : "") + '>&#9650;</button>' +
+          '<button type="button" class="icon-btn" data-action="down" data-p="' + phaseIndex + '" data-q="' + qIndex + '" data-i="' + pos + '" aria-label="Move item down"' + (pos === res.order.length - 1 || res.done ? " disabled" : "") + '>&#9660;</button>' +
+        '</span></li>';
+    });
+    return out + '</ul>';
+  }
+
+  function canCheck(q, res) {
+    if (q.type === "multi") { return res.selected.length > 0; }
+    if (q.type === "single") { return res.selected !== null; }
+    return true; // order is always checkable
+  }
+
+  function feedbackBlock(q, phase, res, ok) {
+    var cls = ok ? "is-ok" : "is-bad";
+    var title = ok ? "Correct" : "Not quite";
+    var out = '<div class="fb ' + cls + '" role="status"><h4>' + title + '</h4>';
+    if (ok) {
+      out += '<p>' + rich(q.explain) + '</p>';
+      if (phase.ichm) { out += '<p class="ichm"><b>ICHM reference:</b> ' + rich(phase.ichm) + '</p>'; }
+    }
+    return out + '</div>';
+  }
+
+  function wrongFeedback(q, detail) {
+    var out = '<div class="fb is-bad" role="status"><h4>Review this decision</h4>' + detail;
+    if (q.hint) { out += '<p><b>Hint:</b> ' + esc(q.hint) + '</p>'; }
+    return out + '</div>';
+  }
+
+  function screenPhase() {
+    var p = PHASES[state.phaseIndex];
+    var pct = Math.round((state.phaseIndex) / PHASES.length * 100);
+    var out = '';
+
+    /* Progress rail */
+    out += '<section class="card card-pad" aria-label="Progress">';
+    out += '<div class="rail-head"><p class="rail-title">Progress</p><p class="rail-count">Phase <b>' + p.n + '</b> of ' + PHASES.length + '</p></div>';
+    out += '<div class="rail-track" role="progressbar" aria-valuemin="0" aria-valuemax="' + PHASES.length + '" aria-valuenow="' + p.n + '" aria-valuetext="Phase ' + p.n + ' of ' + PHASES.length + '"><div class="rail-fill" style="width:' + pct + '%"></div></div>';
+    out += '<div class="rail-dots">';
+    PHASES.forEach(function (ph, i) {
+      var cls = "dot";
+      if (i === state.phaseIndex) { cls += " is-current"; }
+      else if (phaseDone(i)) { cls += " is-done"; }
+      var disabled = (i > state.maxReached) ? " disabled" : "";
+      var st = phaseDone(i) ? "✓ " : "";
+      out += '<button type="button" class="' + cls + '" data-action="go" data-p="' + i + '"' + disabled + ' aria-label="Go to phase ' + ph.n + '">' + st + ph.n + '</button>';
+    });
+    out += '</div></section>';
+
+    /* Phase card */
+    out += '<section class="card card-pad fade-in">';
+    out += '<div class="phase-head">' +
+      '<span class="chip chip-phase">Phase ' + p.n + ' of ' + PHASES.length + '</span>' +
+      '<span class="chip chip-group">Group ' + p.groupNo + ' · ' + esc(p.group) + '</span>' +
+      '<span class="chip chip-vi">' + esc(p.nameVi) + '</span>' +
+    '</div>';
+    out += '<h2 class="phase-title">' + esc(p.name) + '</h2>';
+    out += '<p class="prose"><strong>Goal:</strong> ' + esc(p.goal) + '</p>';
+
+    out += '<div class="prose">';
+    p.brief.forEach(function (para) { out += '<p>' + rich(para) + '</p>'; });
+    out += '</div>';
+
+    out += factGrid(p.facts);
+    out += termChips(p.terms);
+
+    p.questions.forEach(function (q, qi) { out += questionBlock(p, state.phaseIndex, q, qi); });
+
+    out += '</section>';
+
+    out += '<p class="gamefoot">ICHM MOP · simplified for learning. Not affiliated with any carrier or with Sembcorp Industries.</p>';
+    return out;
+  }
+
+  function screenEnd() {
+    var score = totalScore();
+    var pct = Math.round(score / MAX_SCORE * 100);
+    var tier = "Ramp Trainee";
+    if (pct >= 90) { tier = "ICHM Operations Expert"; }
+    else if (pct >= 70) { tier = "Cargo Lead"; }
+    else if (pct >= 50) { tier = "Acceptance Agent"; }
+    var perfect = state.results.filter(function (r) { return r.wrong === 0; }).length;
+
+    var out = '';
+    out += '<section class="card score-hero fade-in">';
+    out += '<p class="chip chip-group">Simulation complete</p>';
+    out += '<h1 style="margin-top:14px;font-size:1.6rem">Shipment delivered to Los Angeles</h1>';
+    out += '<p class="score-num" style="margin-top:18px">' + score + '<span class="score-total"> / ' + MAX_SCORE + '</span></p>';
+    out += '<p class="muted" style="margin-top:6px">' + pct + '% · ' + perfect + ' of ' + TOTAL_QUESTIONS + ' decisions perfect on the first attempt · ' + totalWrong() + ' incorrect attempt' + (totalWrong() === 1 ? "" : "s") + '</p>';
+    out += '<p class="tier">' + tier + '</p>';
+    out += '<div class="hero-actions" style="justify-content:center"><button class="btn btn-primary btn-lg" data-action="restart">Run the simulation again</button></div>';
+    out += '</section>';
+
+    /* Review table */
+    out += '<section class="card card-pad">';
+    out += '<h2 style="font-size:1.15rem">Decision review</h2>';
+    out += '<table class="review"><thead><tr><th>Phase</th><th>Activity group</th><th class="st">Result</th><th style="text-align:right">Points</th></tr></thead><tbody>';
+    PHASES.forEach(function (p, i) {
+      var rs = resultsFor(i);
+      var pts = rs.reduce(function (s, r) { return s + r.points; }, 0);
+      var maxPts = rs.length * 10;
+      var clean = rs.every(function (r) { return r.wrong === 0; });
+      var stHtml = clean ? '<span class="badge-ok">First-try correct</span>' : '<span class="badge-part">' + rs.reduce(function (s, r) { return s + r.wrong; }, 0) + ' retry</span>';
+      out += '<tr><td><b>' + p.n + '.</b> ' + esc(p.name) + '<br><span class="small muted">' + esc(p.nameVi) + '</span></td>' +
+        '<td class="small muted">' + esc(p.group) + '</td>' +
+        '<td class="st">' + stHtml + '</td>' +
+        '<td class="pts" style="text-align:right">' + pts + ' / ' + maxPts + '</td></tr>';
+    });
+    out += '</tbody></table>';
+    out += '<div class="notice"><b>Takeaways from this run:</b> a booking covers service level and DG lead time; custody transfers on documents, so record every discrepancy at the point of discovery; acceptance, build-up and loading must agree with the paperwork; and a valid POD — with count and condition — is what closes the carriage.</div>';
+    out += '</section>';
+
+    out += '<p class="gamefoot">Educational simulation based on the IATA Cargo Handling Manual (ICHM). Always follow your carrier\'s current regulations and applicable national law.</p>';
+    return out;
+  }
+
+  function screenFootnav() {
+    if (state.screen !== "phase") { return ""; }
+    var p = PHASES[state.phaseIndex];
+    var done = phaseDone(state.phaseIndex);
+    var isLast = state.phaseIndex === PHASES.length - 1;
+    var out = '<div class="footnav"><div class="footnav-inner">';
+    out += '<button class="btn btn-outline" data-action="prev"' + (state.phaseIndex === 0 ? " disabled" : "") + '>‹ Previous</button>';
+    out += '<p class="center">Phase <b>' + p.n + ' of ' + PHASES.length + '</b> · ' + esc(p.name) + '<br><span class="small">Score ' + totalScore() + '</span></p>';
+    out += '<button class="btn btn-primary" data-action="next"' + (done ? "" : " disabled") + '>' + (isLast ? "Finish" : "Next phase") + ' ›</button>';
+    out += '</div></div>';
+    return out;
+  }
+
+  /* -------------------- Actions ---------------------- */
+  function currentAnswers() {
+    var p = PHASES[state.phaseIndex];
+    var rs = resultsFor(state.phaseIndex);
+    return { phase: p, results: rs };
+  }
+
+  function handleSelect(qIndex, optIndex) {
+    var q = PHASES[state.phaseIndex].questions[qIndex];
+    var res = resultsFor(state.phaseIndex)[qIndex];
+    if (res.done) { return; }
+    res.selected = optIndex;
+    delete res.lastWrongHtml;
+    render();
+  }
+
+  function handleToggle(qIndex, optIndex) {
+    var res = resultsFor(state.phaseIndex)[qIndex];
+    if (res.done) { return; }
+    var pos = res.selected.indexOf(optIndex);
+    if (pos === -1) { res.selected.push(optIndex); } else { res.selected.splice(pos, 1); }
+    res.selected.sort(function (a, b) { return a - b; });
+    delete res.lastWrongHtml;
+    render();
+  }
+
+  function handleMove(qIndex, from, dir) {
+    var res = resultsFor(state.phaseIndex)[qIndex];
+    if (res.done) { return; }
+    var to = from + dir;
+    if (to < 0 || to >= res.order.length) { return; }
+    var tmp = res.order[from];
+    res.order[from] = res.order[to];
+    res.order[to] = tmp;
+    delete res.lastWrongHtml;
+    render();
+  }
+
+  function checkQuestion(qIndex) {
+    var phase = PHASES[state.phaseIndex];
+    var q = phase.questions[qIndex];
+    var res = resultsFor(state.phaseIndex)[qIndex];
+    if (res.done) { return; }
+
+    var correct = false;
+    var detail = "";
+
+    if (q.type === "single") {
+      correct = !!q.options[res.selected].ok;
+      if (!correct) {
+        detail = '<p>' + esc(q.options[res.selected].why) + '</p>';
+      }
+    } else if (q.type === "multi") {
+      var correctSet = [];
+      q.options.forEach(function (o, i) { if (o.ok) { correctSet.push(i); } });
+      var missing = correctSet.filter(function (i) { return res.selected.indexOf(i) === -1; });
+      var extra = res.selected.filter(function (i) { return !q.options[i].ok; });
+      correct = missing.length === 0 && extra.length === 0;
+      if (!correct) {
+        detail = '<p>' + (missing.length ? "You missed valid check" + (missing.length > 1 ? "s" : "") + ":" : "You selected something that is not part of the check set.") + '</p>';
+        detail += '<ul>';
+        missing.forEach(function (i) { detail += '<li><b>Missing:</b> ' + esc(q.options[i].label) + '</li>'; });
+        extra.forEach(function (i) { detail += '<li><b>Not required:</b> ' + esc(q.options[i].label) + ' — ' + esc(q.options[i].why) + '</li>'; });
+        detail += '</ul>';
+      }
+    } else if (q.type === "order") {
+      correct = res.order.every(function (itemIdx, pos) { return itemIdx === pos; });
+      if (!correct) {
+        var misplaced = [];
+        res.order.forEach(function (itemIdx, pos) { if (itemIdx !== pos) { misplaced.push(pos + 1); } });
+        detail = '<p>The sequence is not yet correct. Re-examine these positions: ' + misplaced.join(", ") + '. Think about checking equipment before building, and finishing with the weight record.</p>';
+      }
+    }
+
+    if (correct) {
+      res.done = true;
+      var perQ = 10;
+      res.points = Math.max(perQ - 3 * res.wrong, 2);
+      render();
+    } else {
+      res.wrong += 1;
+      res.lastWrongHtml = wrongFeedback(q, detail);
+      render();
+    }
+  }
+
+  function goNext() {
+    if (!phaseDone(state.phaseIndex)) { return; }
+    if (state.phaseIndex === PHASES.length - 1) {
+      state.screen = "end";
+      render(true);
+      return;
+    }
+    state.phaseIndex += 1;
+    if (state.phaseIndex > state.maxReached) { state.maxReached = state.phaseIndex; }
+    render(true);
+  }
+
+  function goPrev() {
+    if (state.phaseIndex === 0) { return; }
+    state.phaseIndex -= 1;
+    render(true);
+  }
+
+  function goTo(p) {
+    if (p > state.maxReached) { return; }
+    state.phaseIndex = p;
+    render(true);
+  }
+
+  /* -------------------- Event delegation ---------------------- */
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest("[data-action]");
+    if (!el) { return; }
+    var action = el.getAttribute("data-action");
+    var qi = parseInt(el.getAttribute("data-q"), 10);
+    var oi = parseInt(el.getAttribute("data-o"), 10);
+    var pi = parseInt(el.getAttribute("data-p"), 10);
+
+    if (action === "start") { resetState(); state.screen = "phase"; render(true); return; }
+    if (action === "restart") { resetState(); state.screen = "phase"; render(true); return; }
+    if (action === "select") { handleSelect(qi, oi); return; }
+    if (action === "toggle") { handleToggle(qi, oi); return; }
+    if (action === "up") { handleMove(qi, parseInt(el.getAttribute("data-i"), 10), -1); return; }
+    if (action === "down") { handleMove(qi, parseInt(el.getAttribute("data-i"), 10), 1); return; }
+    if (action === "check") { checkQuestion(qi); return; }
+    if (action === "next") { goNext(); return; }
+    if (action === "prev") { goPrev(); return; }
+    if (action === "go") { goTo(pi); return; }
+  });
+
+  /* -------------------- Boot ---------------------- */
+  resetState();
+  render(true);
+  </script>
+</body>
+</html>

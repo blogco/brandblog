@@ -8,98 +8,94 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23000033'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='16' fill='%2300ffff' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
 <style>
 /* =======================================================================
-   Ticket Sales Simulator — Amadeus terminal skin
+   Ticket Sales Simulator — Amadeus terminal (fixed vertical layout)
    ======================================================================= */
 :root{
-  --bg:#000014;
-  --screen:#000033;
-  --screen2:#000044;
-  --panel:#050538;
-  --line:#22307a;
-  --line2:#33418f;
+  --bg:#000033;
   --yellow:#ffff00;
-  --amber:#ffd23f;
   --cyan:#00ffff;
   --magenta:#ff00ff;
-  --green:#39ff88;
-  --red:#ff5555;
-  --white:#e9e9f5;
-  --dim:#8f9ac9;
-  --mono:"Courier New", Courier, "Consolas", "Fira Code", monospace;
+  --red:#ff0000;
+  --green:#33ff66;
+  --white:#e6f0ff;
+  --dim:#7a86b8;
+  --mono:"Courier New", Courier, monospace;
 }
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%}
 body{
   margin:0;
-  background:
-    radial-gradient(1200px 700px at 50% -10%, #10103f 0%, transparent 60%),
-    var(--bg);
-  color:var(--white);
+  background:var(--bg);
+  color:var(--yellow);
   font-family:var(--mono);
-  font-size:15px;
-  line-height:1.45;
+  font-size:14px;
+  line-height:1.35;
+  overflow:hidden;
   -webkit-font-smoothing:none;
 }
-/* CRT scanlines + vignette + subtle flicker */
-body::before{
-  content:"";position:fixed;inset:0;z-index:60;pointer-events:none;
-  background:repeating-linear-gradient(0deg, rgba(0,0,0,.34) 0 1px, rgba(0,0,0,0) 1px 3px);
-  opacity:.55;
-}
+/* CRT scanlines — light, non-interactive */
 body::after{
-  content:"";position:fixed;inset:0;z-index:61;pointer-events:none;
-  background:radial-gradient(ellipse at center, rgba(0,0,0,0) 52%, rgba(0,0,0,.66) 100%);
+  content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, rgba(0,0,0,0) 1px 3px);
 }
-@keyframes flick{0%,100%{opacity:1}48%{opacity:.975}50%{opacity:.93}52%{opacity:.975}}
-@media (prefers-reduced-motion:no-preference){ .monitor{animation:flick 6.5s infinite steps(1)} }
 
-.shell{min-height:100%;display:flex;flex-direction:column;align-items:center;padding:14px 12px 26px}
-.monitor{
-  width:100%;max-width:1180px;flex:1 1 auto;min-height:0;
+/* ---- App shell: fixed vertical layout, no page scroll ---- */
+.app{
+  height:100vh;height:100dvh;
   display:flex;flex-direction:column;
-  background:linear-gradient(180deg,var(--screen2),var(--screen));
-  border:2px solid var(--line2);
-  border-radius:12px;
-  box-shadow:0 0 0 3px #05052a, 0 18px 60px rgba(0,0,0,.7), inset 0 0 90px rgba(0,40,120,.35);
-  overflow:hidden;
-  text-shadow:0 0 2px currentColor;
+  overflow:hidden;background:var(--bg);
 }
-.monitor__top{
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-  padding:7px 12px;border-bottom:1px solid var(--line);
-  background:linear-gradient(180deg,#00003f,#00002c);
-  color:var(--amber);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;
-}
-.monitor__top b{color:var(--cyan)}
-.dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:var(--green);box-shadow:0 0 8px var(--green)}
-.monitor__top .spacer{flex:1 1 auto}
-.monitor__top button{
-  font:inherit;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--yellow);background:#000028;border:1px solid var(--line2);border-radius:5px;
-  padding:4px 10px;cursor:pointer;
-}
-.monitor__top button:hover{background:#0a0a4d;color:#fff}
 
-.hud{
-  display:grid;grid-template-columns:repeat(6,1fr);gap:1px;
-  background:var(--line);border-bottom:1px solid var(--line);
+/* ---- TOP: status line + command line + hint bar ---- */
+.top{flex:0 0 auto;background:var(--bg);border-bottom:2px solid var(--cyan)}
+.statusbar{
+  display:flex;align-items:center;flex-wrap:wrap;column-gap:14px;row-gap:1px;
+  padding:4px 8px;white-space:nowrap;overflow:hidden;
 }
-.hud__cell{background:#00002e;padding:6px 9px;min-width:0}
-.hud__k{display:block;font-size:.62rem;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
-.hud__v{display:block;font-size:.95rem;color:var(--yellow);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hud__v.cy{color:var(--cyan)}
+.statusbar__agent{color:var(--yellow);font-weight:700}
+.statusbar__office,.statusbar__date{color:var(--cyan)}
+.statusbar__time{color:var(--yellow);font-weight:700}
+.statusbar .spacer{flex:1 1 auto}
+.hud{display:flex;align-items:center;gap:12px;min-width:0;overflow:hidden}
+.hud__cell{display:flex;align-items:baseline;gap:4px;min-width:0;white-space:nowrap}
+.hud__k{display:inline;font-size:.6rem;letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
+.hud__v{display:inline;font-size:.78rem;font-weight:700;color:var(--yellow);overflow:hidden;text-overflow:ellipsis}
 .hud__v.gr{color:var(--green)}
 .hud__v.rd{color:var(--red)}
+.hud__v.dim{color:var(--dim)}
 
-.body{flex:1 1 auto;min-height:0;display:flex;overflow:hidden}
-.log{
-  flex:1 1 auto;min-width:0;
-  padding:12px 14px 18px;overflow-y:auto;overflow-x:auto;
-  font-size:15px;
-  scrollbar-color:var(--line2) transparent;
+.cmdline{display:flex;align-items:center;gap:6px;padding:2px 8px;background:var(--bg);border-bottom:2px solid var(--cyan)}
+.cmdline__sig{color:var(--cyan);font-weight:700}
+.cmdline input{
+  flex:1 1 auto;min-width:0;background:var(--bg);border:0;outline:0;
+  color:var(--yellow);font:inherit;font-size:1rem;letter-spacing:.03em;
+  caret-color:var(--cyan);text-transform:uppercase;
 }
-.log::-webkit-scrollbar{width:10px;height:10px}
-.log::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+.cmdline input::placeholder{color:#4d5a96;text-transform:none;letter-spacing:0}
+
+.hintbar{
+  display:flex;align-items:center;gap:8px;
+  padding:3px 8px;color:var(--dim);font-size:.68rem;letter-spacing:.04em;
+  white-space:nowrap;overflow:hidden;
+}
+.hintbar__keys{overflow:hidden;text-overflow:ellipsis}
+.hintbar .spacer{flex:1 1 auto}
+.hintbar button{
+  font:inherit;color:var(--cyan);background:none;border:0;padding:0 4px;
+  cursor:pointer;letter-spacing:.08em;text-transform:uppercase;
+}
+.hintbar button:hover{color:var(--yellow)}
+
+/* ---- MIDDLE: terminal output (its own scroll area) ---- */
+.screen{
+  flex:1 1 auto;min-height:0;overflow:auto;
+  padding:8px 10px 16px;background:var(--bg);
+  scrollbar-color:var(--cyan) var(--bg);
+}
+.screen::-webkit-scrollbar{width:10px;height:10px}
+.screen::-webkit-scrollbar-thumb{background:#00a5a5}
+.screen::-webkit-scrollbar-track{background:var(--bg)}
+
 .ln{white-space:pre-wrap;word-break:break-word;margin:0}
 .ln.pre{white-space:pre;word-break:normal}
 .ln + .ln{margin-top:1px}
@@ -111,111 +107,149 @@ body::after{
 .gr{color:var(--green)}
 .rd{color:var(--red)}
 .dim{color:var(--dim)}
-.am{color:var(--amber)}
+.am{color:var(--yellow)}
 .wh{color:var(--white)}
 .ck{color:var(--cyan)}
-.ck0{color:#5b6a9e}
+.ck0{color:#4a568c}
 .flt{color:var(--magenta)}
-.stn{color:var(--amber)}
+.stn{color:var(--yellow)}
 .tm{color:var(--white)}
 .equip{color:var(--dim)}
 .dur{color:var(--cyan)}
-.rule{color:var(--line2)}
+.rule{color:#00a5a5}
 .bold{font-weight:700}
 
-/* command reference panel */
+/* ---- Alert: pinned to the TOP of the output, never a centred modal ---- */
+.alert{
+  position:sticky;top:0;z-index:5;
+  background:#330000;color:var(--yellow);
+  border:2px solid var(--white);
+  padding:8px 10px;margin:0 0 10px;
+  animation:alertblink 1s steps(1,end) infinite;
+}
+@keyframes alertblink{0%,49%{border-color:#ffffff}50%,100%{border-color:#330000}}
+.alert__head{color:var(--white);font-weight:700;letter-spacing:.1em;margin-bottom:4px}
+.alert__line{white-space:pre-wrap}
+.alert__actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.alert__btn{
+  font:inherit;color:var(--yellow);background:var(--bg);
+  border:1px solid var(--white);padding:3px 12px;cursor:pointer;
+  letter-spacing:.06em;text-transform:uppercase;
+}
+.alert__btn:hover{background:var(--yellow);color:#330000}
+@media (prefers-reduced-motion:reduce){.alert{animation:none}}
+
+/* ---- BOTTOM: message bar (red error / yellow notice / green status) ---- */
+.msgbar{
+  flex:0 0 auto;display:flex;align-items:center;gap:12px;
+  padding:3px 8px;background:var(--bg);border-top:2px solid var(--cyan);
+  font-size:.78rem;white-space:nowrap;overflow:hidden;
+}
+.msgbar__text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--yellow)}
+.msgbar__text.err{color:var(--red)}
+.msgbar__text.ok{color:var(--green)}
+.msgbar__text.hint{color:var(--yellow)}
+.msgbar__meta{flex:0 0 auto;color:var(--dim);font-size:.64rem;letter-spacing:.04em}
+.msgbar__meta a{color:var(--magenta);text-decoration:none}
+.msgbar__meta a:hover{color:var(--yellow)}
+
+/* ---- Command reference: overlay (does not affect the vertical flow) ---- */
 .ref{
-  flex:0 0 320px;max-width:320px;
-  border-left:1px solid var(--line);
-  background:#00002a;padding:12px 12px 14px;overflow-y:auto;
+  position:fixed;top:0;right:0;height:100%;width:min(360px,88vw);
+  background:var(--bg);border-left:2px solid var(--cyan);
+  overflow-y:auto;padding:10px;z-index:100;
+  transform:translateX(102%);transition:transform .18s ease-out;
 }
-.ref.hidden{display:none}
-.ref__title{color:var(--cyan);font-size:.76rem;letter-spacing:.12em;text-transform:uppercase;margin:0 0 8px;border-bottom:1px dashed var(--line2);padding-bottom:6px}
-.ref__row{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px dotted #16205c;padding:6px 2px;cursor:pointer;font:inherit;color:var(--white)}
-.ref__row:hover{background:#0a0a4d}
-.ref__cmd{display:block;color:var(--amber);font-size:.82rem}
-.ref__use{display:block;color:var(--dim);font-size:.72rem}
-.ref__eg{display:block;color:var(--green);font-size:.72rem}
-.ref__note{color:var(--dim);font-size:.7rem;margin-top:10px;line-height:1.5}
+.ref.open{transform:translateX(0)}
+.ref__title{color:var(--cyan);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;margin:0 0 8px;border-bottom:1px dashed var(--cyan);padding-bottom:6px}
+.ref__row{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px dotted #1c2a6e;padding:6px 2px;cursor:pointer;font:inherit;color:var(--white)}
+.ref__row:hover{background:#001a4d}
+.ref__cmd{display:block;color:var(--yellow);font-size:.8rem}
+.ref__use{display:block;color:var(--dim);font-size:.7rem}
+.ref__eg{display:block;color:var(--green);font-size:.7rem}
+.ref__note{color:var(--dim);font-size:.68rem;margin-top:10px;line-height:1.5}
 
-.prompt{
-  display:flex;align-items:center;gap:8px;
-  border-top:1px solid var(--line2);
-  background:linear-gradient(180deg,#00002c,#000024);
-  padding:9px 12px;
-}
-.prompt__sign{color:var(--cyan);font-weight:700;font-size:1.05rem}
-.prompt input{
-  flex:1 1 auto;min-width:0;
-  background:transparent;border:0;outline:0;
-  color:var(--yellow);font:inherit;font-size:1.02rem;letter-spacing:.02em;
-  caret-color:var(--cyan);
-  text-transform:uppercase;
-}
-.prompt input::placeholder{color:#4d5a96;text-transform:none;letter-spacing:0}
-.prompt__send{
-  font:inherit;font-size:.72rem;letter-spacing:.08em;
-  color:var(--cyan);background:#000028;border:1px solid var(--line2);border-radius:5px;
-  padding:5px 10px;cursor:pointer;white-space:nowrap;
-}
-.prompt__send:hover{background:#0a0a4d;color:#fff}
-
-.foot{max-width:1180px;width:100%;margin-top:10px;color:#5f6aa3;font-size:.7rem;line-height:1.6;text-align:center}
-.foot a{color:var(--cyan);text-decoration:none;border-bottom:1px dotted var(--line2)}
-.foot a:hover{color:#fff}
-
-/* responsive */
+/* ---- Responsive: keep the vertical layout, only shrink the font ---- */
 @media (max-width:900px){
-  .ref{display:none;flex-basis:100%;max-width:100%;border-left:0;border-top:1px solid var(--line)}
-  .ref.open{display:block}
-  .body{flex-direction:column}
-  .log{font-size:13.5px;max-height:none}
-  .hud{grid-template-columns:repeat(3,1fr)}
+  body{font-size:12px}
+  .ln{font-size:12px}
+  .screen{font-size:12px;padding:6px 8px 12px}
+  .statusbar{font-size:12px;column-gap:9px}
+  .hud__k{font-size:.58rem}
+  .hud__v{font-size:.72rem}
+  .hintbar{font-size:.62rem}
+  .msgbar{font-size:.7rem}
+  .cmdline input{font-size:.94rem}
 }
-@media (max-width:560px){
-  .log{font-size:12px;padding:10px 9px 14px}
-  .hud__v{font-size:.85rem}
-  .monitor__top{font-size:.72rem}
-  .prompt input{font-size:.95rem}
+
+/* =======================================================================
+   Tình huống bất khả kháng — system alert (nền đỏ, chữ vàng, viền nhấp nháy)
+   ======================================================================= */
+@keyframes crisisblink{0%,49%{border-color:#fff}50%,100%{border-color:#600000}}
+@keyframes softblink{0%,49%{opacity:1}50%,100%{opacity:.25}}
+.crisis{
+  background:linear-gradient(180deg,#4a0000 0%,#200000 100%);
+  border:2px solid #fff;
+  animation:crisisblink .7s steps(1) infinite;
+  color:var(--yellow);
+  padding:10px 12px 12px;
+  margin:6px 0 8px;
+  box-shadow:inset 0 0 26px rgba(255,40,40,.4);
+  text-shadow:0 0 3px currentColor;
 }
+.crisis__title{display:block;color:#ffff66;font-weight:700;letter-spacing:.04em;margin-bottom:6px}
+.crisis__alert{display:block;color:#ffd23f;white-space:pre-wrap;margin-bottom:8px}
+.crisis__ask{display:block;color:#9aa5d8;margin-bottom:6px}
+.crisis__act{display:flex;gap:6px;flex-wrap:wrap}
+.crisis__act button{
+  flex:1 1 100%;text-align:left;
+  font:inherit;font-size:.82rem;font-weight:700;
+  color:#200000;background:#ffd23f;
+  border:0;border-radius:0;padding:6px 9px;cursor:pointer;
+}
+@media (min-width:720px){ .crisis__act button{flex:1 1 31%} }
+.crisis__act button:hover{background:#fff;color:#000}
+.crisis__act button b{color:#7a0000}
+.crisis__warn{display:block;color:var(--red);font-weight:700;letter-spacing:.06em;animation:softblink 1.1s steps(1) infinite}
 </style>
 </head>
 <body>
-<div class="shell">
-  <div class="monitor" id="monitor">
-    <div class="monitor__top">
-      <span class="dot" aria-hidden="true"></span>
-      <span>AMADEUS TRAINING SYSTEM <b>&nbsp;·&nbsp;</b> TNHH HUNG HA AIRWAYS <b>&nbsp;·&nbsp;</b> TERMINAL HAN01</span>
+<div class="app" id="monitor">
+  <header class="top">
+    <div class="statusbar" aria-label="Trạng thái phiên">
+      <span class="statusbar__agent" id="statusAgent">HH01/SU</span>
+      <span class="statusbar__office" id="statusOffice">HAN01</span>
+      <span class="statusbar__date" id="statusDate">15NOV</span>
+      <span class="statusbar__time" id="statusTime">08:00</span>
       <span class="spacer"></span>
-      <button type="button" id="refToggle">[ DANH SÁCH LỆNH ]</button>
+      <div class="hud" id="hud" aria-live="off"></div>
     </div>
-
-    <div class="hud" id="hud" aria-live="off"></div>
-
-    <div class="body">
-      <div class="log" id="log" aria-live="polite" aria-label="Màn hình terminal"></div>
-      <aside class="ref" id="ref" aria-label="Danh sách lệnh">
-        <p class="ref__title">Danh sách lệnh</p>
-        <div id="refList"></div>
-        <p class="ref__note">Bấm một dòng để chèn vào ô nhập (không tự chạy). Gõ đúng cú pháp rồi nhấn Enter.</p>
-      </aside>
-    </div>
-
-    <form class="prompt" id="form" autocomplete="off">
-      <span class="prompt__sign" aria-hidden="true">&gt;</span>
-      <input id="input" name="cmd" type="text" placeholder="gõ lệnh Amadeus rồi nhấn Enter…  (HELP để xem trợ giúp)"
+    <form class="cmdline" id="form" autocomplete="off">
+      <span class="cmdline__sig" aria-hidden="true">&gt;</span>
+      <input id="input" name="cmd" type="text" autofocus
+             placeholder="GÕ LỆNH + ENTER  (HELP)"
              aria-label="Nhập lệnh" autocapitalize="characters" autocomplete="off" spellcheck="false">
-      <button class="prompt__send" type="submit">ENTER</button>
     </form>
-  </div>
+    <div class="hintbar" aria-hidden="true">
+      <span class="hintbar__keys">ENTER=EXECUTE&nbsp;&nbsp;MD=MAIN MENU&nbsp;&nbsp;AN=AVAILABILITY&nbsp;&nbsp;TJQ=SALES&nbsp;&nbsp;TJD=DAILY&nbsp;&nbsp;HE=HELP</span>
+      <span class="spacer"></span>
+      <button type="button" id="refToggle">[ LỆNH ]</button>
+    </div>
+  </header>
 
-  <p class="foot">
-    <strong style="color:#8f9ac9">Ticket Sales Simulator — Amadeus Terminal.</strong>
-    Sản phẩm học tập, phi thương mại. Hãng hàng không, số hiệu chuyến, giá vé và nhân vật đều hư cấu,
-    đã được đơn giản hoá cho mục đích giảng dạy; không liên kết với bất kỳ hãng hàng không hay hệ thống GDS nào.
-    &nbsp;·&nbsp; <a href="./../">← Về BrandBlog</a>
-  </p>
+  <main class="screen" id="log" aria-live="polite" aria-label="Màn hình terminal"></main>
+
+  <footer class="msgbar">
+    <span class="msgbar__text" id="msgbarText"></span>
+    <span class="msgbar__meta" title="Sản phẩm học tập, phi thương mại. Hãng hàng không, số hiệu chuyến, giá vé và nhân vật đều hư cấu; không liên kết với bất kỳ hãng hàng không hay hệ thống GDS nào.">HƯ CẤU · PHI THƯƠNG MẠI · <a href="./../">← VỀ BRANDBLOG</a></span>
+  </footer>
 </div>
+
+<aside class="ref" id="ref" aria-label="Danh sách lệnh">
+  <p class="ref__title">Danh sách lệnh</p>
+  <div id="refList"></div>
+  <p class="ref__note">Bấm một dòng để chèn vào ô nhập (không tự chạy). Gõ đúng cú pháp rồi nhấn Enter.</p>
+</aside>
 
 <script>
 (function () {
@@ -230,6 +264,8 @@ body::after{
   var hudEl = document.getElementById('hud');
   var refEl = document.getElementById('ref');
   var refList = document.getElementById('refList');
+  var msgbarText = document.getElementById('msgbarText');
+  var statusTimeEl = document.getElementById('statusTime');
 
   function esc(s){
     return String(s).replace(/[&<>"']/g, function(c){
@@ -326,18 +362,21 @@ body::after{
     cash: 0,
     tickets: 0,
     rep: 72,
+    stress: 0,         // chỉ số căng thẳng quầy (0–100)
     served: 0,
     shift: 1,
     over: false,
     legCount: 0,       // tổng số chặng đã xuất
     log: [],           // nhật ký vé đã xuất (tra cứu bằng RT#<PNR>)
-    awaitingNext: false
+    awaitingNext: false,
+    issue: null        // tình huống bất khả kháng đang chờ xử lý
   };
   var cust = null;      // khách hiện tại
   var pnr = null;       // hồ sơ đang mở
   var lastAN = null;    // lần hiển thị chuyến gần nhất (để SS tham chiếu dòng)
   var history = [];
   var histIdx = -1;
+  var msgTouched = false;
 
   function shiftGoal(){ return 5; }
 
@@ -375,10 +414,44 @@ body::after{
   }
   function blank(){ out('&nbsp;'); }
   function echo(cmd){ out('<span class="echo">&gt; ' + esc(cmd) + '</span>'); }
-  function hint(text){ out('<span class="dim">&nbsp;&nbsp;# ' + esc(text) + '</span>'); }
-  function err(text){ out('<span class="rd">&nbsp;&nbsp;** ' + esc(text) + '</span>'); }
-  function ok(text){ out('<span class="gr">&nbsp;&nbsp;' + esc(text) + '</span>'); }
-  function clearScreen(){ log.innerHTML = ''; }
+  function hint(text){ out('<span class="dim">&nbsp;&nbsp;# ' + esc(text) + '</span>'); if (!msgTouched) setMsg(text, 'hint'); }
+  function err(text){ out('<span class="rd">&nbsp;&nbsp;** ' + esc(text) + '</span>'); setMsg(text, 'err'); msgTouched = true; }
+  function ok(text){ out('<span class="gr">&nbsp;&nbsp;' + esc(text) + '</span>'); setMsg(text, 'ok'); msgTouched = true; }
+  function clearScreen(){ log.innerHTML = ''; setMsg('', ''); }
+
+  /* bottom message bar: red error / yellow notice / green status */
+  function setMsg(text, kind){
+    if (!msgbarText) return;
+    msgbarText.textContent = text || '';
+    msgbarText.className = 'msgbar__text' + (kind ? ' ' + kind : '');
+  }
+
+  /* alert banner pinned to the TOP of the output area (not a centred modal) */
+  function showAlert(opts){
+    var wrap = document.createElement('div');
+    wrap.className = 'alert';
+    var html = '<div class="alert__head">!! ' + esc(opts.title || 'CẢNH BÁO') + ' !!</div>';
+    (opts.lines || []).forEach(function(l){ html += '<div class="alert__line">' + l + '</div>'; });
+    wrap.innerHTML = html;
+    var bar = document.createElement('div');
+    bar.className = 'alert__actions';
+    (opts.actions || []).forEach(function(a){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'alert__btn';
+      b.textContent = a.label;
+      b.addEventListener('click', function(){
+        if (a.cmd) input.value = a.cmd;
+        if (a.reload){ location.reload(); return; }
+        if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+        input.focus();
+      });
+      bar.appendChild(b);
+    });
+    wrap.appendChild(bar);
+    if (log.firstChild) log.insertBefore(wrap, log.firstChild); else log.appendChild(wrap);
+    return wrap;
+  }
 
   function rule(ch, n){ return new Array((n||58)+1).join(ch || '-'); }
 
@@ -389,11 +462,13 @@ body::after{
     var ttl = '--';
     if (pnr && pnr.ttl && !pnr.ticketed){ ttl = fmtClock(pnr.ttl); }
     var repCls = G.rep >= 70 ? 'gr' : (G.rep >= 40 ? '' : 'rd');
+    var stCls = G.stress >= 70 ? 'rd' : (G.stress >= 40 ? '' : 'gr');
+    if (statusTimeEl) statusTimeEl.textContent = fmtClock(G.clock);
     hudEl.innerHTML =
-      cell('GIỜ',    fmtClock(G.clock), 'cy') +
       cell('DOANH THU', money(G.cash) + ' đ', 'gr') +
       cell('VÉ',     String(G.tickets), '') +
       cell('UY TÍN', G.rep + '/100', repCls) +
+      cell('CĂNG THẲNG', G.stress + '/100', stCls) +
       cell('ĐÃ PHỤC VỤ', G.served + ' · CA ' + G.shift, '') +
       cell('HẠN XUẤT VÉ', ttl, pnr && pnr.ttl ? '' : 'dim');
     function cell(k,v,cls){
@@ -1483,6 +1558,7 @@ body::after{
     if (cust) cust.served = true;
     G.awaitingNext = true;
     updateHUD();
+    triggerIssue();
   }
 
   function gradeSale(){
@@ -1544,6 +1620,7 @@ body::after{
     G.log.pop();
     blank();
     updateHUD();
+    triggerIssue();
   }
 
   /* ==================================================================
@@ -1552,6 +1629,7 @@ body::after{
   function displayOnTerminal(html, cls){ return out(html, cls); }
   function displayError(msg){
     displayOnTerminal('<span class="rd bold"> ' + esc(msg) + '</span>');
+    setMsg(msg, 'err');
     blank();
   }
 
@@ -1714,9 +1792,185 @@ body::after{
   /* ==================================================================
      17. ĐIỀU PHỐI LỆNH
      ================================================================== */
+
+  /* ==================================================================
+     16c. TÌNH HUỐNG BẤT KHẢ KHÁNG — system alert sau mỗi giao dịch
+     ================================================================== */
+  var ISSUES = [
+    {
+      id:1,
+      title:'KHÁCH NỢ THUẾ - CẤM XUẤT CẢNH',
+      alert:"CẢNH BÁO: HỆ THỐNG XUẤT NHẬP CẢNH - HÀNH KHÁCH NGUYỄN VĂN A CÓ NỢ THUẾ CHƯA THANH TOÁN. LỆNH CẤM XUẤT CẢNH ĐANG HIỆU LỰC.",
+      actionItems:[
+        { text:"Bán vé cho khách. Hệ thống chỉ là gợi ý thôi mà.", r:"Sếp bảo cứ bán, còn lại tính sau. (Vài ngày sau có người tìm đến quầy.)", kpi:{ revenue:500, reputation:-20, stress:10 } },
+        { text:"Từ chối bán vé. Khách quạu nhưng ta an toàn.", r:"Khách lườm một cái rồi bỏ đi. Lương tháng này vẫn còn nguyên.", kpi:{ revenue:0, reputation:5, stress:5 } },
+        { text:"Gợi ý khách ra quầy thuế gần nhất đóng tiền rồi quay lại.", r:"Khách thở dài đi đóng thuế. Quầy yên tĩnh hẳn.", kpi:{ revenue:0, reputation:2, stress:2 } }
+      ]
+    },
+    {
+      id:2,
+      title:'KHÁCH BỆNH HỦY VÉ PHÚT CHÓT',
+      alert:"HÀNH KHÁCH BÁO BỆNH. YÊU CẦU HOÀN VÉ CHUYẾN {flight} LÚC {time}. CÒN 45 PHÚT TRƯỚC KHỞI HÀNH.",
+      actionItems:[
+        { text:"Refund 100% nhưng tính phí 'hỗ trợ tinh thần' $50.", r:"Khách mếu máo nhưng vẫn trả phí. Thương trường như chiến trường.", kpi:{ revenue:50, reputation:-5, stress:-5 } },
+        { text:"Đổi vé sang chuyến sau, thu phí đổi + chênh lệch giá.", r:"Khách qua cơn đau, bạn qua cơn lỗ. Đôi bên cùng vui.", kpi:{ revenue:150, reputation:0, stress:5 } },
+        { text:"Từ chối refund. Quy định là quy định. Đau lòng.", r:"Khách gọi điện cho hội đồng quản trị. Bạn lắng nghe bằng nụ cười.", kpi:{ revenue:0, reputation:-15, stress:10 } }
+      ]
+    },
+    {
+      id:3,
+      title:'KHÁCH YÊU CẦU HOÀN VÉ VÌ "ĐỔI Ý"',
+      alert:'HÀNH KHÁCH: "TÔI KHÔNG MUỐN ĐI NỮA. HOÀN TIỀN ĐI." VÉ ĐÃ XUẤT, FARE KHÔNG HOÀN.',
+      actionItems:[
+        { text:"Giải thích refund policy. Khách không nghe -> gọi bảo vệ.", r:"Cuộc gặp kết thúc nhanh. Bảo vệ rất vui khi được tập thể dục.", kpi:{ revenue:0, reputation:-10, stress:15 } },
+        { text:"Gợi ý khách mua bảo hiểm du lịch cho lần sau.", r:"Khách gật gù đăng ký mua bảo hiểm. Lợi cả đôi đường.", kpi:{ revenue:20, reputation:5, stress:3 } },
+        { text:"Refund có điều kiện khách ký giấy cam kết không đòi thêm.", r:"Khách ký xong còn cảm ơn. Bạn vừa học được nghệ thuật thuyết phục.", kpi:{ revenue:-100, reputation:10, stress:5 } }
+      ]
+    },
+    {
+      id:4,
+      title:'LỖI HỆ THỐNG - VÉ BIẾN MẤT',
+      alert:"LỖI: RECORD LOCATOR {rloc} KHÔNG TÌM THẤY TRÊN HỆ THỐNG. VÉ ĐÃ BAY MÀ KHÔNG AI BIẾT.",
+      actionItems:[
+        { text:"Xuất vé mới cho khách, tính full giá. Lỗi hệ thống, không phải lỗi khách.", r:"Khách cười. Hệ thống vẫn im lặng. Bạn tự nhủ: không sao, còn lương.", kpi:{ revenue:800, reputation:-5, stress:10 } },
+        { text:"Gọi IT support. Ngồi chờ. Khách sốt ruột.", r:"Bộ phận IT bận họp. Khách đếm ngược từng phút.", kpi:{ revenue:0, reputation:-5, stress:20 } },
+        { text:"Bán vé mới, xin lỗi, tặng voucher $50 cho lần sau.", r:"Khách vui vẻ ra về cùng voucher. Nhân viên IT không bao giờ biết chuyện này.", kpi:{ revenue:750, reputation:10, stress:5 } }
+      ]
+    },
+    {
+      id:5,
+      title:'KHÁCH TRÙNG TÊN VỚI NGƯỜI TRONG DANH SÁCH CẤM BAY',
+      alert:"HỆ THỐNG AN NINH: TÊN HÀNH KHÁCH {paxName} TRÙNG KHỚP 87% VỚI DANH SÁCH CẤM BAY. YÊU CẦU XÁC MINH.",
+      actionItems:[
+        { text:"Xác minh thủ công. Chụp CMND, hộ chiếu, selfie với tờ báo hôm nay.", r:"Khách đưa đủ giấy tờ. Hóa ra trùng tên với... một nghệ sĩ cùng tên.", kpi:{ revenue:0, reputation:5, stress:8 } },
+        { text:"Từ chối check-in. An toàn là trên hết.", r:"Khách hậm hực bỏ đi. An ninh gật gù khen bạn.", kpi:{ revenue:0, reputation:-10, stress:5 } },
+        { text:"Gọi tổng đài an ninh. Chờ 30 phút. Khách đã trễ chuyến.", r:"Tổng đài bận. Chuyến bay cất cánh. Tất cả cùng nhìn nhau.", kpi:{ revenue:0, reputation:-5, stress:15 } }
+      ]
+    },
+    {
+      id:6,
+      title:'CHUYẾN BAY QUÁ TẢI (OVERBOOKED)',
+      alert:"FLIGHT {flight} ĐÃ ĐẦY. CẦN VOLUNTEER NHƯỜNG CHỖ. COMPENSATION: $400 CASH + VOUCHER $200.",
+      actionItems:[
+        { text:"Thuyết phục khách nhường chỗ. 'Đi chuyến sau, có tiền uống cà phê!'", r:"Khách gật đầu cầm tiền. Bạn vừa tiết kiệm được cả một hành khách.", kpi:{ revenue:-400, reputation:15, stress:5 } },
+        { text:"Tăng compensation lên $800. Khách gật đầu.", r:"Khách cười tươi như hoa. Quỹ tiền mặt chảy máu nhẹ.", kpi:{ revenue:-800, reputation:20, stress:3 } },
+        { text:"Đẩy khách cuối danh sách xuống. Không thương lượng.", r:"Khách sẽ review 1 sao trên Google Maps. Chắc chắn.", kpi:{ revenue:0, reputation:-25, stress:20 } }
+      ]
+    },
+    {
+      id:7,
+      title:'THỊ THỰC / HỘ CHIẾU HẾT HẠN',
+      alert:"HỘ CHIẾU HÀNH KHÁCH HẾT HẠN {days} NGÀY. KHÔNG ĐỦ ĐIỀU KIỆN NHẬP CẢNH {country}.",
+      actionItems:[
+        { text:"Từ chối check-in. Giải thích rõ. Khách khóc.", r:"Khách khóc thật. Bạn đưa khăn giấy và danh thiếp phòng làm hộ chiếu.", kpi:{ revenue:0, reputation:-5, stress:10 } },
+        { text:"Gợi ý khách ra sân bay khác. 'Biết đâu họ không để ý.'", r:"Đây là hành vi vi phạm pháp luật. Đừng làm. (Bạn vừa nghe thấy tiếng còi cảnh sát.)", kpi:{ revenue:0, reputation:-20, stress:5 } },
+        { text:"Bán vé cho chuyến nội địa thay thế. Ít nhất có doanh thu.", r:"Khách về quê thăm bà. Doanh thu của bạn thì không về quê.", kpi:{ revenue:200, reputation:5, stress:3 } }
+      ]
+    },
+    {
+      id:8,
+      title:'LỖI CHÍNH TẢ TÊN TRÊN VÉ',
+      alert:'TÊN TRÊN VÉ: NGUYEN VAN AN. HỘ CHIẾU: NGUYEN VAN ANH. THIẾU 1 CHỮ "H".',
+      actionItems:[
+        { text:"Sửa miễn phí. Lỗi nhỏ, ai mà để ý.", r:"Khách cười, vui vẻ ra về. Không ai nhắc đến chuyện này nữa.", kpi:{ revenue:0, reputation:10, stress:2 } },
+        { text:"Thu phí sửa tên $50. Quy định là quy định.", r:"Khách hơi nhíu mày nhưng vẫn trả. Bạn khóa sổ, thở phào.", kpi:{ revenue:50, reputation:-10, stress:5 } },
+        { text:"Bảo khách đổi tên trên hộ chiếu cho khớp vé.", r:"Khách sẽ mất 2 tuần làm hộ chiếu mới. Chuyến bay ngày mai.", kpi:{ revenue:0, reputation:-15, stress:5 } }
+      ]
+    }
+  ];
+  var COUNTRY = { HAN:'VIỆT NAM', SGN:'VIỆT NAM', DAD:'VIỆT NAM', PQC:'VIỆT NAM', CXR:'VIỆT NAM', HPH:'VIỆT NAM', SIN:'SINGAPORE', BKK:'THÁI LAN', ICN:'HÀN QUỐC', KUL:'MALAYSIA', NRT:'NHẬT BẢN' };
+
+  var _audio = null;
+  function beep(freq, dur){
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!_audio) _audio = new Ctx();
+      var o = _audio.createOscillator(), g = _audio.createGain();
+      o.type = 'square';
+      o.frequency.value = freq || 1046;
+      g.gain.setValueAtTime(0.04, _audio.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, _audio.currentTime + (dur||160)/1000);
+      o.connect(g); g.connect(_audio.destination);
+      o.start();
+      o.stop(_audio.currentTime + (dur||160)/1000);
+    } catch(e) {}
+  }
+  function issueAlarm(){
+    beep(880, 120);
+    setTimeout(function(){ beep(1046, 120); }, 190);
+    setTimeout(function(){ beep(1318, 160); }, 380);
+  }
+
+  function issueCtx(){
+    var t = G.log[G.log.length-1] || null;
+    var sg = t && t.segs && t.segs.length ? t.segs[0] : (cust && cust.legs ? cust.legs[0] : null);
+    return {
+      flight: sg ? sg.no + ' ' + sg.date : 'HH---',
+      time: sg ? fmtTime(sg.dep) + '-' + fmtTime(sg.arr) : '--:--',
+      rloc: t ? t.locator : (pnr && pnr.locator) || 'TXXXXX',
+      paxName: t && t.pax && t.pax[0] ? t.pax[0].canon : (cust && cust.pax && cust.pax[0] ? cust.pax[0].canon : 'HÀNH KHÁCH'),
+      days: String(randInt(Math.random, 1, 5)),
+      country: sg ? (COUNTRY[sg.to] || COUNTRY[sg.from] || 'QUỐC TẾ') : 'VIỆT NAM'
+    };
+  }
+  function fillAlert(a){
+    var c = issueCtx();
+    return String(a).replace(/\{flight\}/g, c.flight).replace(/\{time\}/g, c.time)
+      .replace(/\{rloc\}/g, c.rloc).replace(/\{paxName\}/g, c.paxName)
+      .replace(/\{days\}/g, c.days).replace(/\{country\}/g, c.country);
+  }
+
+  function renderCrisis(is){
+    var acts = is.actionItems.map(function(a, i){
+      return '<button type="button" onclick="window.__pickIssue && window.__pickIssue(' + (i+1) + ')"><b>[' + (i+1) + ']</b> ' + esc(a.text) + '</button>';
+    }).join('');
+    out('<div class="crisis"><span class="crisis__title">!!! ' + esc(is.title) + ' !!!</span>' +
+        '<span class="crisis__alert">' + esc(fillAlert(is.alert)) + '</span>' +
+        '<span class="crisis__ask">CHỌN HƯỚNG XỬ LÝ — gõ số 1-' + is.actionItems.length + ' hoặc bấm nút:</span>' +
+        '<div class="crisis__act">' + acts + '</div></div>');
+    out('<span class="crisis__warn">SỰ CỐ BẤT KHẢ KHÁNG — CẦN QUYẾT ĐỊNH NGAY TRƯỚC KHI GÕ LỆNH KHÁC</span>');
+    blank();
+  }
+
+  function triggerIssue(){
+    if (G.over || G.issue) return;
+    if (Math.random() >= 0.35) return;   // 35% sau mỗi giao dịch
+    var is = ISSUES[Math.floor(Math.random() * ISSUES.length)];
+    G.issue = is;
+    renderCrisis(is);
+    issueAlarm();
+    updateHUD();
+  }
+
+  function resolveIssue(n){
+    if (!G.issue) return;
+    var is = G.issue;
+    var act = is.actionItems[n-1];
+    if (!act){ err('CHỈ CHỌN ĐƯỢC SỐ 1-' + is.actionItems.length); blank(); return; }
+    var rev = (act.kpi.revenue || 0) * 1000;         // đơn vị nghìn VND
+    G.cash += rev;
+    G.rep = Math.max(0, Math.min(100, G.rep + (act.kpi.reputation || 0)));
+    G.stress = Math.max(0, Math.min(100, G.stress + (act.kpi.stress || 0)));
+    G.issue = null;
+    out('<span class="hl">→ CHỌN ' + n + '</span>');
+    out('  <span class="am">CÁCH XỬ LÝ: ' + esc(act.text) + '</span>', 'pre');
+    if (act.r) out('  <span class="dim">> ' + esc(act.r) + '</span>', 'pre');
+    out('  <span class="wh">KPI</span>  DOANH THU ' + (rev >= 0 ? '+' : '') + money(rev) +
+        ' : UY TÍN ' + (act.kpi.reputation >= 0 ? '+' : '') + act.kpi.reputation +
+        ' : CĂNG THẲNG ' + (act.kpi.stress >= 0 ? '+' : '') + act.kpi.stress, 'pre');
+    blank();
+    ok('SỰ CỐ ĐÃ XỬ LÝ XONG.');
+    hint(G.awaitingNext ? "GÕ 'NEXT' SANG KHÁCH KẾ TIẾP HOẶC RT#<PNR> XEM LẠI VÉ" : nextStepHint());
+    blank();
+    updateHUD();
+  }
+  window.__pickIssue = resolveIssue;
+
   function runCommand(rawLine){
     var raw = rawLine.trim();
     if (!raw) return;
+    msgTouched = false;
     var cmd = raw.toUpperCase();
 
     // thời gian trôi theo thao tác (báo cáo chỉ để tra cứu — không tiêu tốn thời gian game)
@@ -1724,6 +1978,18 @@ body::after{
     if (!isReport){
       advanceTime(2);
       if (G.over) return;
+    }
+
+    // Sự cố bất khả kháng đang chờ — chỉ chấp nhận số chọn hướng xử lý
+    if (G.issue){
+      var im = cmd.match(/^([1-3])$/);
+      if (im){
+        resolveIssue(Number(im[1]));
+      } else {
+        err("SỰ CỐ ĐANG CHỜ XỬ LÝ — GÕ SỐ " + G.issue.actionItems.map(function(_,i){ return i+1; }).join('/') + " ĐỂ CHỌN HƯỚNG XỬ LÝ");
+        blank();
+      }
+      return;
     }
 
     // Sau khi xuất vé: chỉ cho tra cứu lại, thông tin, báo cáo hoặc sang khách kế tiếp
@@ -1812,11 +2078,19 @@ body::after{
       lastAN = null;
       G.rep = Math.max(0, G.rep - 6);
       blank();
-      out('  ' + rule('!', 56), 'rd pre');
-      out('   <span class="rd bold">HẾT HẠN XUẤT VÉ (TTL) — CHỖ ĐÃ TỰ ĐỘNG ĐƯỢC NHẢ</span>', 'pre');
-      out('   <span class="dim">Giá và tình trạng chỗ có thể đã thay đổi. Hãy báo khách và tra cứu lại.</span>', 'pre');
-      out('  ' + rule('!', 56), 'rd pre');
-      hint("Tra cứu lại: AN" + (cust ? cust.legs[0].date + cust.legs[0].from + cust.legs[0].to : 'DDMMMORGDST'));
+      var retry = 'AN' + (cust ? cust.legs[0].date + cust.legs[0].from + cust.legs[0].to : 'DDMMMORGDST');
+      showAlert({
+        title: 'HẾT HẠN XUẤT VÉ (TTL)',
+        lines: [
+          'CHỖ ĐÃ TỰ ĐỘNG ĐƯỢC NHẢ.',
+          'Giá và tình trạng chỗ có thể đã thay đổi. Hãy báo khách và tra cứu lại.'
+        ],
+        actions: [
+          { label: 'TRA CỨU LẠI', cmd: retry },
+          { label: 'ĐÓNG' }
+        ]
+      });
+      setMsg('HẾT HẠN XUẤT VÉ (TTL) — CHỖ ĐÃ ĐƯỢC NHẢ', 'err');
       blank();
       updateHUD();
     }
@@ -1865,6 +2139,7 @@ body::after{
     out('   CHẶNG ĐÃ BÁN    : ' + G.legCount, 'pre');
     out('   DOANH THU       : <span class="gr">' + money(G.cash) + ' VND</span>', 'pre');
     out('   ĐIỂM UY TÍN     : ' + G.rep + ' / 100', 'pre');
+    out('   CĂNG THẲNG     : ' + G.stress + ' / 100', 'pre');
     out('   XẾP LOẠI CA     : <span class="hl">' + rank + '</span>', 'pre');
     out('  ' + rule('#', 56), 'am pre');
     out('   <span class="wh">CA ' + (G.shift+1) + ' BẮT ĐẦU — ĐỘ KHÓ TĂNG.</span>', 'pre');
@@ -1880,9 +2155,21 @@ body::after{
     out('  ' + rule('-', 58), 'rule pre');
     out('   KHÁCH ĐÃ PHỤC VỤ : ' + G.served, 'pre');
     out('   DOANH THU TỔNG   : <span class="gr">' + money(G.cash) + ' VND</span>', 'pre');
+    out('   CĂNG THẲNG CUỐI : ' + G.stress + ' / 100', 'pre');
     out('   VÉ ĐÃ XUẤT      : ' + G.tickets, 'pre');
     out('  ' + rule('=', 58), 'rd pre');
-    hint("Gõ 'CLS' rồi tải lại trang để chơi lại từ đầu.");
+    setMsg('KẾT THÚC CA — UY TÍN VỀ 0. GÕ CLS HOẶC CHƠI LẠI.', 'err');
+    showAlert({
+      title: 'KẾT THÚC CA — UY TÍN VỀ 0',
+      lines: [
+        'Quá nhiều khiếu nại khiến quầy vé tạm dừng phục vụ.',
+        'DOANH THU: ' + money(G.cash) + ' VND  ·  VÉ: ' + G.tickets + '  ·  KHÁCH: ' + G.served
+      ],
+      actions: [
+        { label: 'CHƠI LẠI', reload: true },
+        { label: 'ĐÓNG' }
+      ]
+    });
     blank();
   }
 
@@ -1934,6 +2221,7 @@ body::after{
     out('  <span class="dim">Đổi tên: NACO&lt;LINE&gt;&lt;TÊN MỚI&gt; — đổi ≤3 ký tự miễn phí; &gt;3 ký tự thu phí (NACO).</span>', 'pre');
     out('  <span class="dim">Thông tin: EQ&lt;CODE&gt; tàu bay · WEA&lt;CITY&gt; thời tiết 5 ngày · DA&lt;CITY&gt; giải mã sân bay.</span>', 'pre');
     out('  <span class="dim">Quy trình: NM → APIS → AN → SS → AP → (SO/SR/FO) → FXP → TKTL → (RT#PNR) → NEXT</span>', 'pre');
+    out('  <span class="dim">Sự cố: sau giao dịch (TKTL/RF) có thể nổ ra TÌNH HUỐNG BẤT KHẢ KHÁNG — gõ số 1-3 để xử lý, ảnh hưởng DOANH THU / UY TÍN / CĂNG THẲNG.</span>', 'pre');
     out('  <span class="dim">Báo cáo: TJQ (agent) · TJQ/SOF (toàn VP) · TJD (ngày) · TJD/D-&lt;DDMMM&gt; (ngày cụ thể).</span>', 'pre');
     blank();
   }
@@ -1950,6 +2238,7 @@ body::after{
       var b = e.target.closest('.ref__row');
       if (!b) return;
       input.value = b.getAttribute('data-cmd');
+      refEl.classList.remove('open');
       input.focus();
     });
   }
@@ -1960,6 +2249,13 @@ body::after{
   function boot(){
     loadSalesRecords();
     renderRef();
+    var elA = document.getElementById('statusAgent');
+    var elO = document.getElementById('statusOffice');
+    var elD = document.getElementById('statusDate');
+    if (elA) elA.textContent = AGENT.sign + '/' + AGENT.dutyCode;
+    if (elO) elO.textContent = AGENT.office;
+    if (elD) elD.textContent = TODAY;
+    setMsg('SẴN SÀNG — GÕ HELP ĐỂ XEM DANH SÁCH LỆNH', 'ok');
     blank();
     out('  ' + rule('=', 58), 'hl pre');
     out('   <span class="hl bold">AMADEUS TRAINING SYSTEM</span>', 'pre');
@@ -1973,7 +2269,7 @@ body::after{
     out('   <span class="wh">Phục vụ từng khách: nhập tên + APIS → tra cứu chuyến → bán đúng</span>', 'pre');
     out('   <span class="wh">hạng → tạo PNR → tính giá → xuất vé → RT#&lt;PNR&gt; → NEXT.</span>', 'pre');
     out('  ' + rule('-', 58), 'rule pre');
-    hint("Gõ 'HELP' để xem danh sách lệnh. Bảng lệnh cũng nằm bên phải.");
+    hint("Gõ 'HELP' để xem danh sách lệnh. Bấm '[ LỆNH ]' trên thanh gợi ý để mở bảng.");
     blank();
     cust = makeCustomer();
     renderCustomer();

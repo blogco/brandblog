@@ -30,7 +30,10 @@ COPYRIGHT_YEAR = datetime.now().year
 PATH = "content"
 PAGE_PATHS = ["pages"]
 ARTICLE_PATHS = ["posts"]
-STATIC_PATHS = ["images", "data"]
+# "cargo-simulator/index.html" is a self-contained learning game served verbatim
+# at /cargo-simulator/. It is listed as a single static file so the folder's
+# README / integration guide are not published with the site.
+STATIC_PATHS = ["images", "data", "cargo-simulator/index.html"]
 THEME = "theme"
 THEME_STATIC_DIR = "static"
 THEME_STATIC_PATHS = ["static"]
@@ -119,6 +122,7 @@ FOOTER_COLUMNS = [
             ("Home", ""),
             ("News & Insights", "news/"),
             ("Branding", "branding/"),
+            ("Cargo Simulator", "cargo-simulator/"),
             ("Bán vé máy bay", "ticket-sales-simulator/"),
             ("Pastenote", "pastenote/"),
         ],
