@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="{{ DEFAULT_LANG }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ SITENAME }}{% endblock %} | {{ SITENAME }}</title>
+  <meta name="description" content="{% block description %}{{ SITEDESCRIPTION }}{% endblock %}">
+  <meta name="author" content="{{ AUTHOR }}">
+  <link rel="canonical" href="{% block canonical %}{{ SITEURL }}/{% endblock %}">
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="{{ SITENAME }}">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}{{ SITENAME }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{{ SITEDESCRIPTION }}{% endblock %}">
+  <meta property="og:url" content="{% block og_url %}{{ SITEURL }}/{% endblock %}">
+  <meta property="og:image" content="{{ SITEURL }}/static/images/og-cover.svg">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="{{ SITEURL }}/static/images/favicon.svg" type="image/svg+xml">
+  <link rel="preload" as="image" href="{{ SITEURL }}/static/images/hero-home.svg">
+
+  <!-- Tailwind build -->
+  <link rel="stylesheet" href="{{ SITEURL }}/static/css/style.css">
+  {% block head %}{% endblock %}
+</head>
+<body class="flex min-h-screen flex-col">
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-sm focus:bg-sembcorp-green focus:px-4 focus:py-2 focus:text-white">Skip to content</a>
+
+  {% include "partials/nav.html" %}
+
+  {% block hero %}{% endblock %}
+
+  <main id="main" class="flex-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include "partials/footer.html" %}
+
+  <script src="{{ SITEURL }}/static/js/main.js" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

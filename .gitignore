@@ -1,0 +1,28 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pelican-cache/
+*.egg-info/
+
+# ---- Pelican build output ----
+output/
+cache/
+
+# ---- Node / Tailwind ----
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# ---- Editors / OS ----
+.DS_Store
+.idea/
+.vscode/
+Thumbs.db
+
+# ---- Local secrets ----
+.env
+.env.*
+!.env.example

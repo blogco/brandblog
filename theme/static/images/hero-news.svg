@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 720" preserveAspectRatio="xMidYMid slice" role="img" aria-label="">
+  <defs>
+    <linearGradient id="nb" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#003429"/>
+      <stop offset="0.6" stop-color="#006C53"/>
+      <stop offset="1" stop-color="#0E846D"/>
+    </linearGradient>
+    <radialGradient id="ng" cx="0.85" cy="0.2" r="0.6">
+      <stop offset="0" stop-color="#0095FF" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#0095FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="720" fill="url(#nb)"/>
+  <rect width="1600" height="720" fill="url(#ng)"/>
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.10" stroke-width="2">
+    <path d="M0 160 H1600M0 320 H1600M0 480 H1600M0 640 H1600"/>
+    <path d="M200 0 V720M400 0 V720M600 0 V720M800 0 V720M1000 0 V720M1200 0 V720M1400 0 V720"/>
+  </g>
+  <g fill="#ffffff" fill-opacity="0.10">
+    <rect x="960" y="200" width="240" height="150" rx="10"/>
+    <rect x="1240" y="260" width="220" height="170" rx="10"/>
+    <rect x="1010" y="400" width="200" height="130" rx="10"/>
+  </g>
+  <rect x="960" y="200" width="240" height="12" rx="6" fill="#FF6400" opacity="0.7"/>
+</svg>

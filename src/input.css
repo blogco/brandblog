@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-sembcorp-gray antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    @apply text-sembcorp-ink font-semibold;
+  }
+
+  ::selection {
+    @apply bg-sembcorp-green text-white;
+  }
+}
+
+@layer components {
+  /* ---- Layout helpers ---- */
+  .section {
+    @apply py-14 md:py-20;
+  }
+
+  .eyebrow {
+    @apply inline-block text-xs font-bold uppercase tracking-[0.18em] text-sembcorp-green;
+  }
+
+  .link-underline {
+    @apply relative font-semibold text-sembcorp-green hover:text-sembcorp-green-dark;
+  }
+
+  /* ---- Buttons ---- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm px-5 py-3 text-sm font-semibold tracking-wide transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sembcorp-green focus-visible:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply btn bg-sembcorp-green text-white hover:bg-sembcorp-green-dark;
+  }
+
+  .btn-outline {
+    @apply btn border border-sembcorp-green text-sembcorp-green hover:bg-sembcorp-green hover:text-white;
+  }
+
+  .btn-ghost-light {
+    @apply btn border border-white/70 text-white hover:bg-white hover:text-sembcorp-green;
+  }
+
+  /* ---- Navigation ---- */
+  .nav-link {
+    @apply relative inline-flex items-center px-1 py-2 text-sm font-semibold text-sembcorp-ink transition-colors hover:text-sembcorp-green;
+  }
+
+  .nav-link[aria-current="page"] {
+    @apply text-sembcorp-green;
+  }
+
+  .nav-link[aria-current="page"]::after {
+    content: "";
+    @apply absolute inset-x-0 -bottom-0.5 h-0.5 bg-sembcorp-green;
+  }
+
+  .footer-link {
+    @apply block py-1 text-sm text-white/70 transition-colors hover:text-white;
+  }
+
+  /* ---- Cards ---- */
+  .card {
+    @apply flex h-full flex-col overflow-hidden rounded-sm border border-sembcorp-line bg-white transition-all duration-300 hover:shadow-card;
+  }
+
+  .card-media {
+    @apply relative aspect-[16/10] overflow-hidden bg-sembcorp-mist;
+  }
+
+  .card-media img {
+    @apply h-full w-full object-cover transition-transform duration-500 group-hover:scale-105;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-full bg-sembcorp-green-wash px-3 py-1 text-xs font-semibold uppercase tracking-wide text-sembcorp-green;
+  }
+
+  /* ---- Filter pills ---- */
+  .filter-btn {
+    @apply whitespace-nowrap rounded-full border border-sembcorp-line px-4 py-2 text-sm font-semibold text-sembcorp-gray transition-colors hover:border-sembcorp-green hover:text-sembcorp-green;
+  }
+
+  .filter-btn.is-active {
+    @apply border-sembcorp-green bg-sembcorp-green text-white;
+  }
+
+  /* ---- Article body ---- */
+  .prose-content {
+    @apply text-[17px] leading-relaxed text-sembcorp-gray;
+  }
+
+  .prose-content > * + * {
+    @apply mt-5;
+  }
+
+  .prose-content h2 {
+    @apply mt-10 text-2xl font-bold text-sembcorp-ink md:text-3xl;
+  }
+
+  .prose-content h3 {
+    @apply mt-8 text-xl font-bold text-sembcorp-ink;
+  }
+
+  .prose-content a {
+    @apply font-semibold text-sembcorp-green underline decoration-sembcorp-green/40 underline-offset-2 hover:decoration-sembcorp-green;
+  }
+
+  .prose-content ul {
+    @apply list-disc space-y-2 pl-6;
+  }
+
+  .prose-content ol {
+    @apply list-decimal space-y-2 pl-6;
+  }
+
+  .prose-content blockquote {
+    @apply border-l-4 border-sembcorp-green bg-sembcorp-green-wash px-5 py-4 text-lg font-medium italic text-sembcorp-ink;
+  }
+
+  .prose-content img {
+    @apply w-full rounded-sm;
+  }
+
+  .prose-content table {
+    @apply w-full border-collapse text-sm;
+  }
+
+  .prose-content th,
+  .prose-content td {
+    @apply border border-sembcorp-line px-3 py-2 text-left;
+  }
+
+  .prose-content th {
+    @apply bg-sembcorp-mist font-semibold text-sembcorp-ink;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .bg-hero-overlay {
+    background-image: linear-gradient(
+      90deg,
+      rgba(0, 78, 62, 0.92) 0%,
+      rgba(0, 108, 83, 0.72) 48%,
+      rgba(0, 108, 83, 0.15) 100%
+    );
+  }
+}

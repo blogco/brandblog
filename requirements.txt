@@ -1,0 +1,5 @@
+# Python dependencies for the BrandBlog static site
+# Pinned to minor versions for reproducible GitHub Actions builds.
+pelican[markdown]>=4.11,<5.0
+markdown>=3.5
+Jinja2>=3.1
