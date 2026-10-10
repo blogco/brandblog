@@ -5,7 +5,11 @@ Build locally with:
     pelican content -s pelicanconf.py -l -r
 """
 
+import json
+import os
 from datetime import datetime
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ---------------------------------------------------------------------------
 # Site metadata
@@ -26,7 +30,7 @@ COPYRIGHT_YEAR = datetime.now().year
 PATH = "content"
 PAGE_PATHS = ["pages"]
 ARTICLE_PATHS = ["posts"]
-STATIC_PATHS = ["images"]
+STATIC_PATHS = ["images", "data"]
 THEME = "theme"
 THEME_STATIC_DIR = "static"
 THEME_STATIC_PATHS = ["static"]
@@ -90,6 +94,7 @@ MENUITEMS = [
     ("Home", ""),
     ("News", "news/"),
     ("Branding", "branding/"),
+    ("Từ điển Cargo", "cargo-dictionary/"),
 ]
 
 NAV_UTILITY = [
@@ -157,3 +162,38 @@ BRAND_VALUES = [
     ("Integrity", "We act with honesty, accountability and respect for every stakeholder."),
     ("Integral", "We deliver end-to-end solutions that work as one integrated system."),
 ]
+
+# ---------------------------------------------------------------------------
+# Cargo dictionary (Air Premia–inspired glossary)
+#
+# The seed terms live in a version-controlled JSON file and are embedded into the
+# page at build time, so the client-side search works with no network request.
+# New terms added in the browser are stored in localStorage and can be exported.
+# ---------------------------------------------------------------------------
+with open(
+    os.path.join(BASE_DIR, "content", "data", "cargo_dictionary.json"), encoding="utf-8"
+) as _cargo_file:
+    CARGO_DICTIONARY = json.load(_cargo_file)
+
+# Ordered filter lists (plus a leading "all" handled by the template).
+CARGO_CATEGORIES = [
+    "Cơ bản",
+    "Chứng từ",
+    "Vận hành",
+    "Thanh toán",
+    "Đặc biệt",
+    "Công nghệ",
+    "Dịch vụ Air Premia",
+]
+
+CARGO_LEVELS = ["Cơ bản", "Trung bình", "Nâng cao"]
+
+CARGO_COUNT = len(CARGO_DICTIONARY)
+
+# GitHub repository backing the "live" write features of the dictionary page.
+# Add / edit / delete / import are admin-only: users unlock them with a GitHub
+# Personal Access Token entered in-browser (never stored in this repo). Writes
+# commit the updated glossary to this repository, then GitHub Actions rebuilds
+# and redeploys the site. Public info only — not a secret.
+CARGO_GITHUB_REPO = "blogco/brandblog"
+CARGO_GITHUB_BRANCH = "main"

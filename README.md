@@ -19,6 +19,9 @@ multi-column footer.
   featured story, responsive card grid, sticky sidebar (recent / topics / subscribe).
 - **Branding** — brand guidelines, colour palette (click-to-copy), typography specimen,
   10-icon line set, and a UI/UX component gallery.
+- **Từ điển Cargo** — a three-language (Anh–Việt–Hàn) air-cargo glossary with instant
+  fuzzy search (Fuse.js), category filters, a browser-only "add term" modal with
+  `localStorage` persistence, JSON import/export and Web Speech pronunciation.
 - Fully **responsive** (mobile-first), accessible (skip link, focus rings, ARIA landmarks),
   and self-contained (no runtime JS frameworks, no external image hosts).
 
@@ -29,10 +32,11 @@ brandblog/
 ├── .github/workflows/deploy.yml   # CI: build Tailwind + Pelican, deploy to gh-pages
 ├── .opencode/agent/blogger.md     # Content-writing agent definition
 ├── content/
-│   ├── pages/                     # home.md, news.md, branding.md
+│   ├── pages/                     # home.md, news.md, branding.md, cargo-dictionary.md
+│   ├── data/                      # cargo_dictionary.json (glossary seed data)
 │   └── posts/                     # Markdown articles
 ├── research/                      # UI/UX analysis + design decisions
-├── wireframes/                    # ASCII wireframes (home / news / branding)
+├── wireframes/                    # ASCII wireframes (home / news / branding / cargo)
 ├── src/input.css                  # Tailwind source
 ├── theme/
 │   ├── static/{css,js,images}/    # compiled CSS, JS, SVG artwork
@@ -97,6 +101,29 @@ Body in Markdown. Use `##` subheadings and a `>` pull-quote.
 
 The News page, filters and sidebar update automatically — no template changes needed.
 See `AGENTS.md` for the full editorial guide.
+
+## 📚 Cargo dictionary
+
+The **Từ điển Cargo** page (`/cargo-dictionary/`) ships with seed terms in
+`content/data/cargo_dictionary.json`. Each entry looks like:
+
+```json
+{
+  "id": "awb",
+  "english": "Air Waybill (AWB)",
+  "vietnamese": "Vận đơn hàng không",
+  "korean": "항공화물운송장 (AWB)",
+  "definition": "Chứng từ vận chuyển hàng không…",
+  "example": "The AWB number is 350-12345678.",
+  "category": "Chứng từ",
+  "level": "Cơ bản",
+  "created_at": "2026-10-10"
+}
+```
+
+Edit that file to extend the glossary (categories are listed in `pelicanconf.py` as
+`CARGO_CATEGORIES`). Visitors can also add their own terms in the browser — those are
+saved to `localStorage` and can be exported/imported as JSON from the page toolbar.
 
 ## 📦 Build
 

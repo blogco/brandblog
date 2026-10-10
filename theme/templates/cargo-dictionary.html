@@ -308,8 +308,8 @@
 </template>
 
 <!-- ======================= SEED DATA (embedded at build time) ======================= -->
-<script id="cargo-dictionary-data" type="application/json">{{ CARGO_DICTIONARY|tojson }}</script>
-<script id="cargo-dictionary-config" type="application/json">{{ {"repo": CARGO_GITHUB_REPO, "branch": CARGO_GITHUB_BRANCH, "rawBase": "https://raw.githubusercontent.com", "apiBase": "https://api.github.com"}|tojson }}</script>
+<script id="cargo-dictionary-data" type="application/json">{{ (CARGO_DICTIONARY|default([], true))|tojson }}</script>
+<script id="cargo-dictionary-config" type="application/json">{{ {"repo": CARGO_GITHUB_REPO|default("", true), "branch": CARGO_GITHUB_BRANCH|default("main", true), "rawBase": "https://raw.githubusercontent.com", "apiBase": "https://api.github.com"}|tojson }}</script>
 {% endblock %}
 
 {% block scripts %}

@@ -13,7 +13,8 @@ Static blog generator agent for a Sembcorp-inspired brand blog. The site is buil
 
 | Path | Purpose |
 |------|---------|
-| `content/pages/` | Home / News / Branding pages (custom templates) |
+| `content/pages/` | Home / News / Branding / Cargo Dictionary pages (custom templates) |
+| `content/data/` | `cargo_dictionary.json` — glossary seed data |
 | `content/posts/` | News articles (Markdown) |
 | `theme/templates/` | Jinja2 templates (`base.html` + partials + page templates) |
 | `theme/static/` | CSS output, JS, SVG images |
@@ -50,6 +51,9 @@ Static blog generator agent for a Sembcorp-inspired brand blog. The site is buil
 - **News:** hero banner + breadcrumb, dual filter bar (Type × Topic), featured article,
   responsive card grid, sidebar (recent / topics / subscribe).
 - **Branding:** Brand Guideline, Colour Palette, Typography, Icon Sets, UI/UX components.
+- **Cargo Dictionary:** three-language (Anh–Việt–Hàn) glossary with client-side search,
+  category filters, browser-only add-term flow (localStorage) and JSON import/export.
+  Seed terms live in `content/data/cargo_dictionary.json`; see `wireframes/cargo-dictionary.md`.
 
 ## Adding a new article
 

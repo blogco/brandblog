@@ -41,7 +41,10 @@ def api_publish(
     __: None = Depends(require_csrf),
 ):
     try:
-        result = git_service.publish(payload.message, paths=["content", "theme", "cms"])
+        # Stage the whole working tree (respecting .gitignore) so root-level
+        # build config such as pelicanconf.py / publishconf.py / src/ is never
+        # left behind — that is what made CI builds fail after a publish.
+        result = git_service.publish(payload.message)
     except git_service.GitError as exc:
         raise HTTPException(status_code=502, detail=str(exc))
     return {"ok": True, **result}
@@ -54,7 +57,7 @@ def api_commit(
     __: None = Depends(require_csrf),
 ):
     try:
-        result = git_service.commit(payload.message, paths=["content", "theme", "cms"])
+        result = git_service.commit(payload.message)
     except git_service.GitError as exc:
         raise HTTPException(status_code=502, detail=str(exc))
     return {"ok": True, **result}

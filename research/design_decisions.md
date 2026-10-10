@@ -95,8 +95,39 @@ correctly. `publishconf.py` keeps `RELATIVE_URLS = False` and full absolute URLs
 - `aria-expanded` on the mobile toggle, `aria-current` on active nav.
 - Colour contrast checked against WCAG AA.
 
+## 11. Cargo Dictionary — client-side search & persistence
+
+**Decision:** A three-language (Anh–Việt–Hàn) cargo glossary rendered by a dedicated
+template, with Fuse.js fuzzy search, category filters, a browser-only "add term" modal and
+`localStorage` persistence.
+
+**Why:**
+- The brief calls for a modern dictionary UX with **no backend**. Fuse.js gives instant,
+  typo-tolerant search entirely in the browser; it is **vendored** into
+  `theme/static/js/vendor/fuse.min.js` (Apache-2.0) so the demo stays self-contained and
+  works offline, matching the "no external hosts" rule.
+- **Seed data** lives in `content/data/cargo_dictionary.json` (version-controlled) and is
+  loaded by `pelicanconf.py` into `CARGO_DICTIONARY`, then embedded into the page with
+  Jinja's `|tojson`. This avoids a runtime `fetch()` (which would break under `file://`
+  and needs base-URL juggling) while keeping the JSON the single source of truth.
+- **New terms** are stored under the `cargo_dictionary_custom_terms` key and merged with
+  the seed at render time; JSON **export/import** provides backup/portability.
+- Search covers a derived `search_vi` field with diacritics stripped, so accent-free
+  Vietnamese ("van don") matches while display text keeps its accents.
+- **Highlighting** is a deliberate substring match (diacritic-insensitive) rather than
+  Fuse's match indices, because fuzzy indices produced noisy `<mark>` spans. Exact
+  highlighting reads better and still pairs with fuzzy recall.
+- Dictionary-specific component classes live in `src/input.css` (`@layer components`), so
+  they compile with the rest of the design system and are not dependent on JS string
+  scanning. The modal/card/toast state classes are defined there too.
+
+**Trade-off:** `localStorage` is per-browser and per-origin — terms are not shared across
+devices. Acceptable for a personal study tool; the design keeps the data layer behind a
+small adapter so it can move to an API later.
+
 ## Open questions / future work
 
 - Optional: add Pelican `sitemap` + `feed` plugins for richer SEO.
 - Optional: real web font (self-hosted subset) if licensing allows.
 - Optional: dark mode token set.
+- Optional: sync dictionary terms to a backend (FastAPI) instead of `localStorage`.

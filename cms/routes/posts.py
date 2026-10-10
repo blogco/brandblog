@@ -201,7 +201,9 @@ def api_publish(
         backup_dir = None
 
     try:
-        result = git_service.publish(f"Publish: {post['title']}", paths=["content", "theme", "cms"])
+        # Stage everything (respecting .gitignore) so the commit includes the
+        # root-level build config the CI needs — not just content/theme/cms.
+        result = git_service.publish(f"Publish: {post['title']}")
     except git_service.GitError as exc:
         raise HTTPException(status_code=502, detail=str(exc))
 

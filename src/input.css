@@ -150,6 +150,144 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Cargo dictionary page
+   Tra cứu thuật ngữ Anh–Việt–Hàn · search bar, filter pills, cards, FAB, modal
+   --------------------------------------------------------------------------- */
+@layer components {
+  .dict-search {
+    @apply w-full rounded-xl border-2 border-sembcorp-line bg-white py-4 pl-14 pr-12 text-base text-sembcorp-ink transition-all placeholder:text-sembcorp-gray/60 focus:border-sembcorp-green focus:outline-none focus:ring-4 focus:ring-sembcorp-green/10 md:text-lg;
+  }
+
+  .dict-pill {
+    @apply inline-flex items-center whitespace-nowrap rounded-full border border-sembcorp-line bg-white px-4 py-2 text-sm font-semibold text-sembcorp-gray transition-colors duration-200 hover:border-sembcorp-green hover:text-sembcorp-green focus:outline-none focus-visible:ring-2 focus-visible:ring-sembcorp-green focus-visible:ring-offset-2;
+  }
+
+  .dict-pill.is-active {
+    @apply border-sembcorp-green bg-sembcorp-green text-white hover:text-white;
+  }
+
+  .dict-card {
+    @apply relative flex h-full flex-col rounded-xl border border-l-4 border-sembcorp-line border-l-transparent bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all duration-200;
+  }
+
+  .dict-card:hover {
+    @apply -translate-y-0.5 border-l-sembcorp-green shadow-[0_8px_24px_rgba(0,108,83,0.16)];
+  }
+
+  .dict-card:focus-within {
+    @apply border-l-sembcorp-green ring-2 ring-sembcorp-green/20;
+  }
+
+  .dict-lang {
+    @apply flex items-start gap-2 text-[15px] leading-relaxed text-sembcorp-ink;
+  }
+
+  .dict-flag {
+    @apply select-none text-base leading-none;
+  }
+
+  .dict-def {
+    @apply text-sm leading-relaxed text-sembcorp-gray;
+  }
+
+  .dict-mark {
+    @apply rounded-[3px] bg-[#FFF8E1] px-0.5 font-semibold text-sembcorp-ink;
+  }
+
+  .dict-badge {
+    @apply inline-flex items-center gap-1 rounded-full bg-sembcorp-green-wash px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-sembcorp-green;
+  }
+
+  .dict-icon-btn {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-full text-sembcorp-gray transition-colors hover:bg-sembcorp-green-wash hover:text-sembcorp-green focus:outline-none focus-visible:ring-2 focus-visible:ring-sembcorp-green;
+  }
+
+  .dict-fab {
+    @apply fixed bottom-6 right-6 z-50 inline-flex h-14 w-14 items-center justify-center rounded-full bg-sembcorp-green text-white shadow-[0_8px_24px_rgba(0,108,83,0.4)] transition-transform duration-200 hover:scale-110 hover:bg-sembcorp-green-dark focus:outline-none focus-visible:ring-4 focus-visible:ring-sembcorp-green/30;
+  }
+
+  .dict-label {
+    @apply mb-1.5 block text-sm font-semibold text-sembcorp-ink;
+  }
+
+  .dict-input {
+    @apply w-full rounded-lg border border-sembcorp-line bg-white px-3.5 py-2.5 text-sm text-sembcorp-ink transition-colors placeholder:text-sembcorp-gray/50 focus:border-sembcorp-green focus:outline-none focus:ring-4 focus:ring-sembcorp-green/10;
+  }
+
+  .dict-input.is-invalid {
+    @apply border-sembcorp-orange focus:border-sembcorp-orange focus:ring-sembcorp-orange/10;
+  }
+
+  .dict-error {
+    @apply mt-1 hidden text-xs font-medium text-sembcorp-orange;
+  }
+
+  .dict-error.is-visible {
+    @apply block;
+  }
+
+  .dict-toast {
+    @apply pointer-events-auto flex items-start gap-3 rounded-lg border border-sembcorp-line bg-white p-4 text-sm text-sembcorp-ink shadow-[0_8px_24px_rgba(0,0,0,0.14)];
+  }
+
+  .dict-modal-overlay {
+    @apply absolute inset-0 bg-black/50 opacity-0 transition-opacity duration-300;
+  }
+
+  .dict-modal-overlay.is-open {
+    @apply opacity-100;
+  }
+
+  .dict-modal-panel {
+    @apply translate-y-6 scale-[0.98] opacity-0 transition-all duration-300;
+  }
+
+  .dict-modal-panel.is-open {
+    @apply translate-y-0 scale-100 opacity-100;
+  }
+}
+
+@keyframes dict-toast-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes dict-card-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Suppress the native search field's clear button (we render our own). */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.dict-toast {
+  animation: dict-toast-in 260ms ease-out both;
+}
+
+.dict-toast.is-leaving {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 220ms ease-in, transform 220ms ease-in;
+}
+
+.dict-card-enter {
+  animation: dict-card-in 300ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dict-toast,
+  .dict-card-enter,
+  .dict-fab {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
