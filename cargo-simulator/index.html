@@ -302,6 +302,38 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
 }
 .checkitem.is-done{border-style:solid;border-color:var(--green);background:var(--wash)}
 .checkitem.is-done .checkitem__icon{background:var(--green);border-color:var(--green);color:#fff}
+.checkitem__txt{flex:1;min-width:0}
+.checkitem__go{
+  flex:0 0 auto;font-size:.76rem;font-weight:700;color:var(--green);
+  border:1.5px solid var(--green);border-radius:99px;padding:4px 11px;white-space:nowrap;
+  transition:background .15s ease,color .15s ease;
+}
+.checkitem:hover:not(:disabled) .checkitem__go{background:var(--green);color:#fff}
+.checkitem.is-done .checkitem__go{
+  border-color:transparent;color:var(--green-dark);background:none;padding:0;
+}
+
+.sectionlabel{
+  display:flex;align-items:center;gap:10px;margin:0 0 10px;
+  font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;
+  font-weight:700;color:var(--green-dark);
+}
+.sectionlabel::after{content:"";flex:1 1 auto;height:1px;background:var(--line)}
+.sectionlabel__count{
+  margin-left:auto;flex:0 0 auto;font-size:.72rem;font-weight:700;letter-spacing:.02em;
+  text-transform:none;color:#7C8A84;
+}
+.sectionlabel + .q{border-top:0;padding-top:0}
+
+.locked{border-top:1px dashed var(--line-strong);padding-top:16px;margin-top:20px}
+.q + .locked{border-top:0}
+.locked__note{
+  display:flex;gap:9px;align-items:center;margin:0 0 14px;
+  background:var(--warn-bg);border:1px dashed #E7C79A;border-radius:var(--radius-sm);
+  padding:11px 14px;font-size:.86rem;color:var(--warn);font-weight:600;
+}
+.locked__inner{opacity:.45;pointer-events:none;filter:saturate(.35)}
+.locked__inner .q{padding-top:0;border-top:0}
 
 .finding{
   border-left:4px solid var(--line-strong);
@@ -598,8 +630,24 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
     runtime.done.add(id);
     const all = runtime.required.every(function (r) { return runtime.done.has(r); });
     setNextEnabled(all);
-    if (all) setHint('<strong>Phase complete.</strong> Read the feedback, then move on.');
+    updateNavHint();
     updateChrome();
+  }
+
+  /* Tell the player exactly what is still outstanding, so the disabled
+     "Next phase" button is never a mystery. */
+  function updateNavHint() {
+    const p = PHASES[state.phase];
+    if (!p) return;
+    const pending = p.required.filter(function (id) { return !runtime.done.has(id); });
+    if (!pending.length) {
+      setHint('<strong>Phase complete</strong> — press “Next phase” to continue.');
+      return;
+    }
+    const names = pending.map(function (id) {
+      return (runtime.labels && runtime.labels[id]) || (p.labels && p.labels[id]) || 'this phase’s tasks';
+    });
+    setHint('Still to do: <strong>' + names.join('</strong>, <strong>') + '</strong>');
   }
 
   function wireMCQ(scope, q) {
@@ -651,6 +699,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
         if (field.classList.contains('is-locked')) return;
         if (q.multi) { selected.has(i) ? selected.delete(i) : selected.add(i); }
         else { selected = i; }
+        b.classList.remove('is-wrong');
         paint();
       });
     });
@@ -696,6 +745,10 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
         why +
         '<p class="fb__why">Re-read the evidence in this phase and try again — a correct retry still scores half the points.</p>' +
         '<p class="fb__pts">Attempts used: ' + r.attempts + ' of 3</p>';
+
+      // A multi-answer question must be retried from a clean slate, otherwise the
+      // wrong ticks stay selected and the correct combination can never be reached.
+      if (q.multi) { selected.clear(); paint(); }
     });
   }
 
@@ -716,6 +769,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
     title: 'Booking Request',
     vi: 'Tiếp nhận yêu cầu đặt chỗ · 예약 요청 접수',
     required: ['q1-1', 'q1-2'],
+    labels: { 'q1-1': 'the special handling code', 'q1-2': 'the service level' },
     points: 20,
     render: function (body) {
       block(body,
@@ -796,6 +850,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
     title: 'Booking Confirmation',
     vi: 'Xác nhận đặt chỗ · 예약 확정',
     required: ['q2-1', 'q2-2'],
+    labels: { 'q2-1': 'the LAT check', 'q2-2': 'the late-tender decision' },
     points: 20,
     render: function (body) {
       block(body,
@@ -856,26 +911,45 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
     title: 'Cargo Acceptance',
     vi: 'Kiểm tra tiếp nhận hàng · 화물 접수 검사',
     required: ['p3-inspect', 'q3-1', 'q3-2'],
+    labels: { 'p3-inspect': 'run the 4 acceptance checks', 'q3-1': 'the chargeable weight', 'q3-2': 'the accept / reject decision' },
     points: 30,
     bonus: 5,
     render: function (body) {
+      const checks = [
+        'Verify documentation (' + term('awb') + ' / ' + term('fwb') + ')',
+        'Weigh and measure the cargo',
+        'Inspect packaging, labels and temperature indicator',
+        'Security ' + term('screening') + ' (Regulated Agent)'
+      ];
       block(body,
-        '<p class="lead">18:50 D-0, first tender. The truck is at the acceptance dock. Work through all four acceptance checks, then make the accept-or-reject call.</p>' +
+        '<p class="lead">18:50 D-0, first tender. The truck is at the acceptance dock. ' +
+        '<strong>Run all four acceptance checks, then make the accept-or-reject call.</strong></p>' +
+        '<p class="sectionlabel">Acceptance checks <span class="sectionlabel__count" id="p3-count">0 of 4 complete</span></p>' +
         '<div class="inspect" id="p3-checks">' +
-          '<button type="button" class="checkitem" data-find="0"><span class="checkitem__icon">1</span> Verify documentation (' + term('awb') + ' / ' + term('fwb') + ')</button>' +
-          '<button type="button" class="checkitem" data-find="1"><span class="checkitem__icon">2</span> Weigh and measure the cargo</button>' +
-          '<button type="button" class="checkitem" data-find="2"><span class="checkitem__icon">3</span> Inspect packaging, labels and temperature indicator</button>' +
-          '<button type="button" class="checkitem" data-find="3"><span class="checkitem__icon">4</span> Security ' + term('screening') + ' (Regulated Agent)</button>' +
+          checks.map(function (label, i) {
+            return '<button type="button" class="checkitem" data-find="' + i + '">' +
+              '<span class="checkitem__icon">' + (i + 1) + '</span>' +
+              '<span class="checkitem__txt">' + label + '</span>' +
+              '<span class="checkitem__go">Run check ▸</span>' +
+            '</button>';
+          }).join('') +
         '</div>' +
         '<div id="p3-findings"></div>' +
         '<div id="p3-verdict" class="hidden">' +
           '<div class="callout callout--info"><strong>All four checks complete.</strong> Now weigh the evidence and make the acceptance decision.</div>' +
         '</div>'
       );
-      addQ(body, this.questions[0], 3);
-      block(body, '<div id="p3-decision" class="hidden">');
-      addQ($('#p3-decision', body), this.questions[1], 4);
-      block(body, '</div>');
+
+      block(body, '<p class="sectionlabel" style="margin-top:22px">Decisions</p>');
+      addQ(body, this.questions[0], 1);
+
+      block(body,
+        '<div id="p3-decision" class="locked">' +
+          '<p class="locked__note"><span aria-hidden="true">🔒</span> <span>Complete all four acceptance checks above to unlock this decision.</span></p>' +
+          '<div class="locked__inner">' + qHTML(this.questions[1], 2) + '</div>' +
+        '</div>'
+      );
+
       block(body,
         '<div id="p3-corrective" class="hidden">' +
           '<div class="callout callout--ok"><strong>Corrective action — 20:40 D-0.</strong> Unit B is repacked with validated phase-change cooling panels and a fresh data logger; ' +
@@ -921,6 +995,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
     title: 'ULD Build-Up',
     vi: 'Đóng ghép ULD · ULD 적재',
     required: ['q4-1', 'q4-2', 'q4-3'],
+    labels: { 'q4-1': 'the load device choice', 'q4-2': 'the load distribution', 'q4-3': 'the restraint method' },
     points: 30,
     render: function (body) {
       block(body,
@@ -1004,6 +1079,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
     title: 'Loading onto the Aircraft',
     vi: 'Xếp hàng lên máy bay · 항공기 적재',
     required: ['q5-1', 'q5-2'],
+    labels: { 'q5-1': 'the hold position', 'q5-2': 'the load sheet check' },
     points: 20,
     render: function (body) {
       block(body,
@@ -1066,6 +1142,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
     title: 'Departure &amp; In-Flight Tracking',
     vi: 'Khởi hành và theo dõi bay · 출발 및 운항 추적',
     required: ['q6-1', 'p6-depart', 'q6-2'],
+    labels: { 'q6-1': 'the AWB data message', 'p6-depart': 'release the flight', 'q6-2': 'the delay decision' },
     points: 25,
     bonus: 5,
     render: function (body) {
@@ -1091,9 +1168,10 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
           '<div class="callout callout--info hidden" id="p6-event"><strong>06:05 FRA — flow control.</strong> ATC sequencing at Frankfurt adds <strong>45 minutes</strong>. New ETA <strong>07:05</strong>. The consignee&rsquo;s cold room is booked for 07:30.</div>' +
         '</div>'
       );
-      block(body, '<div id="p6-q2" class="hidden">');
-      addQ($('#p6-q2', body), this.questions[1], 2);
-      block(body, '</div>');
+      block(body, '<div id="p6-q2" class="locked">' +
+        '<p class="locked__note"><span aria-hidden="true">🔒</span> <span>Release the flight (above) to unlock this decision.</span></p>' +
+        '<div class="locked__inner">' + qHTML(this.questions[1], 2) + '</div>' +
+      '</div>');
     },
     questions: [
       Q('q6-1',
@@ -1132,6 +1210,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
     title: 'Arrival &amp; Breakdown',
     vi: 'Đến và tháo dỡ hàng · 도착 및 화물 분해',
     required: ['p7-break', 'q7-1'],
+    labels: { 'p7-break': 'break down the ULD', 'q7-1': 'the discrepancy decision' },
     points: 20,
     bonus: 5,
     render: function (body) {
@@ -1148,9 +1227,10 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
         '</div>' +
         '<div id="p7-findings"></div>'
       );
-      block(body, '<div id="p7-q" class="hidden">');
-      addQ($('#p7-q', body), this.questions[0], 1);
-      block(body, '</div>');
+      block(body, '<div id="p7-q" class="locked">' +
+        '<p class="locked__note"><span aria-hidden="true">🔒</span> <span>Break down the ULD and verify the manifest to unlock this decision.</span></p>' +
+        '<div class="locked__inner">' + qHTML(this.questions[0], 1) + '</div>' +
+      '</div>');
     },
     questions: [
       Q('q7-1',
@@ -1176,6 +1256,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
     title: 'Customs &amp; Delivery to Consignee',
     vi: 'Thông quan và giao hàng · 통관 및 배송',
     required: ['q8-1', 'q8-2'],
+    labels: { 'q8-1': 'the customs document set', 'q8-2': 'the delivery & POD' },
     points: 25,
     render: function (body) {
       block(body,
@@ -1254,47 +1335,71 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
       '<p class="finding__head">' + f.head + '</p><p>' + f.body + '</p></div>';
   }
 
+  /* Reveal a section that was rendered locked (and drop its padlock note). */
+  function unlock(el) {
+    if (!el) return;
+    el.classList.remove('locked');
+    el.classList.remove('hidden');
+    const note = $('.locked__note', el);
+    if (note) note.remove();
+  }
+
   function wirePhase3(body) {
     const btns = $$('.checkitem', body);
     const out = $('#p3-findings', body);
     const verdict = $('#p3-verdict', body);
     const decision = $('#p3-decision', body);
     const corrective = $('#p3-corrective', body);
+    const counter = $('#p3-count', body);
 
+    function refreshCount() {
+      const n = btns.filter(function (b) { return b.disabled; }).length;
+      if (counter) counter.textContent = n + ' of 4 complete';
+      runtime.labels['p3-inspect'] = n >= 4
+        ? 'the 4 acceptance checks'
+        : 'run the ' + (4 - n) + ' remaining acceptance check' + (4 - n === 1 ? '' : 's') + ' (' + n + ' of 4 done)';
+      return n;
+    }
     function reveal(i) {
       block(out, findingHTML(FINDINGS.p3[i]));
       btns[i].classList.add('is-done');
       btns[i].disabled = true;
       btns[i].querySelector('.checkitem__icon').textContent = '✓';
+      const go = btns[i].querySelector('.checkitem__go');
+      if (go) go.textContent = '✓ done';
+    }
+    function unlock() {
+      verdict.classList.remove('hidden');
+      decision.classList.remove('locked');
+      const note = $('.locked__note', decision);
+      if (note) note.remove();
     }
     function allDone() {
       if (!isDone('p3-inspect')) {
         rec('p3-inspect').correct = true;
         rec('p3-inspect').points = 5;
       }
-      verdict.classList.remove('hidden');
-      decision.classList.remove('hidden');
+      unlock();
       taskDone('p3-inspect');
     }
+
+    refreshCount();
     if (isDone('p3-inspect')) {
       FINDINGS.p3.forEach(function (f, i) { reveal(i); });
-      verdict.classList.remove('hidden');
-      decision.classList.remove('hidden');
+      refreshCount();
+      unlock();
     } else {
       btns.forEach(function (b) {
         b.addEventListener('click', function () {
-          const i = Number(b.dataset.find);
-          reveal(i);
-          if (btns.every(function (x) { return x.disabled; })) allDone();
+          reveal(Number(b.dataset.find));
+          const n = refreshCount();
+          updateNavHint();
+          if (n >= 4) allDone();
         });
       });
     }
-    const q32 = PHASES[2].questions[1];
-    const originalSolve = q32.onSolve;
-    q32.onSolve = function () {
-      corrective.classList.remove('hidden');
-      if (typeof originalSolve === 'function') originalSolve();
-    };
+
+    PHASES[2].questions[1].onSolve = function () { corrective.classList.remove('hidden'); };
     if (isDone('q3-2')) corrective.classList.remove('hidden');
   }
 
@@ -1323,49 +1428,44 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
         return entry(s, i === FLIGHT_STEPS.length);
       }).join('');
       ev.classList.remove('hidden');
-      q2wrap.classList.remove('hidden');
+      unlock(q2wrap);
     }
+    function gate() { submit.disabled = isDone('p6-depart') || !isDone('q6-1'); }
+
+    // Unlock the release button the instant the FWB question is answered.
+    PHASES[5].questions[0].onSolve = function () { gate(); updateNavHint(); };
+    gate();
 
     if (isDone('p6-depart')) {
       showAll();
       submit.textContent = 'Flight released';
       submit.disabled = true;
-    } else {
-      const r6 = rec('q6-1');
-      function gate() {
-        if (isDone('q6-1')) submit.disabled = false;
-      }
-      // q6-1 awards on solve; poll via the check button state
-      gate();
-      const observer = setInterval(function () {
-        gate();
-        if (isDone('q6-1')) clearInterval(observer);
-      }, 400);
-
-      submit.addEventListener('click', function () {
-        submit.disabled = true;
-        submit.textContent = 'Releasing…';
-        tl.classList.remove('hidden');
-        let i = 0;
-        (function step() {
-          if (i < FLIGHT_STEPS.length) {
-            block(tl, entry(FLIGHT_STEPS[i], false));
-            i++;
-            setTimeout(step, 850);
-            return;
-          }
-          block(tl, entry(FLIGHT_EVENT, true));
-          ev.classList.remove('hidden');
-          q2wrap.classList.remove('hidden');
-          submit.textContent = 'Flight released';
-          if (!isDone('p6-depart')) {
-            rec('p6-depart').correct = true;
-            rec('p6-depart').points = 5;
-          }
-          taskDone('p6-depart');
-        })();
-      });
+      return;
     }
+
+    submit.addEventListener('click', function () {
+      submit.disabled = true;
+      submit.textContent = 'Releasing…';
+      tl.classList.remove('hidden');
+      let i = 0;
+      (function step() {
+        if (i < FLIGHT_STEPS.length) {
+          block(tl, entry(FLIGHT_STEPS[i], false));
+          i++;
+          setTimeout(step, 850);
+          return;
+        }
+        block(tl, entry(FLIGHT_EVENT, true));
+        ev.classList.remove('hidden');
+        unlock(q2wrap);
+        submit.textContent = 'Flight released';
+        if (!isDone('p6-depart')) {
+          rec('p6-depart').correct = true;
+          rec('p6-depart').points = 5;
+        }
+        taskDone('p6-depart');
+      })();
+    });
   }
 
   function wirePhase7(body) {
@@ -1375,7 +1475,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
 
     function showAll() {
       out.innerHTML = FINDINGS.p7.map(findingHTML).join('');
-      qwrap.classList.remove('hidden');
+      unlock(qwrap);
     }
     if (isDone('p7-break')) {
       showAll();
@@ -1394,7 +1494,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
           setTimeout(step, 700);
           return;
         }
-        qwrap.classList.remove('hidden');
+        unlock(qwrap);
         btn.textContent = 'Breakdown complete';
         if (!isDone('p7-break')) {
           rec('p7-break').correct = true;
@@ -1439,7 +1539,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
 
     runtime = {
       required: p.required.slice(),
-      done: new Set(p.required.filter(function (id) { return isDone(id); }))
+      done: new Set(p.required.filter(function (id) { return isDone(id); })),
+      labels: {}
     };
 
     stage.innerHTML =
@@ -1475,8 +1576,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
     setNextEnabled(all);
     prevBtn.disabled = state.phase === 0;
     nextBtn.textContent = state.phase === PHASES.length - 1 ? 'See results →' : 'Next phase →';
-    setHint(all ? '<strong>Phase complete.</strong> Read the feedback, then move on.'
-                : 'Complete every task in this phase to unlock the next one.');
+    updateNavHint();
     updateChrome();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
