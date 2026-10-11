@@ -1,0 +1,909 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000028">
+  <meta name="description" content="A fictional, browser-based expense manager terminal for training.">
+  <title>Expense Manager Simulator | BrandBlog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js" defer></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --terminal-bg: #050611;
+      --terminal-panel: #0b0d19;
+      --terminal-line: #22283b;
+      --terminal-text: #e5edf7;
+      --terminal-dim: #94a3b8;
+      --terminal-petrol: #00c2bd;
+      --terminal-green: #46d6a1;
+      --terminal-yellow: #f3c969;
+      --terminal-red: #ff8585;
+      --mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      min-width: 320px;
+      min-height: 100vh;
+      flex-direction: column;
+      margin: 0;
+      background: var(--terminal-bg);
+      color: var(--terminal-text);
+      font: 400 14px/1.55 var(--mono);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--terminal-petrol);
+      outline-offset: 3px;
+    }
+
+    .terminal-header {
+      display: flex;
+      min-height: 58px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px clamp(14px, 4vw, 36px);
+      border-bottom: 1px solid var(--terminal-line);
+      background: var(--terminal-panel);
+    }
+
+    .terminal-header__title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--terminal-text);
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+    }
+
+    .terminal-header__mark {
+      color: var(--terminal-petrol);
+      font-size: 1.1rem;
+    }
+
+    .terminal-header__note {
+      margin: 0;
+      color: var(--terminal-dim);
+      font-size: .65rem;
+      text-align: right;
+    }
+
+    .terminal-app {
+      display: flex;
+      width: min(100%, 1120px);
+      min-height: 0;
+      flex: 1;
+      flex-direction: column;
+      align-self: center;
+      padding: 22px clamp(12px, 3vw, 28px);
+    }
+
+    .terminal-app__intro {
+      margin-bottom: 14px;
+    }
+
+    .terminal-app__intro h1 {
+      margin: 0;
+      color: var(--terminal-petrol);
+      font-size: clamp(1rem, 3vw, 1.2rem);
+      font-weight: 700;
+    }
+
+    .terminal-app__intro p {
+      margin: 4px 0 0;
+      color: var(--terminal-dim);
+      font-size: .7rem;
+    }
+
+    .terminal {
+      display: flex;
+      min-height: min(68vh, 700px);
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid #1d2537;
+      background: var(--terminal-bg);
+      box-shadow: 0 18px 48px rgba(0, 0, 40, .28);
+    }
+
+    .terminal__bar {
+      display: flex;
+      min-height: 40px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 7px 12px;
+      border-bottom: 1px solid var(--terminal-line);
+      background: var(--terminal-panel);
+    }
+
+    .terminal__bar-title {
+      color: #b6c5db;
+      font-size: .66rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+    }
+
+    .terminal__bar-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .terminal-button {
+      padding: 6px 9px;
+      border: 1px solid #344056;
+      border-radius: 2px;
+      background: transparent;
+      color: #a9b8ce;
+      cursor: pointer;
+      font-size: .62rem;
+      font-weight: 600;
+    }
+
+    .terminal-button:hover {
+      border-color: var(--terminal-petrol);
+      color: var(--terminal-petrol);
+    }
+
+    .terminal__output {
+      display: flex;
+      min-height: 0;
+      flex: 1;
+      flex-direction: column;
+      gap: 5px;
+      overflow: auto;
+      padding: 14px;
+      scrollbar-color: #344056 var(--terminal-bg);
+    }
+
+    .terminal-line {
+      margin: 0;
+      color: var(--terminal-text);
+      font-size: .72rem;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .terminal-line--command {
+      color: var(--terminal-petrol);
+    }
+
+    .terminal-line--success {
+      color: var(--terminal-green);
+    }
+
+    .terminal-line--warning {
+      color: var(--terminal-yellow);
+    }
+
+    .terminal-line--error {
+      color: var(--terminal-red);
+    }
+
+    .terminal-line--muted {
+      color: var(--terminal-dim);
+    }
+
+    .expense-table-wrap {
+      max-width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--terminal-line);
+    }
+
+    .expense-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .65rem;
+      text-align: left;
+    }
+
+    .expense-table th,
+    .expense-table td {
+      padding: 7px 9px;
+      border-bottom: 1px solid var(--terminal-line);
+      white-space: nowrap;
+    }
+
+    .expense-table th {
+      background: var(--terminal-panel);
+      color: var(--terminal-petrol);
+      font-weight: 700;
+    }
+
+    .expense-table td {
+      color: var(--terminal-text);
+    }
+
+    .expense-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .expense-table__amount {
+      text-align: right;
+    }
+
+    .terminal__form {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--terminal-line);
+      background: var(--terminal-panel);
+    }
+
+    .terminal__prompt {
+      color: var(--terminal-petrol);
+      font-size: .85rem;
+      font-weight: 800;
+    }
+
+    .terminal__input {
+      width: 100%;
+      min-width: 0;
+      padding: 8px 9px;
+      border: 1px solid #283149;
+      border-radius: 2px;
+      background: var(--terminal-bg);
+      color: var(--terminal-text);
+      font-size: .74rem;
+    }
+
+    .terminal__input::placeholder {
+      color: #748198;
+    }
+
+    .terminal__run {
+      min-width: 58px;
+      padding: 8px 12px;
+      border: 1px solid var(--terminal-petrol);
+      border-radius: 2px;
+      background: var(--terminal-petrol);
+      color: #001b1a;
+      cursor: pointer;
+      font-size: .65rem;
+      font-weight: 800;
+    }
+
+    .terminal__hint {
+      margin: 0;
+      padding: 0 12px 9px;
+      background: var(--terminal-panel);
+      color: var(--terminal-dim);
+      font-size: .59rem;
+    }
+
+    .terminal-footer {
+      padding: 0 4px 12px;
+      color: var(--terminal-dim);
+      font-size: .62rem;
+    }
+
+    .receipt-area {
+      margin: 20px 0 0;
+    }
+
+    .receipt {
+      width: min(100%, 760px);
+      margin-inline: auto;
+      padding: clamp(18px, 4vw, 32px);
+      border: 1px solid #b7c0c8;
+      background: #fff;
+      color: #1a1a1a;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, .2);
+      font-family: Arial, sans-serif;
+    }
+
+    .receipt__header,
+    .receipt__summary,
+    .receipt__footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .receipt__header {
+      align-items: center;
+      padding-bottom: 14px;
+      border-bottom: 2px solid #000028;
+    }
+
+    .receipt__brand {
+      margin: 0;
+      color: #006f70;
+      font: 700 .68rem/1.4 var(--mono);
+      letter-spacing: .08em;
+    }
+
+    .receipt h2 {
+      margin: 4px 0;
+      color: #000028;
+      font: 700 1.5rem/1.2 Arial, sans-serif;
+    }
+
+    .receipt__notice {
+      margin: 0;
+      color: #666;
+      font: 600 .58rem/1.4 var(--mono);
+      letter-spacing: .04em;
+    }
+
+    .receipt__number {
+      text-align: right;
+    }
+
+    .receipt__number span,
+    .receipt__summary span {
+      display: block;
+      color: #666;
+      font-size: .62rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .receipt__number strong {
+      display: block;
+      margin-top: 4px;
+      color: #000028;
+      font: 800 1.1rem/1.3 var(--mono);
+    }
+
+    .receipt__summary {
+      margin-top: 18px;
+      padding: 12px;
+      border: 1px solid #b7c0c8;
+    }
+
+    .receipt__summary > div {
+      min-width: 0;
+    }
+
+    .receipt__summary strong {
+      display: block;
+      margin-top: 5px;
+      color: #000028;
+      font-size: .9rem;
+      overflow-wrap: anywhere;
+    }
+
+    .receipt__description {
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px solid #b7c0c8;
+    }
+
+    .receipt__description h3 {
+      margin: 0 0 6px;
+      color: #666;
+      font-size: .63rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .receipt__description p {
+      margin: 0;
+      color: #1a1a1a;
+      font-size: .88rem;
+      overflow-wrap: anywhere;
+    }
+
+    .receipt__footer {
+      align-items: end;
+      margin-top: 18px;
+    }
+
+    .receipt__barcode {
+      width: min(62%, 390px);
+    }
+
+    .receipt__barcode svg {
+      display: block;
+      width: 100%;
+      max-height: 62px;
+    }
+
+    .receipt__barcode span {
+      display: block;
+      margin-top: 3px;
+      color: #555;
+      font: .57rem/1.4 var(--mono);
+      overflow-wrap: anywhere;
+    }
+
+    .receipt__timestamp {
+      max-width: 38%;
+      color: #555;
+      font-size: .62rem;
+      text-align: right;
+    }
+
+    .receipt__timestamp strong {
+      display: block;
+      margin-top: 4px;
+      color: #000028;
+      font-size: .68rem;
+    }
+
+    .receipt__disclaimer {
+      margin: 16px 0 0;
+      padding-top: 9px;
+      border-top: 1px solid #dfe4e8;
+      color: #666;
+      font-size: .61rem;
+      line-height: 1.5;
+    }
+
+    .receipt__actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 600px) {
+      .terminal-header__note {
+        display: none;
+      }
+
+      .terminal__output {
+        padding: 10px;
+      }
+
+      .receipt__header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .receipt__number {
+        text-align: left;
+      }
+
+      .receipt__summary {
+        flex-direction: column;
+      }
+    }
+
+    @media print {
+      @page {
+        size: A5 portrait;
+        margin: 12mm;
+      }
+
+      html,
+      body {
+        display: block;
+        min-width: 0;
+        min-height: 0;
+        background: #fff;
+      }
+
+      body * {
+        visibility: hidden !important;
+      }
+
+      #receiptArea,
+      #receiptArea * {
+        visibility: visible !important;
+      }
+
+      #receiptArea[hidden] {
+        display: block !important;
+      }
+
+      #receiptArea {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        margin: 0;
+      }
+
+      .receipt {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        box-shadow: none;
+        break-inside: avoid;
+      }
+
+      .receipt__actions {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="terminal-header">
+    <div class="terminal-header__title">
+      <span class="terminal-header__mark" aria-hidden="true">&gt;_</span>
+      BRANDBLOG · EXPENSE MANAGER
+    </div>
+    <p class="terminal-header__note">Browser-only training simulator · expenses stay on this device</p>
+  </header>
+
+  <main class="terminal-app">
+    <section class="terminal-app__intro" aria-labelledby="pageTitle">
+      <h1 id="pageTitle">Expense manager terminal</h1>
+      <p>Record, review, and print sample expenses. No data is sent to a server.</p>
+    </section>
+
+    <section class="terminal" aria-label="Expense manager terminal">
+      <div class="terminal__bar">
+        <span class="terminal__bar-title">EXPENSE LEDGER · LOCAL STORAGE</span>
+        <div class="terminal__bar-actions">
+          <button id="clearOutput" class="terminal-button" type="button">CLEAR OUTPUT</button>
+        </div>
+      </div>
+
+      <div id="terminalOutput" class="terminal__output" role="log" aria-live="polite" aria-relevant="additions text"></div>
+
+      <form id="commandForm" class="terminal__form" autocomplete="off">
+        <label class="terminal__prompt" for="commandInput" aria-label="Command prompt">&gt;</label>
+        <input id="commandInput" class="terminal__input" name="command" type="text" placeholder="ADD 50000 Food Lunch" spellcheck="false" aria-describedby="commandHint" autofocus>
+        <button class="terminal__run" type="submit">RUN</button>
+      </form>
+      <p id="commandHint" class="terminal__hint">Enter submits · HELP lists commands · Expenses are saved in this browser only</p>
+    </section>
+
+    <section id="receiptArea" class="receipt-area" aria-label="Expense receipt" hidden>
+      <article class="receipt">
+        <header class="receipt__header">
+          <div>
+            <p class="receipt__brand">BRANDBLOG · PERSONAL LEDGER</p>
+            <h2>Expense receipt</h2>
+            <p class="receipt__notice">PERSONAL RECORD · NOT A TAX INVOICE</p>
+          </div>
+          <div class="receipt__number">
+            <span>Expense ID</span>
+            <strong data-receipt-field="id">—</strong>
+          </div>
+        </header>
+        <div class="receipt__summary">
+          <div><span>Date</span><strong data-receipt-field="date">—</strong></div>
+          <div><span>Amount</span><strong data-receipt-field="amount">—</strong></div>
+          <div><span>Category</span><strong data-receipt-field="category">—</strong></div>
+        </div>
+        <section class="receipt__description">
+          <h3>Description</h3>
+          <p data-receipt-field="description">—</p>
+        </section>
+        <div class="receipt__footer">
+          <div class="receipt__barcode">
+            <svg id="expenseBarcode" role="img" aria-label="Barcode containing expense ID and amount"></svg>
+            <span data-receipt-field="barcodeText">—</span>
+          </div>
+          <div class="receipt__timestamp">
+            Created at
+            <strong data-receipt-field="timestamp">—</strong>
+          </div>
+        </div>
+        <p class="receipt__disclaimer">This receipt was generated by a browser-based training simulator. It is a personal record only and is not proof of purchase.</p>
+        <div class="receipt__actions">
+          <button id="printReceipt" class="terminal-button" type="button">Print</button>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="terminal-footer">BrandBlog educational demo · Expense data is stored locally in this browser.</footer>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const STORAGE_KEY = "brandblog_expense_simulator_expenses";
+      const output = document.getElementById("terminalOutput");
+      const form = document.getElementById("commandForm");
+      const input = document.getElementById("commandInput");
+      const receiptArea = document.getElementById("receiptArea");
+      const printReceiptButton = document.getElementById("printReceipt");
+      const state = { expenses: [], nextId: 1, storageReady: true, displayedReceipt: null };
+
+      function addLine(text, kind = "normal") {
+        const line = document.createElement("p");
+        line.className = `terminal-line${kind === "normal" ? "" : ` terminal-line--${kind}`}`;
+        line.textContent = text;
+        output.append(line);
+        output.scrollTop = output.scrollHeight;
+      }
+
+      function formatAmount(amount) {
+        return new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(amount);
+      }
+
+      function formatDate(value) {
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? "Invalid date" : date.toLocaleDateString();
+      }
+
+      function formatTimestamp(value) {
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? "Invalid timestamp" : date.toLocaleString();
+      }
+
+      function loadExpenses() {
+        let raw;
+        try {
+          raw = window.localStorage.getItem(STORAGE_KEY);
+        } catch (error) {
+          state.storageReady = false;
+          addLine(`LOCAL STORAGE UNAVAILABLE: ${error instanceof Error ? error.message : "browser storage access failed"}. Adding expenses is disabled.`, "error");
+          return;
+        }
+        if (!raw) return;
+
+        try {
+          const stored = JSON.parse(raw);
+          if (!Array.isArray(stored)) throw new Error("stored expense data is not a list");
+          state.expenses = stored.filter((expense) =>
+            expense &&
+            Number.isSafeInteger(expense.id) &&
+            expense.id > 0 &&
+            Number.isFinite(expense.amount) &&
+            expense.amount > 0 &&
+            typeof expense.category === "string" &&
+            typeof expense.description === "string" &&
+            typeof expense.date === "string" &&
+            typeof expense.timestamp === "string"
+          );
+          if (state.expenses.length !== stored.length) {
+            addLine("WARNING: Some stored entries are invalid and were not loaded.", "warning");
+          }
+          state.expenses.sort((a, b) => a.id - b.id);
+          state.nextId = state.expenses.reduce((next, expense) => Math.max(next, expense.id + 1), 1);
+        } catch (error) {
+          state.storageReady = false;
+          addLine(`EXPENSE HISTORY COULD NOT BE READ: ${error instanceof Error ? error.message : "stored data is invalid"}. No new expenses will be saved to avoid overwriting it.`, "error");
+        }
+      }
+
+      function showHelp() {
+        addLine("AVAILABLE EXPENSE COMMANDS", "success");
+        addLine("ADD [amount] [category] [description]  e.g. ADD 50000 Food Lunch");
+        addLine("LIST or HIST                          list all expenses");
+        addLine("VIEW [ID]                             view an expense receipt");
+        addLine("PRINT [ID]                            show and print an expense receipt");
+        addLine("HELP or ?                             show this help");
+        addLine("CLS                                   clear terminal output without deleting expenses");
+        addLine("Amounts have no preset currency. Categories use one word; descriptions may contain spaces.", "muted");
+      }
+
+      function listExpenses() {
+        if (!state.expenses.length) {
+          addLine("NO EXPENSES RECORDED. Add one with ADD 50000 Food Lunch.", "warning");
+          return;
+        }
+
+        addLine(`EXPENSE HISTORY · ${state.expenses.length} RECORD${state.expenses.length === 1 ? "" : "S"}`, "success");
+        const wrapper = document.createElement("div");
+        wrapper.className = "expense-table-wrap";
+        const table = document.createElement("table");
+        table.className = "expense-table";
+        const head = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+        for (const label of ["ID", "DATE", "AMOUNT", "CATEGORY", "DESCRIPTION"]) {
+          const cell = document.createElement("th");
+          cell.scope = "col";
+          cell.textContent = label;
+          headerRow.append(cell);
+        }
+        head.append(headerRow);
+        const body = document.createElement("tbody");
+        for (const expense of state.expenses) {
+          const row = document.createElement("tr");
+          const values = [
+            String(expense.id).padStart(6, "0"),
+            formatDate(expense.date),
+            formatAmount(expense.amount),
+            expense.category,
+            expense.description
+          ];
+          values.forEach((value, index) => {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            if (index === 2) cell.className = "expense-table__amount";
+            row.append(cell);
+          });
+          body.append(row);
+        }
+        table.append(head, body);
+        wrapper.append(table);
+        output.append(wrapper);
+        output.scrollTop = output.scrollHeight;
+      }
+
+      function renderReceipt(expense) {
+        state.displayedReceipt = expense;
+        const payload = `EXP:${String(expense.id).padStart(6, "0")}|AMT:${expense.amount.toFixed(2)}`;
+        const fields = {
+          id: String(expense.id).padStart(6, "0"),
+          date: formatDate(expense.date),
+          amount: formatAmount(expense.amount),
+          category: expense.category,
+          description: expense.description,
+          barcodeText: payload,
+          timestamp: formatTimestamp(expense.timestamp)
+        };
+        for (const field of receiptArea.querySelectorAll("[data-receipt-field]")) {
+          field.textContent = fields[field.dataset.receiptField] || "—";
+        }
+        receiptArea.hidden = false;
+
+        try {
+          if (typeof window.JsBarcode !== "function") throw new Error("barcode library is unavailable");
+          window.JsBarcode(document.getElementById("expenseBarcode"), payload, {
+            format: "CODE128",
+            displayValue: false,
+            height: 46,
+            width: 1.5,
+            margin: 2,
+            lineColor: "#000000",
+            background: "#ffffff"
+          });
+        } catch (error) {
+          addLine(`BARCODE UNAVAILABLE: ${error instanceof Error ? error.message : "barcode could not be rendered"}. Receipt details remain available.`, "warning");
+        }
+        receiptArea.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function findExpense(id) {
+        const expense = state.expenses.find((item) => item.id === id);
+        if (!expense) {
+          addLine(`EXPENSE ${id} NOT FOUND. Use LIST to see recorded expenses.`, "error");
+          return null;
+        }
+        return expense;
+      }
+
+      function viewExpense(id) {
+        const expense = findExpense(id);
+        if (!expense) return;
+        addLine(`EXPENSE RECEIPT · ID ${String(expense.id).padStart(6, "0")}`, "success");
+        addLine(`DATE         ${formatDate(expense.date)}`);
+        addLine(`AMOUNT       ${formatAmount(expense.amount)}`);
+        addLine(`CATEGORY     ${expense.category}`);
+        addLine(`DESCRIPTION  ${expense.description}`);
+        addLine(`RECORDED     ${formatTimestamp(expense.timestamp)}`);
+        renderReceipt(expense);
+      }
+
+      function printExpense(id) {
+        const expense = findExpense(id);
+        if (!expense) return;
+        viewExpense(id);
+        window.print();
+      }
+
+      function addExpense(command) {
+        const match = command.match(/^ADD\s+(\d+(?:\.\d{1,2})?)\s+([A-Z0-9_-]+)\s+(.+)$/i);
+        if (!match) {
+          addLine("FORMAT: ADD [amount] [category] [description]  e.g. ADD 50000 Food Lunch", "error");
+          return;
+        }
+        if (!state.storageReady) {
+          addLine("EXPENSE NOT ADDED · local history is unavailable or invalid.", "error");
+          return;
+        }
+
+        const amount = Number(match[1]);
+        const category = match[2].trim();
+        const description = match[3].trim();
+        if (!Number.isFinite(amount) || amount <= 0 || amount > Number.MAX_SAFE_INTEGER) {
+          addLine("AMOUNT MUST BE A POSITIVE NUMBER WITH UP TO TWO DECIMAL PLACES.", "error");
+          return;
+        }
+        if (!description || description.length > 240) {
+          addLine("DESCRIPTION MUST CONTAIN 1–240 CHARACTERS.", "error");
+          return;
+        }
+        if (category.length > 40) {
+          addLine("CATEGORY MUST BE 40 CHARACTERS OR FEWER.", "error");
+          return;
+        }
+        if (!Number.isSafeInteger(state.nextId)) {
+          addLine("EXPENSE ID LIMIT REACHED; CANNOT ADD ANOTHER RECORD.", "error");
+          return;
+        }
+
+        const now = new Date();
+        const expense = {
+          id: state.nextId,
+          date: now.toISOString().slice(0, 10),
+          timestamp: now.toISOString(),
+          amount,
+          category,
+          description
+        };
+        const updated = [...state.expenses, expense];
+        try {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        } catch (error) {
+          addLine(`EXPENSE NOT SAVED: ${error instanceof Error ? error.message : "browser storage write failed"}.`, "error");
+          return;
+        }
+        state.expenses = updated;
+        state.nextId += 1;
+        addLine(`EXPENSE ADDED · ID ${String(expense.id).padStart(6, "0")} · ${formatAmount(expense.amount)} · ${expense.category}`, "success");
+      }
+
+      function execute(raw) {
+        const command = raw.trim();
+        if (!command) return;
+        addLine(`> ${command}`, "command");
+
+        const upper = command.toUpperCase();
+        if (upper === "HELP" || upper === "?") {
+          showHelp();
+        } else if (upper === "LIST" || upper === "HIST") {
+          listExpenses();
+        } else if (upper === "CLS") {
+          output.replaceChildren();
+          addLine("OUTPUT CLEARED. EXPENSE HISTORY IS UNCHANGED.", "muted");
+        } else if (/^ADD(?:\s|$)/i.test(command)) {
+          addExpense(command);
+        } else if (/^(?:PRINT|VIEW)(?:\s|$)/i.test(command)) {
+          const match = command.match(/^(?:PRINT|VIEW)\s+(\d+)$/i);
+          if (!match) {
+            addLine("FORMAT: PRINT [ID] or VIEW [ID].", "error");
+          } else if (!Number.isSafeInteger(Number(match[1])) || Number(match[1]) <= 0) {
+            addLine("EXPENSE ID MUST BE A POSITIVE WHOLE NUMBER.", "error");
+          } else if (/^PRINT/i.test(command)) {
+            printExpense(Number(match[1]));
+          } else {
+            viewExpense(Number(match[1]));
+          }
+        } else {
+          addLine(`UNKNOWN COMMAND "${command}". Enter HELP or ? for supported commands.`, "error");
+        }
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        execute(input.value);
+        input.value = "";
+        input.focus();
+      });
+
+      document.getElementById("clearOutput").addEventListener("click", () => {
+        output.replaceChildren();
+        addLine("OUTPUT CLEARED. EXPENSE HISTORY IS UNCHANGED.", "muted");
+        input.focus();
+      });
+
+      printReceiptButton.addEventListener("click", () => {
+        if (state.displayedReceipt) window.print();
+      });
+
+      loadExpenses();
+      addLine("EXPENSE MANAGER TERMINAL · READY", "success");
+      addLine("Type HELP or ? to list commands. Expenses are stored only in this browser.", "muted");
+      addLine(`LOCAL HISTORY · ${state.expenses.length} RECORD${state.expenses.length === 1 ? "" : "S"}`, "muted");
+      input.focus();
+    })();
+  </script>
+</body>
+</html>
