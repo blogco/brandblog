@@ -57,6 +57,8 @@ vào dấu nhắc `>`:
 | `FO <FORM>` | Ghi **hình thức thanh toán** (`CASH` / `CK` / `CC<16 số>/<YYMM>`) | `FO CASH` |
 | `AP <PHONE>` | Thêm liên hệ | `AP 0912345678` |
 | `SR <CODE>` | Yêu cầu dịch vụ đặc biệt (SSR) | `SR CHML` |
+| `SR FEE` | Ghi phí dịch vụ hậu mãi cho SSR trên vé đã xuất | `SR FEE` |
+| `FP <FORM>` | Thu phí hậu mãi (`CASH` / `CK` / `CC<số>/<YYMM>`) | `FP CASH` |
 | `FXP` | Tính giá vé, thuế, phí và dịch vụ | `FXP` |
 | `TQT` | Xem **chi tiết thuế & phí** (chưa gồm giá vé) | `TQT` |
 | `TKTL` / `TTP` | Phát hành vé điện tử | `TKTL` |
@@ -136,6 +138,24 @@ FO CASH                  ← tiền mặt
 FO CK                    ← séc (cheque)
 FO CC4111111111111111/0426   ← thẻ tín dụng
 ```
+
+### Thêm dịch vụ sau khi xuất vé
+
+Trong bảng **[ BÁN VÉ ]**, mở **Post-issuance services**, chọn một PNR đã xuất, SSR và mức
+phí, rồi nhập hình thức thanh toán. Các lệnh được tạo theo thứ tự:
+
+```text
+RT#<PNR>
+SR WCHR             ← ví dụ: xe lăn; có thể chọn SPML, AVML, VGML, CHML, DBML, GFML...
+SR FEE              ← ghi mức phí đang chọn trong bảng (bỏ qua với dịch vụ miễn phí)
+FP CASH             ← hoặc FP CK / FP CC<11–19 số>/<YYMM>
+```
+
+Chạy từng lệnh một. `RT#<PNR>` chọn hồ sơ hậu mãi; SSR mới được thêm vào vé đã phát hành,
+`SR FEE` ghi phí cấu hình trong bảng và `FP` thu khoản đó, cộng doanh thu và ghi chứng từ
+dịch vụ (`EMDS`). Chọn mức phí `0` để ghi dịch vụ miễn phí; không cần `SR FEE` hoặc `FP`.
+Không thể thêm trùng SSR hoặc bắt đầu SSR khác khi còn phí chưa thanh toán. Phí hậu mãi
+được ghi riêng, không tính lại giá vé hoặc phát hành lại vé.
 
 ### Tra cứu thông tin
 
