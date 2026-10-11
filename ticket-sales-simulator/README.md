@@ -75,7 +75,8 @@ vào dấu nhắc `>`:
 | `FP <FORM>` | Thu phí hậu mãi (`CASH` / `CK` / `CC<số>/<YYMM>`) | `FP CASH` |
 | `FXP` | Tính giá vé, thuế, phí và dịch vụ | `FXP` |
 | `TQT` | Xem **chi tiết thuế & phí** (chưa gồm giá vé) | `TQT` |
-| `TKTL` / `TTP` | Phát hành vé điện tử | `TKTL` |
+| `TKTL` / `TKOK` / `TTP` | Phát hành vé và hiển thị đầy đủ chi tiết trong terminal | `TKTL` |
+| `P` / `P#<PNR>` | Mở hộp thoại in vé mới nhất hoặc vé theo PNR | `P` |
 | `TTK` | **Danh sách số vé đã xuất** | `TTK` |
 | `RT` | Xem lại PNR đang mở (hoặc vé gần nhất) | `RT` |
 | `RD` | Hiển thị lại PNR (redisplay) | `RD` |
@@ -98,7 +99,12 @@ vào dấu nhắc `>`:
 
 **Quy trình một hồ sơ:** `NM` → `APIS` (cho **từng** khách) → `AN` → `SS` → `AP` →
 `(NACO nếu sửa tên)` → `(SO nếu thu phí dịch vụ)` → `(FO nếu ghi thanh toán)` → `SR` (nếu cần) →
-`FXP` → `TKTL` → `RT#<PNR>` (tuỳ chọn) → `NEXT`.
+`FXP` → `TKTL` → kiểm tra vé trên terminal → `P` (in nếu cần) → `NEXT`.
+
+Sau khi `TKTL`, `TKOK` hoặc `TTP` phát hành vé, toàn bộ thông tin vé hiện trong terminal;
+boarding pass không tự bật. Gõ `P` để mở hộp thoại in vé vừa phát hành, hoặc `P#<PNR>` để
+in lại một vé đã xuất. Boarding pass vẫn được xem/in riêng bằng các lệnh `BP` hoặc nút
+`PRINT BOARDING PASSES`.
 
 ### General Declaration, tổ bay và manifest
 
