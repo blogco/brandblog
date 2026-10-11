@@ -428,6 +428,10 @@ body::after{
   var workflowCustomerId = null;
   var workflowContactValue = '';
   var workflowIssuedPnr = '';
+  var workflowPassengerObserver = null;
+  var workflowPassengerContainer = null;
+  var workflowDocumentObserver = null;
+  var workflowPassengerDetectionReady = false;
   var postIssueLocator = '';
   var postIssueFeeAmount = 150000;
   var postIssuePaymentDetails = 'CASH';
@@ -2168,7 +2172,37 @@ body::after{
   }
 
   function notifyWorkflowState(){
-    renderWorkflowPanel();
+    if (workflowPassengerDetectionReady) renderWorkflowPanel();
+  }
+
+  function observeWorkflowPassengerContainer(){
+    var container = document.getElementById('log');
+    if (container === workflowPassengerContainer) return;
+
+    if (workflowPassengerObserver) workflowPassengerObserver.disconnect();
+    workflowPassengerContainer = container;
+    workflowPassengerObserver = null;
+    if (!container) return;
+
+    workflowPassengerObserver = new MutationObserver(function(){
+      notifyWorkflowState();
+    });
+    workflowPassengerObserver.observe(container, {
+      childList: true,
+      characterData: true,
+      subtree: true
+    });
+    notifyWorkflowState();
+  }
+
+  function initializeWorkflowPassengerDetection(){
+    workflowPassengerDetectionReady = true;
+    observeWorkflowPassengerContainer();
+    workflowDocumentObserver = new MutationObserver(observeWorkflowPassengerContainer);
+    workflowDocumentObserver.observe(document.documentElement, {
+      childList: true,
+      subtree: true
+    });
   }
 
   function copyWorkflowText(text, successMessage){
@@ -3137,6 +3171,11 @@ body::after{
   boot();
   input.focus();
   notifyWorkflowState();
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initializeWorkflowPassengerDetection, { once:true });
+  } else {
+    initializeWorkflowPassengerDetection();
+  }
 })();
 </script>
 </body>
