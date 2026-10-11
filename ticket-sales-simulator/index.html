@@ -1730,10 +1730,14 @@ body::after{
   }
   function parseAfterSalesPayment(raw){
     var value = String(raw).trim().toUpperCase();
-    if (value === 'CASH') return { type:'CASH', raw:value, label:FOP_LABEL.CASH };
+    if (value === 'CASH' || value === 'VND') return { type:'CASH', raw:value, label:FOP_LABEL.CASH };
     if (value === 'CK' || value === 'CHEQUE') return { type:'CHEQUE', raw:value, label:FOP_LABEL.CHEQUE };
     if (/^CC\d{11,19}(\/\d{4})?$/.test(value)) return { type:'CARD', raw:value, label:FOP_LABEL.CARD };
     return null;
+  }
+  function parsePostIssueFPCommand(command){
+    var match = command.match(/^FP(?:\s+(.+))?$/);
+    return match ? (match[1] || 'CASH') : null;
   }
   function doPostIssueFP(raw){
     var ticket = postIssueTicket();
@@ -1745,7 +1749,7 @@ body::after{
     }
     if (!service){ err('NO SERVICE FEE TO COLLECT — RUN SR <CODE>, THEN SR FEE FIRST'); return; }
     var payment = parseAfterSalesPayment(raw);
-    if (!payment){ err('FP INVALID — USE FP CASH, FP CK, OR FP CC<11–19 DIGITS>/<YYMM>'); return; }
+    if (!payment){ err('FP INVALID — USE FP, FP CASH/VND, FP CK, OR FP CC<11–19 DIGITS>/<YYMM>'); return; }
     service.payment = payment;
     service.paid = true;
     G.cash += service.fee;
@@ -1767,6 +1771,7 @@ body::after{
     });
     out('<span class="hl">FP ' + esc(payment.raw) + '</span>');
     ok('COLLECTED ' + money(service.fee) + ' VND FOR ' + service.code + ' · PNR ' + ticket.locator + ' · ' + payment.label);
+    if (G.awaitingNext) hint("PAYMENT RECORDED — GÕ 'NEXT' ĐỂ SANG KHÁCH KẾ TIẾP");
     blank();
   }
   function doSR(code){
@@ -3026,6 +3031,7 @@ body::after{
     if (!raw) return;
     msgTouched = false;
     var cmd = raw.toUpperCase();
+    var fpPayment = parsePostIssueFPCommand(cmd);
     if (/^(HIST|HISTORY|LIST SALES|SHOW HISTORY)$/.test(cmd.replace(/\s+/g, ' '))){
       showSalesHistoryInTerminal();
       return;
@@ -3051,7 +3057,8 @@ body::after{
     }
 
     // Sau khi xuất vé: chỉ cho tra cứu lại, thông tin, báo cáo hoặc sang khách kế tiếp
-    if (G.awaitingNext && !/^(RT|RD|TTK|EQ|WEA|DA|NEXT|N|HELP|HE|\?|CLS|CLEAR|RF|TJQ|TJD|SR|FP)/.test(cmd)){
+    if (G.awaitingNext && !/^(RT|RD|TTK|EQ|WEA|DA|NEXT|N|HELP|HE|\?|CLS|CLEAR|RF|TJQ|TJD|SR)/.test(cmd) &&
+        fpPayment === null){
       err("VÉ ĐÃ XUẤT — GÕ 'RT#<PNR>' ĐỂ XEM LẠI HOẶC 'NEXT' ĐỂ SANG KHÁCH KẾ TIẾP");
       blank();
       return;
@@ -3093,8 +3100,8 @@ body::after{
       doAP(raw.replace(/^AP\s*/i, ''));
     } else if (/^SR\s*([A-Z]{3,4})$/.test(cmd)){
       doSR(cmd.match(/^SR\s*([A-Z]{3,4})$/)[1]);
-    } else if (/^FP\s+(.+)$/.test(cmd)){
-      doPostIssueFP(raw.replace(/^FP\s*/i, ''));
+    } else if (fpPayment !== null){
+      doPostIssueFP(fpPayment);
     } else if (cmd === 'FXP'){
       doFXP();
     } else if (cmd === 'TQT'){
@@ -3246,7 +3253,7 @@ body::after{
     ['XK<LINE> / XE<LINE>',  'Huỷ / xoá một chặng đã giữ', 'XK1'],
     ['SO <AMOUNT>',          'Thu phí dịch vụ (gộp vào tổng khi tính giá)', 'SO150000'],
     ['FO <FORM>',            'Hình thức thanh toán', 'FO CASH'],
-    ['FP <FORM>',            'Thu phí dịch vụ hậu mãi cho vé đã xuất', 'FP CASH'],
+    ['FP [FORM]',            'Thu phí dịch vụ hậu mãi cho vé đã xuất (mặc định CASH; hỗ trợ VND, CK, CC...)', 'FP'],
     ['AP <PHONE>',           'Thêm liên hệ', 'AP 0912345678'],
     ['SR <CODE>',            'Yêu cầu dịch vụ đặc biệt (SSR)', 'SR CHML'],
     ['SR FEE',               'Ghi phí cho SSR hậu mãi sau khi xuất vé', 'SR FEE'],
