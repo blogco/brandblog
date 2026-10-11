@@ -1,3 +1,23 @@
 {
-  "awbs": []
+  "awbs": [
+    {
+      "awb": "TST-000001",
+      "recordId": "mv364gcr-0sktjyzz",
+      "shipper": "KIM / MINJUN",
+      "consignee": "LEE / JIHOON",
+      "origin": "ICN",
+      "destination": "SEL",
+      "date": "10NOV",
+      "flight": "SIM-C204",
+      "pieces": 3,
+      "weight": 250,
+      "volume": 1.2,
+      "specialHandling": [
+        "PER"
+      ],
+      "status": "RECEIVED",
+      "issuedAt": "2026-10-11T01:52:26.571Z",
+      "updatedAt": "2026-10-11T01:53:09.948Z"
+    }
+  ]
 }
