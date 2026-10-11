@@ -8,6 +8,7 @@
   <title>Cargo Terminal Simulator | BrandBlog</title>
   <link rel="icon" href="../static/images/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../static/css/cargo-terminal.css">
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js" defer></script>
   <script src="../static/js/cargo-terminal.js" defer></script>
 </head>
 <body class="cargo-terminal-page">
@@ -78,6 +79,7 @@
               <div class="shipment-field"><dt>Date</dt><dd id="statusDate" class="is-empty">—</dd></div>
               <div class="shipment-field"><dt>Flight line</dt><dd id="statusFlight" class="is-empty">—</dd></div>
               <div class="shipment-field"><dt>Shipper</dt><dd id="statusShipper" class="is-empty">—</dd></div>
+              <div class="shipment-field"><dt>Consignee</dt><dd id="statusConsignee" class="is-empty">—</dd></div>
               <div class="shipment-field"><dt>Cargo</dt><dd id="statusCargo" class="is-empty">—</dd></div>
               <div class="shipment-field"><dt>Special handling</dt><dd id="statusHandling" class="is-empty">—</dd></div>
               <div class="shipment-field"><dt>Test AWB</dt><dd id="statusAwb" class="is-empty">—</dd></div>
@@ -94,6 +96,15 @@
           </div>
         </section>
 
+        <section class="cargo-panel" aria-labelledby="historyHeading">
+          <div class="cargo-panel__head"><h2 id="historyHeading">AWB history sync</h2></div>
+          <div class="cargo-panel__body">
+            <p id="githubSyncStatus" class="github-sync-status" data-state="idle" role="status" aria-live="polite">Loading AWB history…</p>
+            <button id="githubSettings" class="github-settings" type="button">Configure GitHub sync</button>
+            <p class="cargo-notice">Synced AWB records are public in this repository; use fictional data only. History also saves in this browser. GitHub sync requires a fine-grained token with Contents: write access.</p>
+          </div>
+        </section>
+
         <section class="cargo-panel" aria-labelledby="noticeHeading">
           <div class="cargo-panel__head"><h2 id="noticeHeading">Training notice</h2></div>
           <div class="cargo-panel__body">
@@ -102,7 +113,111 @@
         </section>
       </aside>
     </div>
+
+    <section id="awbDocumentArea" class="awb-document-area" aria-label="Air waybill document" hidden>
+      <article class="awb-document">
+        <header class="awb-document__header">
+          <div class="awb-document__carrier">
+            <span class="awb-document__logo" aria-hidden="true">BB</span>
+            <div>
+              <p class="awb-document__eyebrow">BRANDBLOG CARGO · TRAINING CARRIER</p>
+              <h2>Air Waybill</h2>
+              <p class="awb-document__notice">SIMULATED DOCUMENT · NOT VALID FOR TRANSPORT</p>
+            </div>
+          </div>
+          <div class="awb-document__number">
+            <span>Air Waybill Number · Check Digit</span>
+            <strong data-awb-field="formattedNumber">—</strong>
+            <small>Fictional carrier prefix · check digit calculated from serial</small>
+          </div>
+        </header>
+
+        <div class="awb-document__parties">
+          <section class="awb-document__box">
+            <h3>Shipper's name and address</h3>
+            <p data-awb-field="shipper">—</p>
+            <p class="awb-document__blank">Address not captured in this training simulator</p>
+          </section>
+          <section class="awb-document__box">
+            <h3>Consignee's name and address</h3>
+            <p data-awb-field="consignee">—</p>
+            <p class="awb-document__blank">Address not captured in this training simulator</p>
+          </section>
+        </div>
+
+        <div class="awb-document__route">
+          <div><span>Airport of departure</span><strong data-awb-field="origin">—</strong></div>
+          <div class="awb-document__route-arrow" aria-hidden="true">→</div>
+          <div><span>Airport of destination</span><strong data-awb-field="destination">—</strong></div>
+          <div><span>Flight / date</span><strong data-awb-field="flight">—</strong></div>
+        </div>
+
+        <div class="awb-document__cargo">
+          <div class="awb-document__section-title">Handling information</div>
+          <p data-awb-field="handling">—</p>
+          <div class="awb-document__section-title">Nature and quantity of goods</div>
+          <p>GENERAL CARGO · TRAINING SIMULATION</p>
+        </div>
+
+        <table class="awb-document__table">
+          <thead>
+            <tr>
+              <th>Pieces</th>
+              <th>Gross weight</th>
+              <th>Volume</th>
+              <th>Declared value for carriage</th>
+              <th>Declared value for customs</th>
+              <th>Insurance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-awb-field="pieces">—</td>
+              <td data-awb-field="weight">—</td>
+              <td data-awb-field="volume">—</td>
+              <td>NVD</td>
+              <td>NCV</td>
+              <td>NOT REQUESTED</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="awb-document__footer">
+          <div class="awb-document__barcode">
+            <svg id="awbBarcode" role="img" aria-label="Barcode encoding AWB shipment details"></svg>
+            <span data-awb-field="barcodeText">—</span>
+          </div>
+          <div class="awb-document__status">
+            <span>Shipment status</span>
+            <strong data-awb-field="status">—</strong>
+            <span>Issue date / time</span>
+            <strong data-awb-field="issued">—</strong>
+          </div>
+        </div>
+        <p class="awb-document__disclaimer">Educational sample only. BrandBlog is not an airline or cargo carrier. This simulated document has no legal or operational validity.</p>
+        <div class="awb-document__actions">
+          <button id="printAwbButton" class="github-settings github-settings--primary" type="button">Print AWB</button>
+        </div>
+      </article>
+    </section>
   </main>
+
+  <dialog id="githubDialog" class="github-dialog" aria-labelledby="githubDialogTitle">
+    <form id="githubTokenForm" autocomplete="off">
+      <h2 id="githubDialogTitle">Configure GitHub history sync</h2>
+      <p>Enter a fine-grained GitHub personal access token with <code>Contents: write</code> access to <code>blogco/brandblog</code>. It is sent directly from this browser to GitHub and is never included in AWB records. Synced records are public, so use fictional data only.</p>
+      <label for="githubToken">Personal access token</label>
+      <input id="githubToken" name="token" type="password" autocomplete="new-password" placeholder="github_pat_…" spellcheck="false">
+      <label class="github-remember"><input id="githubTokenRemember" type="checkbox" checked> Remember token in this browser</label>
+      <p class="github-security-note">A token saved in localStorage can be accessed by scripts running on this site. Use the minimum repository scope, do not use an organization-wide token, and revoke it when no longer needed. Leave “Remember” unchecked to keep it only for this page session (the token is not saved for future sessions).</p>
+      <p id="githubTokenError" class="github-token-error" role="alert"></p>
+      <div class="github-dialog__actions">
+        <button id="clearGithubToken" type="button" class="github-settings" hidden>Remove saved token</button>
+        <button id="githubDialogCancel" type="button" class="github-settings">Cancel</button>
+        <button type="submit" class="github-settings github-settings--primary">Save &amp; sync</button>
+      </div>
+    </form>
+  </dialog>
 
   <footer class="cargo-footer">
     BrandBlog educational demo. The command patterns are simplified for learning and do not establish a real booking or transport document.

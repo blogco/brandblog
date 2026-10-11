@@ -12,9 +12,13 @@ AN10NOVICNSEL
 FFR
 SB1G250
 NM1KIM/MINJUN
+CN1LEE/JIHOON
 FD3/250/1.2
 SR PER
 FWB
+FWD TST-000001
+PRINT AWB TST-000001
+LIST AWB
 ET
 FSU
 TRK TST-000001
@@ -24,6 +28,21 @@ TRK TST-000001
 `SGN-ICN`. Availability is fictional. The terminal lists simulated line/class choices
 with Copy buttons. `FSU` advances through fixed training milestones; `HELP` or `?`
 shows syntax, `CLS` clears the transcript, and `NEW` starts a fresh shipment.
+
+Use `FWD[AWB]`, `RT[AWB]`, `VIEW AWB [number]`, or `SHOW AWB [number]` to
+retrieve an issued record; `LIST AWB` or `AWB LIST` lists all records. The
+`CN1LAST/FIRST` command records the consignee. AWBs persist in browser storage and
+can be synced to the public `content/data/cargo_history.json` file using a
+fine-grained GitHub token with Contents: write access to `blogco/brandblog`.
+Configure this in the GitHub sync panel. `SYNC` retries failed writes; offline
+records remain local and retry when connectivity returns. Do not use real
+shipment data or a privileged token.
+
+Issuing or retrieving an AWB shows its printable training document.
+`PRINT AWB [number]` or the document's **Print AWB** button opens the browser
+print dialog. The page renders a Code 128 barcode (JsBarcode) containing the AWB
+and shipment summary. Its carrier number/check digit is simulated; this is not an
+official IATA document or a valid transport document.
 
 AWB identifiers such as `TST-000001` are not valid transport documents. Do not use this
 simulator for real cargo operations.

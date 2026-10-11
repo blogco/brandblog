@@ -14,9 +14,13 @@ AN10NOVICNSEL
 FFR
 SB1G250
 NM1KIM/MINJUN
+CN1LEE/JIHOON
 FD3/250/1.2
 SR PER
 FWB
+FWD TST-000001
+PRINT AWB TST-000001
+LIST AWB
 ET
 FSU
 TRK TST-000001
@@ -27,6 +31,28 @@ TRK TST-000001
 have adjacent Copy buttons. `FSU` advances through a fixed sequence of fictional
 milestones. Use `HELP` or `?` for command syntax, `CLS` to clear the transcript, or
 `NEW` to start another shipment.
+
+Retrieve issued records with `FWD[AWB]`, `RT[AWB]`, `VIEW AWB [number]`, or
+`SHOW AWB [number]`; `LIST AWB` and `AWB LIST` show all issued records. Add a
+consignee before issue with `CN1LAST/FIRST`. AWBs are saved in browser storage
+immediately. To sync the shared history to `content/data/cargo_history.json` in
+`blogco/brandblog`, use **Configure GitHub sync** and provide a fine-grained
+personal access token with Contents: write permission for that repository. `SYNC`
+retries queued changes, and queued writes retry automatically when the browser
+comes back online. A missing token or network/API error leaves history in local
+browser storage and displays a warning.
+
+Issuing or viewing an AWB also displays a printable training document.
+`PRINT AWB [number]` opens the browser print dialog; the document's **Print AWB**
+button does the same. It includes a Code 128 barcode encoding the AWB and shipment
+summary (generated with JsBarcode), a simulated carrier number/check digit,
+shipment details, and NVD/NCV declared-value fields. It is a fictional educational
+sample, not an official IATA document or valid transport document.
+
+GitHub history is public because this is a public repository. Do not enter real
+shipment information or a privileged token. A token remembered in localStorage
+is accessible to scripts running on this site; use a narrowly scoped token and
+revoke it when no longer needed. The simulator never commits credentials.
 
 An AWB such as `TST-000001` is a test identifier, not a valid air waybill. Do not use
 this simulator to book, tender, track, or transport real cargo.

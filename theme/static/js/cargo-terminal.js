@@ -6,10 +6,33 @@
   const input = document.getElementById("commandInput");
   const quickCommands = document.getElementById("quickCommands");
   const copyNotice = document.getElementById("copyNotice");
+  const awbDocumentArea = document.getElementById("awbDocumentArea");
+  const printAwbButton = document.getElementById("printAwbButton");
+  const githubSyncStatus = document.getElementById("githubSyncStatus");
+  const githubSettings = document.getElementById("githubSettings");
+  const githubDialog = document.getElementById("githubDialog");
+  const githubTokenForm = document.getElementById("githubTokenForm");
+  const githubTokenInput = document.getElementById("githubToken");
+  const githubTokenRemember = document.getElementById("githubTokenRemember");
+  const githubTokenError = document.getElementById("githubTokenError");
+  const clearGithubToken = document.getElementById("clearGithubToken");
+  const githubDialogCancel = document.getElementById("githubDialogCancel");
 
-  if (!transcript || !form || !input || !quickCommands || !copyNotice) {
+  if (!transcript || !form || !input || !quickCommands || !copyNotice ||
+      !awbDocumentArea || !printAwbButton ||
+      !githubSyncStatus || !githubSettings || !githubDialog || !githubTokenForm ||
+      !githubTokenInput || !githubTokenRemember || !githubTokenError || !clearGithubToken || !githubDialogCancel) {
     throw new Error("Cargo terminal markup is incomplete.");
   }
+
+  const HISTORY_KEY = "cargo_simulator_awbs";
+  const PENDING_SYNC_KEY = "cargo_simulator_history_pending";
+  const TOKEN_KEY = "cargo_simulator_github_token";
+  const GITHUB_REPO = "blogco/brandblog";
+  const GITHUB_BRANCH = "main";
+  const GITHUB_PATH = "content/data/cargo_history.json";
+  const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
+  const GITHUB_RAW_URL = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${GITHUB_PATH}`;
 
   const routes = new Set(["ICNSEL", "ICNFRA", "ICNLAX", "HANSIN", "SGNICN"]);
   const specialHandlingCodes = new Set(["PER", "AVI", "DG", "COL", "EAP", "HUM", "ICE", "VAL"]);
@@ -27,6 +50,7 @@
     flights: [],
     selectedFlight: null,
     shipper: "",
+    consignee: "",
     cargo: null,
     handling: new Set(),
     awb: "",
@@ -35,6 +59,12 @@
     finalized: false,
     awbSequence: 1
   };
+  let issuedAwbs = [];
+  let syncInProgress = false;
+  let sessionGithubToken = "";
+  let historyReady = false;
+  let historyRevision = 0;
+  let displayedAwb = null;
 
   function addLine(text, type = "normal", copyValue = "") {
     const line = document.createElement("div");
@@ -57,6 +87,409 @@
 
     transcript.append(line);
     transcript.scrollTop = transcript.scrollHeight;
+  }
+
+  function setSyncStatus(text, stateName = "idle") {
+    githubSyncStatus.textContent = text;
+    githubSyncStatus.dataset.state = stateName;
+  }
+
+  function normalizeAwb(raw) {
+    if (!raw || typeof raw !== "object" || !/^TST-\d{6}$/.test(String(raw.awb || ""))) {
+      return null;
+    }
+    const issuedAt = String(raw.issuedAt || raw.issueDateTime || "");
+    const handling = Array.isArray(raw.specialHandling) ? raw.specialHandling : [];
+    return {
+      awb: String(raw.awb),
+      recordId: String(raw.recordId || ""),
+      shipper: String(raw.shipper || ""),
+      consignee: String(raw.consignee || ""),
+      origin: String(raw.origin || ""),
+      destination: String(raw.destination || ""),
+      date: String(raw.date || ""),
+      flight: String(raw.flight || ""),
+      pieces: Number(raw.pieces) || 0,
+      weight: Number(raw.weight) || 0,
+      volume: Number(raw.volume) || 0,
+      specialHandling: handling.map(String),
+      status: String(raw.status || "AWB ISSUED"),
+      issuedAt,
+      updatedAt: String(raw.updatedAt || issuedAt)
+    };
+  }
+
+  function mergeAwbs(...lists) {
+    const records = new Map();
+    for (const list of lists) {
+      if (!Array.isArray(list)) continue;
+      for (const raw of list) {
+        const record = normalizeAwb(raw);
+        if (!record) continue;
+        const previous = records.get(record.awb);
+        if (!previous || record.updatedAt >= previous.updatedAt) {
+          records.set(record.awb, record);
+        }
+      }
+    }
+    return [...records.values()].sort((a, b) => a.awb.localeCompare(b.awb));
+  }
+
+  function persistAwbs() {
+    try {
+      window.localStorage.setItem(HISTORY_KEY, JSON.stringify(issuedAwbs));
+    } catch (error) {
+      addLine(`LOCAL AWB HISTORY SAVE FAILED: ${error instanceof Error ? error.message : "browser storage unavailable"}`, "error");
+    }
+  }
+
+  function setSyncPending(pending) {
+    try {
+      if (pending) window.localStorage.setItem(PENDING_SYNC_KEY, "true");
+      else window.localStorage.removeItem(PENDING_SYNC_KEY);
+    } catch (error) {
+      addLine(`SYNC QUEUE SAVE FAILED: ${error instanceof Error ? error.message : "browser storage unavailable"}`, "error");
+    }
+  }
+
+  function isSyncPending() {
+    try {
+      return window.localStorage.getItem(PENDING_SYNC_KEY) === "true";
+    } catch (error) {
+      setSyncStatus("Browser storage unavailable · GitHub sync state unknown", "error");
+      return false;
+    }
+  }
+
+  function getGithubToken() {
+    try {
+      return window.localStorage.getItem(TOKEN_KEY) || sessionGithubToken;
+    } catch (error) {
+      return sessionGithubToken;
+    }
+  }
+
+  function saveCurrentAwb() {
+    if (!state.awb || !state.cargo || !state.selectedFlight) return;
+    const now = new Date().toISOString();
+    const existing = issuedAwbs.find((record) => record.awb === state.awb);
+    const record = normalizeAwb({
+      awb: state.awb,
+      recordId: existing ? existing.recordId : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
+      shipper: state.shipper,
+      consignee: state.consignee,
+      origin: state.route.slice(0, 3),
+      destination: state.route.slice(3),
+      date: state.date,
+      flight: state.selectedFlight.flight,
+      pieces: state.cargo.pieces,
+      weight: state.cargo.weight,
+      volume: state.cargo.volume,
+      specialHandling: [...state.handling],
+      status: state.status,
+      issuedAt: existing ? existing.issuedAt : now,
+      updatedAt: now
+    });
+    issuedAwbs = mergeAwbs(issuedAwbs, [record]);
+    historyRevision += 1;
+    persistAwbs();
+    setSyncPending(true);
+  }
+
+  function updateSequence() {
+    const highest = issuedAwbs.reduce((value, record) => {
+      const number = Number(record.awb.slice(4));
+      return Number.isFinite(number) ? Math.max(value, number) : value;
+    }, 0);
+    state.awbSequence = Math.max(state.awbSequence, highest + 1);
+  }
+
+  function sameAwbIssue(left, right) {
+    if (left.recordId && right.recordId) return left.recordId === right.recordId;
+    return left.issuedAt === right.issuedAt &&
+      left.shipper === right.shipper &&
+      left.consignee === right.consignee &&
+      left.origin === right.origin &&
+      left.destination === right.destination &&
+      left.date === right.date &&
+      left.flight === right.flight &&
+      left.pieces === right.pieces &&
+      left.weight === right.weight &&
+      left.volume === right.volume &&
+      left.specialHandling.join(",") === right.specialHandling.join(",");
+  }
+
+  function repairAwbCollisions(remoteAwbs) {
+    const remoteByAwb = new Map(remoteAwbs.map((record) => [record.awb, record]));
+    const occupied = new Set([...remoteAwbs, ...issuedAwbs].map((record) => record.awb));
+    const maxSequence = [...occupied].reduce((value, awb) => Math.max(value, Number(awb.slice(4)) || 0), 0);
+    state.awbSequence = Math.max(state.awbSequence, maxSequence + 1);
+    let repaired = false;
+
+    issuedAwbs = issuedAwbs.map((record) => {
+      const remoteRecord = remoteByAwb.get(record.awb);
+      if (!remoteRecord || sameAwbIssue(record, remoteRecord)) return record;
+      const previousAwb = record.awb;
+      let nextAwb = `TST-${String(state.awbSequence).padStart(6, "0")}`;
+      while (occupied.has(nextAwb)) {
+        state.awbSequence += 1;
+        nextAwb = `TST-${String(state.awbSequence).padStart(6, "0")}`;
+      }
+      occupied.add(nextAwb);
+      state.awbSequence += 1;
+      repaired = true;
+      if (state.awb === previousAwb) state.awb = nextAwb;
+      addLine(`AWB NUMBER COLLISION · ${previousAwb} already exists with different shipment details; this record was reassigned to ${nextAwb}.`, "warning");
+      return { ...record, awb: nextAwb, updatedAt: new Date().toISOString() };
+    });
+
+    if (repaired) {
+      historyRevision += 1;
+      persistAwbs();
+      setSyncPending(true);
+      refreshStatus();
+    }
+  }
+
+  function displayAwb(record) {
+    const issued = record.issuedAt ? new Date(record.issuedAt) : null;
+    const issueDateTime = issued && !Number.isNaN(issued.getTime()) ? issued.toLocaleString() : (record.issuedAt || "—");
+    const route = [record.origin || "—", record.destination || "—"].join(" → ");
+    const details = [
+      `AWB NUMBER     ${record.awb}`,
+      `SHIPPER        ${record.shipper || "NOT PROVIDED"}`,
+      `CONSIGNEE      ${record.consignee || "NOT PROVIDED"}`,
+      `ORIGIN/DEST.   ${route}`,
+      `FLIGHT         ${record.flight || "NOT PROVIDED"}`,
+      `PIECES         ${record.pieces || "—"}`,
+      `WEIGHT         ${record.weight ? `${record.weight} KG` : "—"}`,
+      `VOLUME         ${record.volume ? `${record.volume} M3` : "—"}`,
+      `SPECIAL HAND.  ${record.specialHandling.length ? record.specialHandling.join(", ") : "NONE"}`,
+      `STATUS         ${record.status}`,
+      `ISSUED         ${issueDateTime}`
+    ];
+    addLine(`AWB DETAILS · ${record.awb}`, "success");
+    for (const detail of details) addLine(detail);
+    renderAwbDocument(record);
+  }
+
+  function awbDocumentNumber(record) {
+    const digits = record.awb.match(/(\d+)$/)?.[1] || "0";
+    const serial = digits.padStart(7, "0").slice(-7);
+    const checkDigit = Number(serial) % 7;
+    return `999-${serial}-${checkDigit}`;
+  }
+
+  function renderAwbDocument(record) {
+    displayedAwb = record;
+    const barcodePayload = [
+      `AWB:${record.awb}`,
+      `NO:${awbDocumentNumber(record)}`,
+      `ROUTE:${record.origin}-${record.destination}`,
+      `FLT:${record.flight}`,
+      `PCS:${record.pieces}`,
+      `WT:${record.weight}KG`,
+      `VOL:${record.volume}M3`,
+      `SR:${record.specialHandling.join(",") || "NONE"}`
+    ].join("|");
+    const values = {
+      formattedNumber: awbDocumentNumber(record),
+      shipper: record.shipper || "NOT PROVIDED",
+      consignee: record.consignee || "NOT PROVIDED",
+      origin: record.origin || "—",
+      destination: record.destination || "—",
+      flight: `${record.flight || "—"} / ${record.date || "DATE NOT PROVIDED"}`,
+      handling: record.specialHandling.length ? record.specialHandling.join(" · ") : "NONE",
+      pieces: record.pieces ? `${record.pieces}` : "—",
+      weight: record.weight ? `${record.weight} KG` : "—",
+      volume: record.volume ? `${record.volume} M3` : "—",
+      status: record.status,
+      issued: record.issuedAt ? new Date(record.issuedAt).toLocaleString() : "—",
+      barcodeText: barcodePayload
+    };
+
+    for (const field of awbDocumentArea.querySelectorAll("[data-awb-field]")) {
+      field.textContent = values[field.dataset.awbField] || "—";
+    }
+    awbDocumentArea.hidden = false;
+    try {
+      if (typeof window.JsBarcode !== "function") {
+        throw new Error("Barcode library is unavailable.");
+      }
+      window.JsBarcode(document.getElementById("awbBarcode"), barcodePayload, {
+        format: "CODE128",
+        displayValue: false,
+        height: 48,
+        width: 1.35,
+        margin: 2,
+        lineColor: "#000000",
+        background: "#ffffff"
+      });
+    } catch (error) {
+      addLine(`AWB BARCODE UNAVAILABLE: ${error instanceof Error ? error.message : "barcode could not be generated"}. The AWB number and details are still printable.`, "warning");
+    }
+    awbDocumentArea.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function printAwb(number) {
+    const record = issuedAwbs.find((entry) => entry.awb === number.toUpperCase());
+    if (!record) {
+      addLine(`AWB NOT FOUND · ${number.toUpperCase()}. Use LIST AWB to see issued AWBs.`, "error");
+      return;
+    }
+    displayAwb(record);
+    window.print();
+  }
+
+  function viewAwb(number) {
+    const record = issuedAwbs.find((entry) => entry.awb === number.toUpperCase());
+    if (!record) {
+      addLine(`AWB NOT FOUND · ${number.toUpperCase()}. Use LIST AWB to see issued AWBs.`, "error");
+      return;
+    }
+    displayAwb(record);
+  }
+
+  function listAwbs() {
+    if (!issuedAwbs.length) {
+      addLine("NO ISSUED AWBS. Complete a shipment with FWB first.", "warning");
+      return;
+    }
+    addLine(`ISSUED AWBS · ${issuedAwbs.length}`, "success");
+    for (const record of issuedAwbs.slice().sort((a, b) => b.awb.localeCompare(a.awb))) {
+      addLine(`${record.awb} · ${record.origin || "---"}-${record.destination || "---"} · ${record.status}`, "normal", `VIEW AWB ${record.awb}`);
+    }
+  }
+
+  function decodeBase64Json(content) {
+    const binary = atob(content.replace(/\s/g, ""));
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    const data = JSON.parse(new TextDecoder().decode(bytes));
+    return Array.isArray(data) ? data : data.awbs;
+  }
+
+  function encodeBase64(text) {
+    const bytes = new TextEncoder().encode(text);
+    let binary = "";
+    for (let index = 0; index < bytes.length; index += 0x8000) {
+      binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
+    }
+    return btoa(binary);
+  }
+
+  async function loadGithubAwbs() {
+    const response = await fetch(`${GITHUB_RAW_URL}?t=${Date.now()}`, { cache: "no-store" });
+    if (response.status === 404) return [];
+    if (!response.ok) throw new Error(`GitHub history load failed (HTTP ${response.status}).`);
+    const data = await response.json();
+    return Array.isArray(data) ? data : data.awbs;
+  }
+
+  async function getGithubFile(token) {
+    const response = await fetch(`${GITHUB_API_URL}?ref=${encodeURIComponent(GITHUB_BRANCH)}`, {
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${token}`,
+        "X-GitHub-Api-Version": "2022-11-28"
+      },
+      cache: "no-store"
+    });
+    if (response.status === 404) return { awbs: [], sha: null };
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || `GitHub read failed (HTTP ${response.status}).`);
+    }
+    if (!result.content) throw new Error("GitHub history file has no readable content.");
+    return { awbs: decodeBase64Json(result.content), sha: result.sha };
+  }
+
+  async function syncHistory(report = false) {
+    const token = getGithubToken();
+    if (!token) {
+      setSyncStatus(isSyncPending() ? "Local history saved · GitHub token not configured" : "GitHub token not configured", "pending");
+      if (report) addLine("GITHUB SYNC UNAVAILABLE · configure GitHub sync to store history in the repository.", "warning");
+      return false;
+    }
+    if (!navigator.onLine) {
+      setSyncStatus("Offline · GitHub sync queued", "pending");
+      if (report) addLine("GITHUB SYNC QUEUED · offline; it will retry when connectivity returns.", "warning");
+      return false;
+    }
+    if (syncInProgress) return false;
+
+    syncInProgress = true;
+    setSyncStatus("Syncing AWB history to GitHub…", "syncing");
+    try {
+      let conflicts = 0;
+      while (true) {
+        const remote = await getGithubFile(token);
+        const remoteAwbs = mergeAwbs(remote.awbs);
+        repairAwbCollisions(remoteAwbs);
+        const merged = mergeAwbs(remoteAwbs, issuedAwbs);
+        const revision = historyRevision;
+        const body = {
+          message: `Update cargo AWB history (${merged.length} records)`,
+          content: encodeBase64(`${JSON.stringify({ awbs: merged }, null, 2)}\n`),
+          branch: GITHUB_BRANCH
+        };
+        if (remote.sha) body.sha = remote.sha;
+        const response = await fetch(GITHUB_API_URL, {
+          method: "PUT",
+          headers: {
+            Accept: "application/vnd.github+json",
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            "X-GitHub-Api-Version": "2022-11-28"
+          },
+          body: JSON.stringify(body)
+        });
+        if (response.ok) {
+          issuedAwbs = mergeAwbs(issuedAwbs, merged);
+          persistAwbs();
+          if (historyRevision !== revision) continue;
+          setSyncPending(false);
+          setSyncStatus(`Synced ${issuedAwbs.length} AWB${issuedAwbs.length === 1 ? "" : "s"} to GitHub`, "synced");
+          if (report) addLine(`GITHUB SYNC COMPLETE · ${issuedAwbs.length} AWB RECORDS STORED.`, "success");
+          return true;
+        }
+        const result = await response.json();
+        if ((response.status === 409 || response.status === 422) && conflicts < 2) {
+          conflicts += 1;
+          continue;
+        }
+        throw new Error(result.message || `GitHub write failed (HTTP ${response.status}).`);
+      }
+    } catch (error) {
+      setSyncPending(true);
+      setSyncStatus("Sync failed · AWB history remains saved locally", "error");
+      addLine(`GITHUB SYNC FAILED: ${error instanceof Error ? error.message : "network or API error"}. History is queued for retry.`, "warning");
+      return false;
+    } finally {
+      syncInProgress = false;
+    }
+  }
+
+  async function loadAwbHistory() {
+    try {
+      const raw = window.localStorage.getItem(HISTORY_KEY);
+      issuedAwbs = mergeAwbs(raw ? JSON.parse(raw) : []);
+    } catch (error) {
+      addLine(`LOCAL AWB HISTORY COULD NOT BE READ: ${error instanceof Error ? error.message : "invalid stored data"}`, "warning");
+    }
+    updateSequence();
+    if (issuedAwbs.length) addLine(`LOCAL AWB HISTORY LOADED · ${issuedAwbs.length} RECORDS.`, "muted");
+    try {
+      issuedAwbs = mergeAwbs(issuedAwbs, await loadGithubAwbs());
+      persistAwbs();
+      updateSequence();
+      if (issuedAwbs.length) addLine(`HISTORY READY · ${issuedAwbs.length} ISSUED AWB${issuedAwbs.length === 1 ? "" : "S"} AVAILABLE.`, "success");
+    } catch (error) {
+      addLine(`GITHUB HISTORY UNAVAILABLE: ${error instanceof Error ? error.message : "network error"}. Using local history.`, "warning");
+    }
+    historyReady = true;
+    setSyncStatus(isSyncPending() ? "Local history saved · GitHub sync pending" : "Local history ready · GitHub sync not configured", isSyncPending() ? "pending" : "idle");
+    updateSequence();
+    if (isSyncPending() && getGithubToken()) syncHistory();
   }
 
   function updateField(id, value) {
@@ -82,6 +515,7 @@
       state.selectedFlight ? `LINE ${state.selectedFlight.line} · ${state.selectedFlight.flight}` : ""
     );
     updateField("statusShipper", state.shipper);
+    updateField("statusConsignee", state.consignee);
     updateField(
       "statusCargo",
       state.cargo ? `${state.cargo.pieces} PCS · ${state.cargo.weight} KG · ${state.cargo.volume} M³` : ""
@@ -103,11 +537,16 @@
       ["Space request", "FFR"],
       ["Book line 1 · 250 kg", "SB1G250"],
       ["Add shipper", "NM1KIM/MINJUN"],
+      ["Add consignee", "CN1LEE/JIHOON"],
       ["Cargo details", "FD3/250/1.2"],
       ["Special handling", "SR PER"],
       ["Issue simulated AWB", "FWB"],
+      ["View AWB details", state.awb ? `FWD${state.awb}` : "LIST AWB"],
+      ["Print AWB", state.awb ? `PRINT AWB ${state.awb}` : "PRINT AWB TST-000001"],
+      ["List issued AWBs", "AWB LIST"],
       ["Tracking lookup", state.awb ? `TRK ${state.awb}` : "TRK TST-000001"],
       ["Update status", "FSU"],
+      ["Sync AWB history", "SYNC"],
       ["End transaction", "ET"],
       ["Start fresh shipment", "NEW"],
       ["Help", "HELP"]
@@ -149,12 +588,18 @@
     addLine("FFR                            request space on listed availability");
     addLine("SB[LINE][CLASS][WEIGHT_KG]     e.g. SB1G250");
     addLine("NM1[LAST]/[FIRST MIDDLE]       e.g. NM1KIM/MINJUN");
+    addLine("CN1[LAST]/[FIRST MIDDLE]       add the consignee, e.g. CN1LEE/JIHOON");
     addLine("FD[PIECES]/[WEIGHT_KG]/[VOLUME_M3] e.g. FD3/250/1.2");
     addLine("SR [PER|AVI|DG|COL|EAP|HUM|ICE|VAL]");
     addLine("FWB                            create a simulated AWB after booking details");
+    addLine("FWD[AWB] or RT[AWB]            retrieve full AWB details, e.g. FWD TST-000001");
+    addLine("VIEW AWB [number] / SHOW AWB [number]  display an issued AWB");
+    addLine("PRINT AWB [number]             display and print the simulated AWB document");
+    addLine("LIST AWB / AWB LIST             list all issued AWBs");
     addLine("ET or RF                       end the simulated transaction");
     addLine("TRK [AWB]                      look up this shipment after FWB");
     addLine("FSU                            advance one simulated status after ET / RF");
+    addLine("SYNC                           retry saving AWB history to GitHub");
     addLine("HELP or ?                      show this help · CLS clears transcript · NEW starts a fresh shipment");
     addLine("Training simulation only; no live airline inventory, GDS, or valid transport document.", "warning");
   }
@@ -270,6 +715,27 @@
     refreshStatus();
   }
 
+  function handleConsignee(command) {
+    const match = command.match(/^CN1\s*([^/]+)\/(.+)$/);
+    if (!match || !match[1].trim() || !match[2].trim()) {
+      addLine("FORMAT: CN1LAST/FIRST MIDDLE  e.g. CN1LEE/JIHOON", "error");
+      return;
+    }
+    const last = match[1].trim();
+    const first = match[2].trim();
+    if (`${last}/${first}`.length > 80) {
+      addLine("CONSIGNEE NAME IS TOO LONG (MAXIMUM 80 CHARACTERS).", "error");
+      return;
+    }
+    if (state.awb) {
+      addLine("CONSIGNEE DETAILS ARE LOCKED AFTER FWB.", "warning");
+      return;
+    }
+    state.consignee = `${last.toUpperCase()} / ${first.toUpperCase()}`;
+    addLine(`CONSIGNEE ADDED · ${state.consignee}`, "success");
+    refreshStatus();
+  }
+
   function handleCargo(command) {
     const match = command.match(/^FD\s*(\d+)\s*\/\s*(\d+(?:\.\d+)?)\s*(?:KG)?\s*\/\s*(\d+(?:\.\d+)?)\s*(?:M3)?$/i);
     if (!match) {
@@ -314,6 +780,10 @@
   }
 
   function handleAwb() {
+    if (!historyReady) {
+      addLine("AWB HISTORY IS STILL LOADING. Wait for the history message, then retry FWB.", "warning");
+      return;
+    }
     if (!state.selectedFlight) {
       addLine("BOOK SPACE FIRST WITH AN, THEN SB[line][class][weight].", "error");
       return;
@@ -338,8 +808,17 @@
     state.awb = `TST-${String(state.awbSequence).padStart(6, "0")}`;
     state.awbSequence += 1;
     state.status = "AWB ISSUED";
+    saveCurrentAwb();
     addLine(`SIMULATED AWB ISSUED · ${state.awb}`, "success", state.awb);
     addLine("Next: end this simulated transaction with ET or RF.", "muted", "ET");
+    if (getGithubToken()) {
+      syncHistory(true);
+    } else {
+      setSyncStatus("Local history saved · GitHub token not configured", "pending");
+      addLine("AWB SAVED LOCALLY. Configure GitHub sync to persist it to the repository.", "warning");
+    }
+    const issuedRecord = issuedAwbs.find((record) => record.awb === state.awb);
+    if (issuedRecord) displayAwb(issuedRecord);
     refreshStatus();
   }
 
@@ -359,17 +838,16 @@
   }
 
   function handleTracking(command) {
-    if (!state.awb) {
+    const requestedAwb = command.replace(/^TRK\s*/i, "").trim().toUpperCase();
+    const record = requestedAwb
+      ? issuedAwbs.find((entry) => entry.awb === requestedAwb)
+      : issuedAwbs.find((entry) => entry.awb === state.awb);
+    if (!record) {
       addLine("NO SIMULATED AWB YET. Complete booking details and enter FWB first.", "error");
       return;
     }
-    const requestedAwb = command.replace(/^TRK\s*/i, "").trim();
-    if (requestedAwb && requestedAwb.toUpperCase() !== state.awb) {
-      addLine(`AWB NOT FOUND IN THIS SIMULATION. Current test AWB: ${state.awb}.`, "error");
-      return;
-    }
-    addLine(`TRACKING · ${state.awb} · ${state.status}`, "success", `TRK ${state.awb}`);
-    if (!state.finalized) {
+    addLine(`TRACKING · ${record.awb} · ${record.status}`, "success", `TRK ${record.awb}`);
+    if (record.awb === state.awb && !state.finalized) {
       addLine("End the transaction with ET or RF before advancing shipment milestones.", "warning", "ET");
     }
   }
@@ -396,7 +874,9 @@
     }
     state.trackingIndex = nextIndex;
     setNextStatus(milestone.label);
+    saveCurrentAwb();
     addLine(`FSU ${milestone.code} · ${state.awb} · STATUS ${milestone.label}`, "success");
+    if (getGithubToken()) syncHistory();
   }
 
   function startNewShipment() {
@@ -405,6 +885,7 @@
     state.flights = [];
     state.selectedFlight = null;
     state.shipper = "";
+    state.consignee = "";
     state.cargo = null;
     state.handling.clear();
     state.awb = "";
@@ -437,12 +918,30 @@
       handleSell(command);
     } else if (command.startsWith("NM1")) {
       handleName(command);
+    } else if (command.startsWith("CN1")) {
+      handleConsignee(command);
     } else if (command.startsWith("FD")) {
       handleCargo(command);
     } else if (command.startsWith("SR")) {
       handleSpecialHandling(command);
     } else if (command === "FWB") {
       handleAwb();
+    } else if (/^(?:FWD|RT)\s+[A-Z0-9-]+$/.test(command) || /^(?:FWD|RT)[A-Z0-9-]+$/.test(command)) {
+      viewAwb(command.replace(/^(?:FWD|RT)\s*/, ""));
+    } else if (/^(?:FWD|RT)(?:\s|$)/.test(command)) {
+      addLine("FORMAT: FWD[AWB NUMBER] or RT[AWB NUMBER]  e.g. FWD TST-000001.", "error");
+    } else if (/^(?:VIEW|SHOW)\s+AWB(?:\s+|$)/.test(command)) {
+      const match = command.match(/^(?:VIEW|SHOW)\s+AWB\s+([A-Z0-9-]+)$/);
+      if (match) viewAwb(match[1]);
+      else addLine("FORMAT: VIEW AWB [NUMBER] or SHOW AWB [NUMBER].", "error");
+    } else if (/^PRINT\s+AWB(?:\s+|$)/.test(command)) {
+      const match = command.match(/^PRINT\s+AWB\s+([A-Z0-9-]+)$/);
+      if (match) printAwb(match[1]);
+      else addLine("FORMAT: PRINT AWB [NUMBER].", "error");
+    } else if (command === "LIST AWB" || command === "AWB LIST") {
+      listAwbs();
+    } else if (command === "SYNC") {
+      syncHistory(true);
     } else if (command === "ET" || command === "RF") {
       handleEndTransaction(command);
     } else if (/^TRK(?:\s|$)/.test(command)) {
@@ -496,8 +995,64 @@
     input.focus();
   });
 
+  githubSettings.addEventListener("click", () => {
+    githubTokenError.textContent = "";
+    githubTokenInput.value = "";
+    githubTokenRemember.checked = Boolean(getGithubToken());
+    clearGithubToken.hidden = !getGithubToken();
+    githubDialog.showModal();
+  });
+
+  printAwbButton.addEventListener("click", () => {
+    if (displayedAwb) window.print();
+  });
+
+  githubTokenForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const token = githubTokenInput.value.trim();
+    if (!token) {
+      githubTokenError.textContent = "Enter a GitHub personal access token.";
+      return;
+    }
+    try {
+      if (githubTokenRemember.checked) window.localStorage.setItem(TOKEN_KEY, token);
+      else {
+        window.localStorage.removeItem(TOKEN_KEY);
+        sessionGithubToken = token;
+      }
+    } catch (error) {
+      githubTokenError.textContent = `Could not save token: ${error instanceof Error ? error.message : "browser storage unavailable"}`;
+      return;
+    }
+    githubDialog.close();
+    githubTokenInput.value = "";
+    await syncHistory(true);
+  });
+
+  clearGithubToken.addEventListener("click", () => {
+    try {
+      window.localStorage.removeItem(TOKEN_KEY);
+      sessionGithubToken = "";
+      githubDialog.close();
+      setSyncStatus("GitHub token removed · history remains local", "pending");
+      addLine("GITHUB TOKEN REMOVED. Existing AWB history remains saved locally.", "muted");
+    } catch (error) {
+      githubTokenError.textContent = `Could not remove token: ${error instanceof Error ? error.message : "browser storage unavailable"}`;
+    }
+  });
+
+  githubDialog.addEventListener("click", (event) => {
+    if (event.target === githubDialog) githubDialog.close();
+  });
+  githubDialogCancel.addEventListener("click", () => githubDialog.close());
+
+  window.addEventListener("online", () => {
+    if (isSyncPending()) syncHistory(true);
+  });
+
   addLine("AMADEUS CARGO TRAINING TERMINAL · SESSION READY", "success");
   addLine("SIMULATED DATA ONLY — THIS IS NOT CONNECTED TO ANY AIRLINE OR GDS.", "warning");
   addLine("Type HELP or ? to see command syntax. Start with AN10NOVICNSEL.", "muted", "AN10NOVICNSEL");
   refreshStatus();
+  loadAwbHistory();
 })();
