@@ -28,8 +28,10 @@ COPYRIGHT_YEAR = datetime.now().year
 # Paths
 # ---------------------------------------------------------------------------
 PATH = "content"
-PAGE_PATHS = ["pages"]
-ARTICLE_PATHS = ["posts"]
+# Keep the live deployment focused on the standalone simulator and hide the
+# editorial blog experience from the published site.
+PAGE_PATHS = []
+ARTICLE_PATHS = []
 # "cargo-simulator/index.html" is the terminal training app served at
 # /cargo-simulator/. Its shared CSS and JavaScript are emitted from theme/static.
 # Only the HTML is listed here so the documentation is not published with the site.
@@ -94,18 +96,11 @@ GZIP = False
 # Navigation
 # ---------------------------------------------------------------------------
 MENUITEMS = [
-    ("Home", ""),
-    ("News", "news/"),
-    ("Branding", "branding/"),
-    ("Từ điển Cargo", "cargo-dictionary/"),
-    ("Cargo Simulator", "cargo-simulator/"),
     ("Bán vé máy bay", "ticket-sales-simulator/"),
-    ("Pastenote", "pastenote/"),
 ]
 
 NAV_UTILITY = [
-    ("News & Insights", "news/"),
-    ("Contact", "branding/#contact"),
+    ("Bán vé máy bay", "ticket-sales-simulator/"),
 ]
 
 SOCIAL = [
@@ -117,39 +112,9 @@ SOCIAL = [
 # Footer link zones (mirrors the reference site's multi-column footer)
 FOOTER_COLUMNS = [
     (
-        "Explore",
+        "Public access",
         [
-            ("Home", ""),
-            ("News & Insights", "news/"),
-            ("Branding", "branding/"),
-            ("Cargo Simulator", "cargo-simulator/"),
             ("Bán vé máy bay", "ticket-sales-simulator/"),
-            ("Pastenote", "pastenote/"),
-        ],
-    ),
-    (
-        "Topics",
-        [
-            ("Corporate", "news/"),
-            ("Renewables", "news/"),
-            ("Financial Results", "news/"),
-            ("Innovation", "news/"),
-        ],
-    ),
-    (
-        "Resources",
-        [
-            ("Media Releases", "news/"),
-            ("Insights & Stories", "news/"),
-            ("Email Alerts", "branding/#subscribe"),
-        ],
-    ),
-    (
-        "Legal",
-        [
-            ("Privacy Statement", "branding/"),
-            ("Terms of Use", "branding/"),
-            ("Cookie Policy", "branding/"),
         ],
     ),
 ]

@@ -49,16 +49,29 @@ jobs:
       - name: Build site with Pelican
         run: pelican content -s publishconf.py -o output
 
-      # ---- Bundled mini games ---------------------------------------------
-      # *-simulator/ folders live outside content/, so Pelican ignores them.
-      # Copy every simulator folder into the published tree so it ships live.
-      - name: Copy simulator games into the published site
+      # ---- Public landing page -------------------------------------------
+      # Keep the published site focused on the requested simulator page and hide
+      # the rest of the editorial blog from the live deployment.
+      - name: Copy the public simulator into the published site
         run: |
-          for d in *-simulator; do
-            [ -d "$d" ] || continue
-            mkdir -p "output/$d"
-            cp -R "$d/." "output/$d/"
-          done
+          if [ -d "ticket-sales-simulator" ]; then
+            mkdir -p "output/ticket-sales-simulator"
+            cp -R "ticket-sales-simulator/." "output/ticket-sales-simulator/"
+          fi
+
+          cat > output/index.html <<'EOF'
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8">
+              <meta http-equiv="refresh" content="0; url=./ticket-sales-simulator/">
+              <title>Redirecting…</title>
+            </head>
+            <body>
+              <p>Redirecting to <a href="./ticket-sales-simulator/">ticket-sales-simulator</a>…</p>
+            </body>
+          </html>
+          EOF
 
       # ---- Publish --------------------------------------------------------
       - name: Deploy to GitHub Pages
