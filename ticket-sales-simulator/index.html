@@ -293,6 +293,18 @@ body::after{
 .workflow__after-sales-note{margin:8px 0;color:var(--dim);font-size:.64rem;line-height:1.4}
 .workflow__after-sales-copy{margin:2px 0 8px;padding:6px 10px;color:var(--bg);background:var(--cyan);border:1px solid var(--cyan);font:inherit;font-size:.7rem;font-weight:700;cursor:pointer}
 .workflow__after-sales-copy:disabled{opacity:.4;cursor:not-allowed}
+.workflow__history{margin-top:16px;padding-top:12px;border-top:1px solid rgba(0,255,255,.2)}
+.workflow__history h3{margin:0 0 8px;color:var(--cyan);font-size:.78rem;letter-spacing:.06em}
+.workflow__history-help,.workflow__history-status{margin:6px 0;color:var(--dim);font-size:.64rem;line-height:1.45}
+.workflow__history-status.is-error{color:var(--red)}
+.workflow__history-token{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
+.workflow__history-token input{min-width:0;padding:7px 8px;color:var(--white);background:var(--bg);border:1px solid rgba(0,255,255,.28);font:inherit;font-size:.68rem}
+.workflow__history-token button{padding:5px 8px;color:var(--cyan);background:transparent;border:1px solid rgba(0,255,255,.32);font:inherit;font-size:.64rem;cursor:pointer}
+.workflow__history-list{display:grid;gap:7px;margin:8px 0 0;padding:0;list-style:none}
+.workflow__history-item{padding:8px;border:1px solid rgba(0,255,255,.14);background:rgba(0,0,0,.16)}
+.workflow__history-item strong{display:block;overflow-wrap:anywhere;color:var(--white);font-size:.69rem}
+.workflow__history-item span{display:block;margin-top:3px;color:var(--dim);font-size:.62rem}
+.workflow__history-empty{color:var(--dim);font-size:.66rem}
 @media (max-width:480px){
   .workflow__body{padding-inline:12px}
   .workflow__route-controls{grid-template-columns:minmax(0,1fr) 74px}
@@ -390,6 +402,18 @@ body::after{
       <button type="button" id="workflowAfterSalesCopyAll" class="workflow__after-sales-copy" disabled>Copy SSR steps</button>
       <ol id="workflowAfterSalesCommands" class="workflow__commands"></ol>
     </section>
+    <section class="workflow__history" aria-labelledby="workflowHistoryTitle">
+      <h3 id="workflowHistoryTitle">HISTORY</h3>
+      <p class="workflow__history-help">Search commands: HIST · HISTORY · LIST SALES · SHOW HISTORY</p>
+      <label class="workflow__field workflow__field--wide" for="workflowHistoryToken">GitHub token for redacted sync (this tab only)
+        <div class="workflow__history-token">
+          <input id="workflowHistoryToken" type="password" autocomplete="off" placeholder="Fine-grained token with repository Contents access">
+          <button type="button" id="workflowHistoryTokenSave">Use token</button>
+        </div>
+      </label>
+      <p id="workflowHistoryStatus" class="workflow__history-status" role="status" aria-live="polite">Loading history…</p>
+      <ul id="workflowHistoryList" class="workflow__history-list"></ul>
+    </section>
     <div id="workflowRoutes" class="workflow__routes"></div>
     <ol id="workflowCommands" class="workflow__commands"></ol>
     <p id="workflowMessage" class="workflow__message" role="status" aria-live="polite"></p>
@@ -419,6 +443,10 @@ body::after{
   var workflowPaymentInput = document.getElementById('workflowPayment');
   var workflowAfterSalesCommandsEl = document.getElementById('workflowAfterSalesCommands');
   var workflowAfterSalesCopyAllButton = document.getElementById('workflowAfterSalesCopyAll');
+  var workflowHistoryTokenInput = document.getElementById('workflowHistoryToken');
+  var workflowHistoryTokenSaveButton = document.getElementById('workflowHistoryTokenSave');
+  var workflowHistoryStatusEl = document.getElementById('workflowHistoryStatus');
+  var workflowHistoryListEl = document.getElementById('workflowHistoryList');
   var workflowRoutesEl = document.getElementById('workflowRoutes');
   var workflowCommandsEl = document.getElementById('workflowCommands');
   var workflowMessageEl = document.getElementById('workflowMessage');
@@ -435,6 +463,14 @@ body::after{
   var postIssueLocator = '';
   var postIssueFeeAmount = 150000;
   var postIssuePaymentDetails = 'CASH';
+  var SALES_HISTORY_KEY = 'ticketSalesHistory';
+  var GITHUB_HISTORY_TOKEN_KEY = 'ticketSalesHistoryGithubToken';
+  var GITHUB_HISTORY_URL = 'https://api.github.com/repos/blogco/brandblog/contents/ticket-sales-simulator/sales_history.json';
+  var localSalesHistory = [];
+  var remoteSalesHistory = [];
+  var salesHistorySyncBusy = false;
+  var salesHistorySyncQueued = [];
+  var salesHistoryLoadSequence = 0;
 
   function esc(s){
     return String(s).replace(/[&<>"']/g, function(c){
@@ -568,6 +604,238 @@ body::after{
   }
   function saveSalesRecords(){
     try { localStorage.setItem(SR_KEY, JSON.stringify(salesRecords)); } catch (e) {}
+  }
+
+  function salesHistoryStatus(message, isError){
+    workflowHistoryStatusEl.textContent = message;
+    workflowHistoryStatusEl.classList.toggle('is-error', !!isError);
+  }
+
+  function normalizeLocalSale(record){
+    if (!record || typeof record !== 'object' || typeof record.id !== 'string' ||
+        typeof record.timestamp !== 'string') return null;
+    return {
+      id: record.id,
+      timestamp: record.timestamp,
+      status: 'ISSUED',
+      pnr: String(record.pnr || ''),
+      passengerName: String(record.passengerName || ''),
+      ticketNo: String(record.ticketNo || '')
+    };
+  }
+
+  function normalizeRemoteSale(record){
+    if (!record || typeof record !== 'object' || typeof record.id !== 'string' ||
+        typeof record.timestamp !== 'string') return null;
+    return {
+      id: record.id,
+      timestamp: record.timestamp,
+      status: 'ISSUED'
+    };
+  }
+
+  function loadLocalSalesHistory(){
+    try {
+      var raw = localStorage.getItem(SALES_HISTORY_KEY);
+      var stored = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(stored)) throw new Error('Sales history data must be an array.');
+      localSalesHistory = stored.map(normalizeLocalSale).filter(Boolean);
+    } catch (error) {
+      localSalesHistory = [];
+      salesHistoryStatus('Could not load browser sales history: ' + error.message, true);
+    }
+  }
+
+  function persistLocalSalesHistory(){
+    try {
+      localStorage.setItem(SALES_HISTORY_KEY, JSON.stringify(localSalesHistory));
+      return true;
+    } catch (error) {
+      salesHistoryStatus('Sale issued, but browser history could not be saved: ' + error.message, true);
+      return false;
+    }
+  }
+
+  function salesHistoryId(){
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+    return String(Date.now()) + '-' + String(Math.floor(Math.random() * 0x100000000));
+  }
+
+  function formatSalesHistoryDate(value){
+    var date = new Date(value);
+    return Number.isNaN(date.getTime()) ? 'Unknown date' : date.toLocaleString();
+  }
+
+  function renderSalesHistory(){
+    var merged = Object.create(null);
+    remoteSalesHistory.forEach(function(record){ merged[record.id] = record; });
+    localSalesHistory.forEach(function(record){ merged[record.id] = record; });
+    var records = Object.keys(merged).map(function(id){ return merged[id]; });
+    records.sort(function(a, b){ return Date.parse(b.timestamp) - Date.parse(a.timestamp); });
+    workflowHistoryListEl.replaceChildren();
+    if (!records.length){
+      var empty = workflowNode('li', 'workflow__history-empty', 'No issued sales found.');
+      workflowHistoryListEl.appendChild(empty);
+      return;
+    }
+    records.forEach(function(record){
+      var item = workflowNode('li', 'workflow__history-item');
+      var title = record.pnr && record.passengerName ?
+        record.pnr + ' · ' + record.passengerName :
+        'PNR and passenger details redacted';
+      item.appendChild(workflowNode('strong', '', title));
+      var details = formatSalesHistoryDate(record.timestamp) + ' · ' + record.status;
+      if (record.ticketNo) details += ' · Ticket ' + record.ticketNo;
+      item.appendChild(workflowNode('span', '', details));
+      workflowHistoryListEl.appendChild(item);
+    });
+  }
+
+  function decodeGithubHistory(content){
+    var binary = atob(String(content || '').replace(/\s/g, ''));
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+
+  function encodeGithubHistory(data){
+    var bytes = new TextEncoder().encode(JSON.stringify(data, null, 2) + '\n');
+    var binary = '';
+    for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }
+
+  function githubHistoryHeaders(token){
+    var headers = { Accept:'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' };
+    if (token) headers.Authorization = 'Bearer ' + token;
+    return headers;
+  }
+
+  async function fetchGithubHistory(token){
+    var response = await fetch(GITHUB_HISTORY_URL + '?ref=main', {
+      headers: githubHistoryHeaders(token),
+      cache: 'no-store'
+    });
+    if (response.status === 404) return { records:[], sha:null };
+    var result = await response.json();
+    if (!response.ok) throw new Error(result.message || 'GitHub returned HTTP ' + response.status);
+    if (!result || typeof result.content !== 'string') throw new Error('GitHub history file has no content.');
+    var decoded = decodeGithubHistory(result.content);
+    if (!decoded || decoded.version !== 1 || !Array.isArray(decoded.sales)) {
+      throw new Error('GitHub history file has an unsupported format.');
+    }
+    return {
+      records: decoded.sales.map(normalizeRemoteSale).filter(Boolean),
+      sha: result.sha || null
+    };
+  }
+
+  async function loadGithubSalesHistory(){
+    var sequence = ++salesHistoryLoadSequence;
+    try {
+      var token = sessionStorage.getItem(GITHUB_HISTORY_TOKEN_KEY) || '';
+      var result = await fetchGithubHistory(token);
+      if (sequence !== salesHistoryLoadSequence) return;
+      remoteSalesHistory = result.records;
+      renderSalesHistory();
+      salesHistoryStatus(localSalesHistory.length ?
+        'Showing browser details and redacted GitHub history.' :
+        'GitHub history loaded. PNR, passenger, ticket, and APIS details are not stored there.');
+    } catch (error) {
+      if (sequence !== salesHistoryLoadSequence) return;
+      renderSalesHistory();
+      salesHistoryStatus('GitHub history could not be loaded: ' + error.message, true);
+    }
+  }
+
+  async function syncSaleToGithub(record){
+    var token;
+    try { token = sessionStorage.getItem(GITHUB_HISTORY_TOKEN_KEY) || ''; }
+    catch (error) {
+      salesHistoryStatus('Could not read this-tab GitHub token: ' + error.message, true);
+      return;
+    }
+    if (!token){
+      salesHistoryStatus('Sale saved in this browser. Add a session token to sync redacted history to GitHub.');
+      return;
+    }
+    if (salesHistorySyncBusy){
+      salesHistorySyncQueued.push(record);
+      return;
+    }
+    salesHistorySyncBusy = true;
+    try {
+      var redacted = { id:record.id, timestamp:record.timestamp, status:'ISSUED' };
+      for (var attempt = 0; attempt < 3; attempt++){
+        var current = await fetchGithubHistory(token);
+        var records = current.records.filter(function(item){ return item.id !== record.id; });
+        records.push(redacted);
+        var body = {
+          message: 'Record redacted ticket sale history',
+          content: encodeGithubHistory({ version:1, sales:records }),
+          branch: 'main'
+        };
+        if (current.sha) body.sha = current.sha;
+        var response = await fetch(GITHUB_HISTORY_URL, {
+          method:'PUT',
+          headers:Object.assign(githubHistoryHeaders(token), { 'Content-Type':'application/json' }),
+          body:JSON.stringify(body)
+        });
+        var result = await response.json();
+        if (response.status === 409 && attempt < 2) continue;
+        if (!response.ok) throw new Error(result.message || 'GitHub returned HTTP ' + response.status);
+        salesHistoryLoadSequence++;
+        remoteSalesHistory = records;
+        renderSalesHistory();
+        salesHistoryStatus('Redacted sale history synced to GitHub. Passenger and ticket details remain browser-only.');
+        return;
+      }
+      throw new Error('GitHub history changed during each sync attempt. Retry the sale history sync.');
+    } catch (error) {
+      salesHistoryStatus('Sale saved in this browser, but GitHub sync failed: ' + error.message, true);
+    } finally {
+      salesHistorySyncBusy = false;
+      if (salesHistorySyncQueued.length){
+        var queued = salesHistorySyncQueued.shift();
+        syncSaleToGithub(queued);
+      }
+    }
+  }
+
+  function recordIssuedSale(ticketNo){
+    var record = {
+      id: salesHistoryId(),
+      timestamp: new Date().toISOString(),
+      status: 'ISSUED',
+      pnr: pnr.locator,
+      passengerName: cust.pax.map(function(passenger){ return passenger.canon; }).join(', '),
+      ticketNo: ticketNo
+    };
+    localSalesHistory.unshift(record);
+    persistLocalSalesHistory();
+    renderSalesHistory();
+    syncSaleToGithub(record);
+  }
+
+  function showSalesHistoryInTerminal(){
+    out('<span class="hl">HISTORY</span>');
+    var records = Object.create(null);
+    remoteSalesHistory.forEach(function(record){ records[record.id] = record; });
+    localSalesHistory.forEach(function(record){ records[record.id] = record; });
+    var rows = Object.keys(records).map(function(id){ return records[id]; });
+    rows.sort(function(a, b){ return Date.parse(b.timestamp) - Date.parse(a.timestamp); });
+    if (!rows.length){
+      hint('NO ISSUED SALES IN HISTORY');
+      blank();
+      return;
+    }
+    rows.forEach(function(record){
+      var locator = record.pnr || '[REDACTED]';
+      var passenger = record.passengerName || '[REDACTED]';
+      out('  <span class="am">' + esc(locator) + '</span>  ' + esc(passenger) + '  ' +
+        '<span class="dim">' + esc(formatSalesHistoryDate(record.timestamp)) + ' · ' + esc(record.status) + '</span>', 'pre');
+    });
+    blank();
   }
 
   /* ==================================================================
@@ -2314,6 +2582,7 @@ body::after{
       priced: pnr.priced,
       classLabel: classLabel
     });
+    recordIssuedSale(ticketNo);
 
     // ghi chứng từ bán vé vào sổ sales reports (localStorage)
     addSalesRecord({
@@ -2757,6 +3026,10 @@ body::after{
     if (!raw) return;
     msgTouched = false;
     var cmd = raw.toUpperCase();
+    if (/^(HIST|HISTORY|LIST SALES|SHOW HISTORY)$/.test(cmd.replace(/\s+/g, ' '))){
+      showSalesHistoryInTerminal();
+      return;
+    }
 
     // thời gian trôi theo thao tác (báo cáo chỉ để tra cứu — không tiêu tốn thời gian game)
     var isReport = /^(TJQ|TJD)/.test(cmd);
@@ -3133,6 +3406,19 @@ body::after{
     postIssuePaymentDetails = workflowPaymentInput.value;
     workflowBuildAfterSalesSteps();
   });
+  workflowHistoryTokenSaveButton.addEventListener('click', function(){
+    var token = workflowHistoryTokenInput.value.trim();
+    try {
+      if (token) sessionStorage.setItem(GITHUB_HISTORY_TOKEN_KEY, token);
+      else sessionStorage.removeItem(GITHUB_HISTORY_TOKEN_KEY);
+      workflowHistoryTokenInput.value = '';
+      salesHistoryStatus(token ? 'Session token saved for this tab. Loading GitHub history…' :
+        'Session token cleared. Existing browser history is unchanged.');
+      loadGithubSalesHistory();
+    } catch (error) {
+      salesHistoryStatus('Could not save the session token: ' + error.message, true);
+    }
+  });
   workflowCopyAllButton.addEventListener('click', function(){
     var commands = [];
     for (var i=0;i<workflowSteps.length;i++){
@@ -3168,6 +3454,9 @@ body::after{
     workflowToggle.setAttribute('aria-expanded', 'true');
   }
 
+  loadLocalSalesHistory();
+  renderSalesHistory();
+  loadGithubSalesHistory();
   boot();
   input.focus();
   notifyWorkflowState();

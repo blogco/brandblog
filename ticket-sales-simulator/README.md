@@ -27,6 +27,20 @@ cũng được mô phỏng theo chuẩn Amadeus.
 
 Toàn bộ HTML, CSS, JavaScript nằm trong một file `index.html` duy nhất.
 
+### Lịch sử vé đã xuất
+
+Mỗi lần `TTP` phát hành vé thành công, simulator lưu PNR, tên hành khách và số vé vào
+`localStorage` của trình duyệt. APIS không được sao chép vào mục lịch sử. Trong **AMADEUS
+WORKFLOW → HISTORY**, lịch sử cục bộ hiển thị chi tiết; gõ `HIST`, `HISTORY`, `LIST SALES`
+hoặc `SHOW HISTORY` để xem trong terminal.
+
+Để đồng bộ giữa các trình duyệt, nhập fine-grained GitHub token có quyền **Contents: Read and
+write** trên `blogco/brandblog` vào HISTORY. Token chỉ giữ trong `sessionStorage` của tab và
+cần nhập lại khi mở phiên mới. `ticket-sales-simulator/sales_history.json` là file công khai;
+chỉ lưu ID ngẫu nhiên, thời điểm phát hành và trạng thái. PNR, tên hành khách, số vé và APIS
+không được gửi lên GitHub. Lịch sử GitHub đã đồng bộ chỉ hiển thị trạng thái redacted khi
+không có bản chi tiết trong trình duyệt hiện tại.
+
 ### Gợi ý quy trình bán vé
 
 Mở **[ BÁN VÉ ]** trên thanh công cụ để xem bảng lệnh được tạo từ hành khách và hành trình
