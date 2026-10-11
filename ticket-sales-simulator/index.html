@@ -3652,6 +3652,253 @@ body::after{
   }
   window.__pickIssue = resolveIssue;
 
+  var flightOps = {
+    flight: {
+      operator:'TNHH HUNG HA AIRWAYS', reg:'VN-A001', flightNo:'HH001',
+      date:'15NOV', dep:'SGN', arr:'BKK', routing:'SGN-BKK', pax:0
+    },
+    crew: []
+  };
+
+  function flightOpsCrewText(){
+    if (!flightOps.crew.length) return '  (Chưa nạp — dùng CREW <data>)';
+    return flightOps.crew.map(function(member, index){
+      return '  ' + padL(String(index + 1), 2) + '. ' +
+        padR(member.name, 24) + ' ' + padR(member.role, 10) + ' ' + member.pass;
+    }).join('\n');
+  }
+
+  function flightOpsGeneralDeclaration(){
+    var f = flightOps.flight;
+    return [
+      '============================================================',
+      '              GENERAL DECLARATION (OUTWARD/INWARD)',
+      '============================================================',
+      'Operator ............... ' + f.operator,
+      'Nationality/Reg ........ ' + f.reg,
+      'Flight No. ............. ' + f.flightNo,
+      'Date ................... ' + f.date,
+      'Departure .............. ' + f.dep,
+      'Arrival ................ ' + f.arr,
+      'Routing ................ ' + f.routing,
+      '------------------------------------------------------------',
+      'NAMES OF CREW:',
+      flightOpsCrewText(),
+      '------------------------------------------------------------',
+      'Number of Passengers ... ' + f.pax,
+      'Declaration of Health .. NIL',
+      'Disinsecting ........... NIL',
+      '------------------------------------------------------------',
+      'SIGNATURE: ______________________',
+      '           Pilot-in-Command',
+      '============================================================'
+    ].join('\n');
+  }
+
+  function flightOpsManifest(){
+    var f = flightOps.flight;
+    return [
+      '============================================================',
+      '              LOADING MANIFEST / LOAD REPORT',
+      '============================================================',
+      'Station ......... ' + f.dep,
+      'Flight .......... ' + f.flightNo,
+      'Date ............ ' + f.date,
+      'Aircraft ID ..... ' + f.reg,
+      '------------------------------------------------------------',
+      'PASSENGERS ...... ' + f.pax + ' pax',
+      '  Y ............. ' + f.pax + '    C ............. 0    F ............. 0',
+      '------------------------------------------------------------',
+      'BAGGAGE ......... 0 kiện / 0 kg',
+      'CARGO ........... 0 kiện / 0 kg',
+      '------------------------------------------------------------',
+      'CREW ............ ' + flightOps.crew.length + ' người',
+      '  ' + (flightOps.crew.map(function(member){ return member.name; }).join(', ') || '—'),
+      '------------------------------------------------------------',
+      'GATE AGENT ...... ______________',
+      'RAMP AGENT ...... ______________',
+      '============================================================'
+    ].join('\n');
+  }
+
+  function flightOpsBriefing(){
+    var f = flightOps.flight;
+    return [
+      '============================================================',
+      '              FLIGHT INSTRUCTION / BRIEFING',
+      '============================================================',
+      'Flight .......... ' + f.flightNo,
+      'Route ........... ' + f.routing,
+      'Date ............ ' + f.date,
+      '------------------------------------------------------------',
+      'ALTITUDE ........ FL350',
+      'FUEL ............ 12,500 kg',
+      'WEATHER ......... CAVOK',
+      'NOTAMs .......... (Không có)',
+      '------------------------------------------------------------',
+      'SPECIAL:',
+      '  - Kiểm tra APIS trước khởi hành.',
+      '  - Xác nhận pax với Ground Staff.',
+      '  - Liên lạc Dispatch nếu có thay đổi.',
+      '------------------------------------------------------------',
+      'PIC SIGNATURE ... ______________',
+      '============================================================'
+    ].join('\n');
+  }
+
+  function printFlightOps(title, pages){
+    var printWindow = window.open('', '_blank');
+    if (!printWindow){
+      err('BỊ CHẶN CỬA SỔ IN — CHO PHÉP POP-UP RỒI THỬ LẠI');
+      return false;
+    }
+    var pageMarkup = pages.map(function(page, index){
+      return '<section class="page' + (index ? ' page--break' : '') + '"><pre>' +
+        esc(page) + '</pre></section>';
+    }).join('');
+    printWindow.document.write(
+      '<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>' +
+      esc(title) + '</title><style>' +
+      'body{font:11px/1.35 "Courier New",monospace;color:#111;margin:0}' +
+      '.page{padding:12mm}.page--break{break-before:page;page-break-before:always}' +
+      'pre{white-space:pre-wrap;margin:0}@page{margin:8mm}' +
+      '</style></head><body>' + pageMarkup + '</body></html>'
+    );
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    return true;
+  }
+
+  function setFlightOpsField(key, value){
+    var normalizedKey = key.toLowerCase();
+    var fieldByKey = {
+      operator:'operator', reg:'reg', flightno:'flightNo', date:'date',
+      dep:'dep', arr:'arr', routing:'routing', pax:'pax'
+    };
+    var field = fieldByKey[normalizedKey];
+    if (!field) return 'Trường không hợp lệ. Dùng operator, reg, flightNo, date, dep, arr, routing hoặc pax.';
+
+    var cleanValue = value.trim();
+    if (!cleanValue || /[\u0000-\u001f\u007f]/.test(cleanValue)){
+      return 'Giá trị không hợp lệ.';
+    }
+    if (field === 'operator' && cleanValue.length > 48){
+      return 'Tên operator tối đa 48 ký tự.';
+    }
+    if (field === 'reg' && !/^[A-Z0-9-]{3,10}$/i.test(cleanValue)){
+      return 'reg cần 3–10 ký tự chữ, số hoặc dấu gạch nối.';
+    }
+    if (field === 'flightNo' && !/^[A-Z0-9-]{2,10}$/i.test(cleanValue)){
+      return 'flightNo cần 2–10 ký tự chữ, số hoặc dấu gạch nối.';
+    }
+    if (field === 'date' && !/^\d{2}[A-Z]{3}$/i.test(cleanValue)){
+      return 'date cần định dạng DDMMM, ví dụ 15NOV.';
+    }
+    if ((field === 'dep' || field === 'arr') && !/^[A-Z]{3}$/i.test(cleanValue)){
+      return field + ' cần mã sân bay gồm 3 chữ cái.';
+    }
+    if (field === 'routing' && !/^[A-Z]{3}(?:-[A-Z]{3})+$/i.test(cleanValue)){
+      return 'routing cần dạng SGN-BKK hoặc SGN-HAN-BKK.';
+    }
+    if (field === 'pax'){
+      var pax = Number(cleanValue);
+      if (!/^\d+$/.test(cleanValue) || pax > 999){
+        return 'pax cần là số nguyên từ 0 đến 999.';
+      }
+      flightOps.flight.pax = pax;
+    } else {
+      flightOps.flight[field] = cleanValue.toUpperCase();
+    }
+    return null;
+  }
+
+  function handleFlightOpsCommand(rawLine){
+    var command = rawLine.trim();
+    var upper = command.toUpperCase();
+    var match;
+    if (upper === 'GD'){
+      out(esc(flightOpsGeneralDeclaration()), 'pre');
+      blank();
+      return true;
+    }
+    if (upper === 'GDP'){
+      if (printFlightOps('GD ' + flightOps.flight.flightNo, [flightOpsGeneralDeclaration()])){
+        ok('ĐÃ MỞ CỬA SỔ IN GD.');
+      }
+      return true;
+    }
+    if ((match = command.match(/^GD\s+SET\s+([A-Z]+)\s+(.+)$/i))){
+      var error = setFlightOpsField(match[1], match[2]);
+      if (error){
+        err('GD SET — ' + error);
+      } else {
+        ok('GD.' + match[1].toUpperCase() + '=' + flightOps.flight[
+          { operator:'operator', reg:'reg', flightno:'flightNo', date:'date',
+            dep:'dep', arr:'arr', routing:'routing', pax:'pax' }[match[1].toLowerCase()]
+        ]);
+      }
+      blank();
+      return true;
+    }
+    if (upper === 'CREW LIST'){
+      var crewLines = [
+        'STT|HỌ TÊN|VAI TRÒ|HỘ CHIẾU|QT|NS|GT',
+        '---+------+-------+--------+--+--+--'
+      ];
+      flightOps.crew.forEach(function(member, index){
+        crewLines.push([index + 1, member.name, member.role, member.pass,
+          member.nat, member.dob, member.sex].join('|'));
+      });
+      out(esc(flightOps.crew.length ? crewLines.join('\n') : '(Tổ bay trống)'), 'pre');
+      blank();
+      return true;
+    }
+    if (upper === 'CREW CLEAR'){
+      flightOps.crew = [];
+      ok('ĐÃ XÓA TỔ BAY.');
+      blank();
+      return true;
+    }
+    if ((match = command.match(/^CREW\s+(.+)$/i))){
+      var parts = match[1].split('|').map(function(part){ return part.trim(); });
+      if (parts.length < 3 || parts.length > 6 || !parts[0] || !parts[1] || !parts[2]){
+        err('CREW <Tên>|<Vai trò>|<Hộ chiếu>|<QT>|<NS>|<GT>');
+      } else if (parts.some(function(part){ return part.length > 48 || /[\u0000-\u001f\u007f]/.test(part); })){
+        err('DỮ LIỆU CREW KHÔNG HỢP LỆ — MỖI TRƯỜNG TỐI ĐA 48 KÝ TỰ.');
+      } else {
+        var crewMember = {
+          name:parts[0], role:parts[1], pass:parts[2],
+          nat:(parts[3] || 'VN').toUpperCase(),
+          dob:parts[4] || '—',
+          sex:(parts[5] || '—').toUpperCase()
+        };
+        flightOps.crew.push(crewMember);
+        ok(crewMember.name + ' — ' + crewMember.role + ' (' + crewMember.pass + ')');
+      }
+      blank();
+      return true;
+    }
+    if (upper === 'MANIFEST' || upper === 'MANIFEST ALL'){
+      out(esc(flightOpsManifest() + '\n\n' + flightOpsBriefing()), 'pre');
+      blank();
+      return true;
+    }
+    if (upper === 'MANIFEST FI'){
+      out(esc(flightOpsBriefing()), 'pre');
+      blank();
+      return true;
+    }
+    if (upper === 'MANIFEST PRINT'){
+      if (printFlightOps('MANIFEST ' + flightOps.flight.flightNo,
+          [flightOpsManifest(), flightOpsBriefing()])){
+        ok('ĐÃ MỞ CỬA SỔ IN MANIFEST.');
+      }
+      return true;
+    }
+    return false;
+  }
+
   function runCommand(rawLine){
     var raw = rawLine.trim();
     if (!raw) return;
@@ -3671,6 +3918,7 @@ body::after{
       }
       return;
     }
+    if (handleFlightOpsCommand(raw)) return;
 
     // thời gian trôi theo thao tác (báo cáo chỉ để tra cứu — không tiêu tốn thời gian game)
     var isReport = /^(TJQ|TJD)/.test(cmd);
@@ -3912,6 +4160,10 @@ body::after{
     ['EQ',                   'Thông tin tàu bay (equipment)', 'EQ320'],
     ['WEA <CITY>',           'Thời tiết 5 ngày tại điểm đến', 'WEA SGN'],
     ['DA <CITY>',            'Giải mã mã sân bay (decode)', 'DA SIN'],
+    ['GD / GDP',             'Xem / in General Declaration', 'GD'],
+    ['GD SET <FIELD> <VALUE>', 'Cập nhật thông tin chuyến bay trên GD/manifest', 'GD SET pax 120'],
+    ['CREW <...>',           'Thêm tổ bay; CREW LIST / CREW CLEAR để xem / xoá', 'CREW Nguyen Van A|PIC|P1234567'],
+    ['MANIFEST [FI|PRINT]',  'Xem manifest + briefing, briefing riêng hoặc in cả hai', 'MANIFEST PRINT'],
     ['NEXT',                 'Tiếp nhận khách mua vé kế tiếp', 'NEXT'],
     ['IG',                   'Bỏ PNR hiện tại (ignore)', 'IG'],
     ['RF',                   'Hoàn vé gần nhất (refund)', 'RF'],
