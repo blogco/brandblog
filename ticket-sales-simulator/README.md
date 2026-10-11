@@ -86,6 +86,10 @@ vào dấu nhắc `>`:
 | `EQ<CODE>` | **Thông tin tàu bay** (equipment): tầm bay, sức chứa, động cơ… (`EQ` không mã = danh sách đội tàu) | `EQ320` |
 | `WEA <CITY>` | **Thời tiết 5 ngày** tại điểm đến | `WEA SGN` |
 | `DA <CITY>` | Giải mã mã sân bay (decode) | `DA SIN` |
+| `GD` / `GDP` | Xem / in General Declaration của chuyến bay | `GDP` |
+| `GD SET <FIELD> <VALUE>` | Cập nhật `operator`, `reg`, `flightNo`, `date`, `dep`, `arr`, `routing` hoặc `pax` | `GD SET pax 120` |
+| `CREW <name>|<role>|<passport>|[nat]|[dob]|[sex]` | Thêm thành viên tổ bay; dùng `CREW LIST` / `CREW CLEAR` để xem / xoá | `CREW Nguyen Van A|PIC|P1234567` |
+| `MANIFEST [FI|PRINT]` | Xem manifest + briefing; `FI` xem briefing, `PRINT` in cả hai | `MANIFEST PRINT` |
 | `NEXT` | **Tiếp nhận khách mua vé kế tiếp** | `NEXT` |
 | `IG` | Bỏ PNR hiện tại (ignore) | `IG` |
 | `RF` | Hoàn vé gần nhất (refund) | `RF` |
@@ -95,6 +99,19 @@ vào dấu nhắc `>`:
 **Quy trình một hồ sơ:** `NM` → `APIS` (cho **từng** khách) → `AN` → `SS` → `AP` →
 `(NACO nếu sửa tên)` → `(SO nếu thu phí dịch vụ)` → `(FO nếu ghi thanh toán)` → `SR` (nếu cần) →
 `FXP` → `TKTL` → `RT#<PNR>` (tuỳ chọn) → `NEXT`.
+
+### General Declaration, tổ bay và manifest
+
+`GD` hiển thị General Declaration; `GDP` mở hộp thoại in. Dùng `GD SET <FIELD> <VALUE>`
+để cập nhật dữ liệu chuyến (ví dụ `GD SET flightNo HH002`, `GD SET dep HAN`,
+`GD SET routing HAN-SGN`, `GD SET pax 120`). `CREW <Tên>|<Vai trò>|<Hộ chiếu>|<QT>|<NS>|<GT>`
+thêm thành viên; có thể bỏ các trường cuối để nhận mặc định. `CREW LIST` xem danh sách,
+còn `CREW CLEAR` xoá tổ bay trong phiên hiện tại.
+
+`MANIFEST` hiển thị loading manifest và flight briefing; `MANIFEST FI` chỉ hiển thị briefing,
+`MANIFEST PRINT` mở bản in hai trang. Dữ liệu chuyến và tổ bay chỉ tồn tại trong bộ nhớ của
+tab hiện tại. Đây là tài liệu mô phỏng; tải trọng, nhiên liệu, thời tiết và NOTAM là giá trị
+minh hoạ, không dùng cho khai thác thực tế.
 
 ### Nhập hành khách & APIS (bắt buộc trước khi tra cứu)
 
