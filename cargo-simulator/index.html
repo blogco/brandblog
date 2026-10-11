@@ -5,37 +5,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cargo Operations Simulator — Air Cargo Workflow Training</title>
 <meta name="description" content="An interactive, browser-based mini game that walks you through the end-to-end air cargo workflow: booking, acceptance, ULD build-up, loading, departure, arrival and delivery.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23006C53'/%3E%3Cpath d='M6 19h20l-3 4H9zM8 12h14l4 6H8z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='2' fill='%23009999'/%3E%3Cpath d='M6 19h20l-3 4H9zM8 12h14l4 6H8z' fill='%23fff'/%3E%3C/svg%3E">
 <style>
 /* ---------------------------------------------------------------
-   Design tokens — mirrors tailwind.config.js (Sembcorp-inspired)
+   Design tokens — mirrors the shared BrandBlog visual system
    --------------------------------------------------------------- */
 :root{
-  --green:#006C53;
-  --green-dark:#005B48;
-  --wash:#E6F1EE;
-  --blue:#0095FF;
-  --orange:#FF6400;
-  --ink:#1A1A1A;
-  --body:#464646;
-  --surface:#FFFFFF;
-  --mist:#F5F6F5;
+  --brand-petrol:#009999;
+  --brand-deep-blue:#000028;
+  --brand-white:#ffffff;
+  --brand-ink:#1a1a1a;
+  --brand-muted:#666666;
+  --brand-line:#dfe4e8;
+  --brand-surface:#f5f7f8;
+  --brand-shadow:0 12px 32px rgba(0,0,40,.08);
+  --brand-font-sans:"Siemens Sans",Arial,sans-serif;
+  --green:var(--brand-petrol);
+  --green-dark:#007F7F;
+  --wash:var(--brand-surface);
+  --blue:#009999;
+  --orange:#009999;
+  --ink:var(--brand-ink);
+  --body:var(--brand-muted);
+  --surface:var(--brand-white);
+  --mist:var(--brand-surface);
 
-  --ok:#0B7A5A;
-  --ok-bg:#E6F1EE;
+  --ok:var(--brand-petrol);
+  --ok-bg:var(--brand-surface);
   --warn:#9A5B00;
   --warn-bg:#FFF4E5;
   --err:#B42318;
   --err-bg:#FDECEA;
-  --line:#E2E7E4;
-  --line-strong:#CFD8D3;
+  --line:var(--brand-line);
+  --line-strong:var(--brand-line);
 
-  --shadow-sm:0 1px 2px rgba(16,24,20,.06);
-  --shadow:0 1px 2px rgba(16,24,20,.05), 0 10px 28px -16px rgba(16,24,20,.35);
-  --radius:14px;
-  --radius-sm:9px;
-  --font: Frutiger, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --shadow-sm:var(--brand-shadow);
+  --shadow:var(--brand-shadow);
+  --radius:2px;
+  --radius-sm:2px;
+  --font:var(--brand-font-sans);
+  --mono: var(--brand-font-sans);
 }
 
 *,*::before,*::after{box-sizing:border-box}
@@ -44,13 +53,20 @@ body{
   margin:0;
   font-family:var(--font);
   color:var(--body);
-  background:var(--mist);
-  line-height:1.55;
+  background:var(--surface);
+  line-height:20px;
   font-size:16px;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
-h1,h2,h3,h4{color:var(--ink);line-height:1.25;margin:0}
+h1,h2,h3,h4,h5,h6{color:var(--ink);margin:0}
+h1{font-size:30px;font-weight:700;line-height:36px}
+h2{font-size:20px;font-weight:600;line-height:24px}
+h3,h4,h5,h6{font-size:18px;font-weight:600;line-height:24px}
 p{margin:0 0 .75em}
 p:last-child{margin-bottom:0}
+button,input,select,textarea,table{font-family:var(--font)}
+button,input,select,textarea{border-radius:2px!important}
 small{font-size:.82rem}
 strong{color:var(--ink)}
 ul{margin:.35em 0 .85em;padding-left:1.15em}
@@ -62,12 +78,14 @@ li{margin:.2em 0}
 }
 .skip:focus{left:0}
 :focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+button,input,select,textarea,table{font-family:var(--font)}
+button,input,select,textarea{border-radius:2px!important}
 
 .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
 
 /* ----------------------------- header ----------------------------- */
 .topbar{
-  background:linear-gradient(135deg,var(--green-dark) 0%, var(--green) 62%, #0A7F63 100%);
+  background:var(--brand-deep-blue);
   color:#fff;
   padding:22px 0 26px;
   border-bottom:4px solid var(--wash);
@@ -119,7 +137,7 @@ li{margin:.2em 0}
 .step.done .step__dot{background:var(--wash);border-color:var(--green);color:var(--green-dark)}
 .step.done .step__label{color:var(--green-dark)}
 
-.progress{height:6px;border-radius:99px;background:#E2E7E4;overflow:hidden;margin:4px 0 22px}
+.progress{height:6px;border-radius:99px;background:#DFE4E8;overflow:hidden;margin:4px 0 22px}
 .progress__bar{height:100%;width:0;background:linear-gradient(90deg,var(--green),#12A07C);border-radius:99px;transition:width .35s ease}
 
 /* ----------------------------- stage ----------------------------- */
@@ -137,13 +155,13 @@ li{margin:.2em 0}
 
 .phase__head{
   padding:20px 24px;
-  background:linear-gradient(180deg,var(--wash),#F3F9F7);
+  background:linear-gradient(180deg,var(--wash),var(--brand-white));
   border-bottom:1px solid var(--line);
   display:flex;gap:14px;align-items:flex-start;
 }
 .phase__num{
   flex:0 0 auto;font-family:var(--mono);font-size:.78rem;font-weight:700;
-  background:var(--green);color:#fff;border-radius:8px;padding:5px 9px;letter-spacing:.06em;
+  background:var(--green);color:#fff;border-radius:2px;padding:5px 9px;letter-spacing:.06em;
 }
 .phase__title{margin:0;font-size:clamp(1.15rem,2.6vw,1.5rem)}
 .phase__vi{margin:.15em 0 0;font-size:.8rem;color:var(--green-dark);font-weight:600}
@@ -177,14 +195,14 @@ li{margin:.2em 0}
   padding:12px 16px;margin:0 0 18px;font-size:.92rem;
 }
 .callout strong{color:var(--warn)}
-.callout--info{border-left-color:var(--blue);background:#EAF4FF}
-.callout--info strong{color:#0A5FA8}
+.callout--info{border-left-color:var(--blue);background:var(--brand-surface)}
+.callout--info strong{color:var(--brand-petrol)}
 .callout--ok{border-left-color:var(--green);background:var(--ok-bg)}
 .callout--ok strong{color:var(--green-dark)}
 
 table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
 .tbl th,.tbl td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-.tbl th{font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:#7C8A84;background:#FAFBFA}
+.tbl th{font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--brand-muted);background:var(--brand-surface)}
 .tbl tr:last-child td{border-bottom:0}
 .tbl td strong{color:var(--ink)}
 
@@ -224,7 +242,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
   padding:12px 14px;
   transition:border-color .15s ease,background .15s ease,transform .15s ease;
 }
-.opt:hover:not(:disabled){border-color:var(--green);background:#F8FCFA;transform:translateX(2px)}
+.opt:hover:not(:disabled){border-color:var(--green);background:#F5F7F8;transform:translateX(2px)}
 .opt:disabled{cursor:default}
 .opt__key{
   flex:0 0 auto;width:24px;height:24px;border-radius:6px;
@@ -293,7 +311,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
   background:var(--surface);border:1.5px dashed var(--line-strong);border-radius:var(--radius-sm);
   padding:12px 14px;transition:border-color .15s ease,background .15s ease;
 }
-.checkitem:hover:not(:disabled){border-color:var(--green);background:#F8FCFA}
+.checkitem:hover:not(:disabled){border-color:var(--green);background:#F5F7F8}
 .checkitem:disabled{cursor:default;border-style:solid;opacity:1}
 .checkitem__icon{
   flex:0 0 auto;width:26px;height:26px;border-radius:50%;
@@ -357,12 +375,12 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
 .uld__item{text-align:center;font-size:.74rem;color:#7C8A84;font-weight:700}
 .uld__box{
   width:96px;height:64px;border-radius:7px;margin-bottom:6px;
-  background:repeating-linear-gradient(45deg,#E9EFEC,#E9EFEC 7px,#DFE8E3 7px,#DFE8E3 14px);
+  background:repeating-linear-gradient(45deg,#F5F7F8,#F5F7F8 7px,#DFE4E8 7px,#DFE4E8 14px);
   border:1.5px solid var(--line-strong);
   display:grid;place-items:center;font-size:.78rem;color:var(--green-dark);font-weight:700;
 }
-.uld__box--a{background:linear-gradient(180deg,#CFE7DF,#B9DBD1);border-color:#8FC4B4}
-.uld__box--b{background:linear-gradient(180deg,#E4F0EC,#D3E7E0);border-color:#A9CDBF}
+.uld__box--a{background:linear-gradient(180deg,var(--brand-white),var(--brand-surface));border-color:var(--brand-line)}
+.uld__box--b{background:linear-gradient(180deg,var(--brand-surface),var(--brand-white));border-color:var(--brand-line)}
 .uld__deck{width:210px;height:10px;border-radius:6px;background:var(--green-dark);margin:0 auto}
 
 .deck{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 18px}
@@ -435,6 +453,14 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;margin:0 0 6px}
   .kv{grid-template-columns:1fr}
   .q__pts{width:100%;margin-left:0}
 }
+*,*::before,*::after{font-family:var(--brand-font-sans)!important}
+h1{font-size:30px!important;font-weight:700!important;line-height:36px!important}
+h2{font-size:20px!important;font-weight:600!important;line-height:24px!important}
+h3,h4,h5,h6{font-size:18px!important;font-weight:600!important;line-height:24px!important}
+p{font-size:16px!important;font-weight:400!important;line-height:20px!important}
+button,input,select,textarea,table{font-family:var(--brand-font-sans)!important}
+button,input,select,textarea{border-radius:2px!important}
+body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 </style>
 </head>
 <body>

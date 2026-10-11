@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 540" preserveAspectRatio="xMidYMid slice" role="img" aria-label="">
   <defs>
     <linearGradient id="ifb" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0E846D"/>
-      <stop offset="1" stop-color="#003429"/>
+      <stop offset="0" stop-color="#009999"/>
+      <stop offset="1" stop-color="#000028"/>
     </linearGradient>
   </defs>
   <rect width="720" height="540" fill="url(#ifb)"/>
   <circle cx="540" cy="150" r="70" fill="#FFB27A" opacity="0.5"/>
-  <circle cx="540" cy="150" r="120" fill="#FF6400" opacity="0.12"/>
+  <circle cx="540" cy="150" r="120" fill="#009999" opacity="0.12"/>
   <!-- solar panels -->
   <g fill="#ffffff" fill-opacity="0.14" stroke="#ffffff" stroke-opacity="0.25" stroke-width="2">
     <path d="M120 380 L420 320 L470 420 L170 480 Z"/>

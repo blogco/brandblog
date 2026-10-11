@@ -24,22 +24,20 @@
   --note-purple-deep: #b197fc;
 
   /* ---- Ink ---- */
-  --ink: #2d2a26;
-  --ink-light: #5c5750;
+  --ink: var(--brand-ink);
+  --ink-light: var(--brand-muted);
 
   /* ---- Elevation ---- */
-  --note-shadow: 0 2px 8px rgba(45, 42, 38, 0.15),
-    0 8px 20px -12px rgba(45, 42, 38, 0.25);
-  --note-shadow-hover: 0 4px 16px rgba(45, 42, 38, 0.25),
-    0 14px 32px -14px rgba(45, 42, 38, 0.35);
+  --note-shadow: var(--brand-shadow);
+  --note-shadow-hover: 0 12px 32px rgba(0, 0, 40, 0.14);
 
   /* ---- Surfaces ---- */
-  --paper-bg: #faf8f3;
-  --board-bg: #f1efe8;
+  --paper-bg: var(--brand-white);
+  --board-bg: var(--brand-surface);
 
-  /* ---- Handwriting (Google Fonts Caveat + graceful fallbacks) ---- */
-  --pn-hand: "Caveat", "Kalam", "Segoe Print", "Comic Sans MS", cursive;
-  --pn-ui: "Frutiger", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* ---- Shared typography ---- */
+  --pn-hand: var(--brand-font-sans);
+  --pn-ui: var(--brand-font-sans);
 }
 
 /* ---------------------------------------------------------------------------
@@ -47,25 +45,25 @@
    --------------------------------------------------------------------------- */
 .pn-compose {
   margin-top: 2rem;
-  border: 2px dashed #d8d5cc;
-  border-radius: 12px;
-  background: #fbfaf6;
+  border: 1px dashed var(--brand-line);
+  border-radius: 2px;
+  background: var(--brand-white);
   padding: 1rem 1rem 0.75rem;
   transition: border-color 200ms ease, background-color 200ms ease,
     box-shadow 200ms ease;
 }
 
 .pn-compose:focus-within {
-  border-color: #006c53;
+  border-color: var(--brand-petrol);
   border-style: solid;
   background: #fff;
-  box-shadow: 0 0 0 4px rgba(0, 108, 83, 0.08);
+  box-shadow: 0 0 0 4px rgba(0, 153, 153, 0.1);
 }
 
 .pn-compose.is-dragover {
-  border-color: #006c53;
+  border-color: var(--brand-petrol);
   border-style: solid;
-  background: #e6f1ee;
+  background: var(--brand-surface);
 }
 
 .pn-compose-head {
@@ -120,7 +118,7 @@
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 9999px;
-  border: 2px solid rgba(45, 42, 38, 0.12);
+  border: 2px solid rgba(0, 0, 40, 0.12);
   cursor: pointer;
   padding: 0;
   transition: transform 150ms ease, box-shadow 150ms ease,
@@ -133,12 +131,12 @@
 
 .pn-color-dot[aria-pressed="true"] {
   border-color: var(--ink);
-  box-shadow: 0 0 0 3px rgba(45, 42, 38, 0.12);
+  box-shadow: 0 0 0 3px rgba(0, 0, 40, 0.12);
   transform: scale(1.08);
 }
 
 .pn-color-dot:focus-visible {
-  outline: 2px solid #006c53;
+  outline: 2px solid var(--brand-petrol);
   outline-offset: 2px;
 }
 
@@ -154,7 +152,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  border-radius: 8px;
+  border-radius: 2px;
   padding: 0.55rem 1rem;
   font-family: var(--pn-ui);
   font-size: 0.85rem;
@@ -170,29 +168,29 @@
 }
 
 .pn-btn-primary {
-  border: 1px solid #006c53;
-  background: #006c53;
+  border: 1px solid var(--brand-petrol);
+  background: var(--brand-petrol);
   color: #fff;
 }
 
 .pn-btn-primary:hover {
-  background: #005b48;
-  border-color: #005b48;
+  background: #007f7f;
+  border-color: #007f7f;
 }
 
 .pn-btn-ghost {
-  border: 1px solid #e0e0e0;
-  background: #fff;
-  color: #000;
+  border: 1px solid var(--brand-line);
+  background: var(--brand-white);
+  color: var(--brand-ink);
 }
 
 .pn-btn-ghost:hover {
-  border-color: #006c53;
-  color: #006c53;
+  border-color: var(--brand-petrol);
+  color: var(--brand-petrol);
 }
 
 .pn-btn:focus-visible {
-  outline: 2px solid #006c53;
+  outline: 2px solid var(--brand-petrol);
   outline-offset: 2px;
 }
 
@@ -200,7 +198,7 @@
   margin-top: 0.65rem;
   font-size: 0.78rem;
   line-height: 1.5;
-  color: #6a6a6a;
+  color: var(--brand-muted);
 }
 
 /* ---------------------------------------------------------------------------
@@ -210,7 +208,7 @@
   background: var(--board-bg);
   background-image: radial-gradient(
       circle at 1px 1px,
-      rgba(45, 42, 38, 0.05) 1px,
+      rgba(0, 0, 40, 0.05) 1px,
       transparent 0
     );
   background-size: 22px 22px;
@@ -234,14 +232,20 @@
 
 .pn-board-count {
   font-size: 0.85rem;
-  color: #6a6a6a;
+  color: var(--brand-muted);
 }
 
 .pn-board {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 2rem 1.6rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
   align-items: start;
+}
+
+@media (max-width: 900px) {
+  .pn-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -347,7 +351,7 @@
   left: 0.7rem;
   width: 1.1rem;
   height: 1.1rem;
-  color: rgba(45, 42, 38, 0.55);
+  color: rgba(0, 0, 40, 0.55);
   transform: rotate(-18deg);
   pointer-events: none;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
@@ -374,12 +378,12 @@
 
 .pn-note-body[contenteditable="true"]:empty::before {
   content: "Viết gì đó…";
-  color: rgba(45, 42, 38, 0.4);
+  color: rgba(0, 0, 40, 0.4);
 }
 
 .pn-note-body[contenteditable="true"]:focus-visible {
   border-radius: 2px;
-  box-shadow: inset 0 -2px 0 rgba(45, 42, 38, 0.25);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 40, 0.25);
 }
 
 /* Link card inside a note */
@@ -439,7 +443,7 @@
   border-radius: 4px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.6);
-  box-shadow: inset 0 0 0 1px rgba(45, 42, 38, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 40, 0.08);
 }
 
 .pn-image img {
@@ -466,14 +470,14 @@
   gap: 0.5rem;
   margin-top: 0.6rem;
   padding-top: 0.5rem;
-  border-top: 1px solid rgba(45, 42, 38, 0.12);
+  border-top: 1px solid rgba(0, 0, 40, 0.12);
 }
 
 .pn-note-time {
   font-family: var(--pn-ui);
   font-size: 0.7rem;
   font-weight: 600;
-  color: rgba(45, 42, 38, 0.6);
+  color: rgba(0, 0, 40, 0.6);
   white-space: nowrap;
 }
 
@@ -501,13 +505,13 @@
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: rgba(45, 42, 38, 0.7);
+  color: rgba(0, 0, 40, 0.7);
   cursor: pointer;
   transition: background-color 140ms ease, color 140ms ease;
 }
 
 .pn-icon-btn:hover {
-  background: rgba(45, 42, 38, 0.12);
+  background: rgba(0, 0, 40, 0.12);
   color: var(--ink);
 }
 
@@ -517,7 +521,7 @@
 }
 
 .pn-icon-btn:focus-visible {
-  outline: 2px solid #006c53;
+  outline: 2px solid var(--brand-petrol);
   outline-offset: 1px;
 }
 
@@ -558,7 +562,7 @@
   max-width: 28rem;
   font-size: 0.875rem;
   line-height: 1.6;
-  color: #6a6a6a;
+  color: var(--brand-muted);
 }
 
 /* ---------------------------------------------------------------------------
@@ -574,10 +578,10 @@
   gap: 0.65rem;
   max-width: calc(100vw - 2rem);
   border-radius: 100px;
-  background: #006c53;
+  background: var(--brand-petrol);
   padding: 0.5rem 0.55rem 0.5rem 1rem;
   color: #fff;
-  box-shadow: 0 8px 24px rgba(0, 108, 83, 0.35);
+  box-shadow: 0 12px 32px rgba(0, 0, 40, 0.16);
   font-family: var(--pn-ui);
   font-size: 0.82rem;
   font-weight: 600;
@@ -589,7 +593,7 @@
 }
 
 .pn-sync[data-state="syncing"] {
-  background: #005b48;
+  background: #007f7f;
 }
 
 .pn-sync-text {
@@ -741,7 +745,7 @@
   margin-top: 0.15rem;
   font-size: 0.75rem;
   line-height: 1.5;
-  color: #6a6a6a;
+  color: var(--brand-muted);
 }
 
 .pn-modal-close {
@@ -754,7 +758,7 @@
   border: 0;
   border-radius: 9999px;
   background: transparent;
-  color: #6a6a6a;
+  color: var(--brand-muted);
   cursor: pointer;
 }
 
@@ -788,9 +792,9 @@
 }
 
 .pn-input:focus {
-  border-color: #006c53;
+  border-color: var(--brand-petrol);
   outline: none;
-  box-shadow: 0 0 0 4px rgba(0, 108, 83, 0.1);
+  box-shadow: 0 0 0 4px rgba(0, 153, 153, 0.1);
 }
 
 .pn-check {
@@ -800,7 +804,7 @@
   margin-top: 0.9rem;
   font-size: 0.8rem;
   line-height: 1.5;
-  color: #6a6a6a;
+  color: var(--brand-muted);
 }
 
 .pn-check input {
@@ -828,7 +832,7 @@
 }
 
 .pn-modal-foot .pn-btn-ghost {
-  color: #6a6a6a;
+  color: var(--brand-muted);
 }
 
 .pn-modal-foot .pn-btn-ghost:hover {
@@ -868,7 +872,7 @@
   align-items: flex-start;
   gap: 0.7rem;
   border: 1px solid #e0e0e0;
-  border-left: 4px solid #006c53;
+  border-left: 4px solid var(--brand-petrol);
   border-radius: 10px;
   background: #fff;
   padding: 0.85rem 1rem;
@@ -950,7 +954,7 @@
 @media (max-width: 639px) {
   .pn-board {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 20px;
   }
 
   .pn-note {

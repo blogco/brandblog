@@ -92,7 +92,7 @@ By the end of the game you should be able to:
 - Responsive down to tablet and phone widths.
 - Progress and decisions are tracked in a small in-memory JavaScript state object
   (`{ phase, answers, finished }`).
-- Visual tokens (colour palette and font stack) follow the BrandBlog / Sembcorp-inspired
-  design system used by the rest of this repository.
+- Visual tokens (colour palette and font stack) follow the shared Siemens-inspired
+  BrandBlog design system.
 - Keyboard accessible: focus rings, `aria-pressed` on options, live regions for feedback,
   a skip link and a screen-reader-friendly progress bar.
