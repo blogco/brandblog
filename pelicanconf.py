@@ -30,9 +30,9 @@ COPYRIGHT_YEAR = datetime.now().year
 PATH = "content"
 PAGE_PATHS = ["pages"]
 ARTICLE_PATHS = ["posts"]
-# "cargo-simulator/index.html" is a self-contained learning game served verbatim
-# at /cargo-simulator/. It is listed as a single static file so the folder's
-# README / integration guide are not published with the site.
+# "cargo-simulator/index.html" is the terminal training app served at
+# /cargo-simulator/. Its shared CSS and JavaScript are emitted from theme/static.
+# Only the HTML is listed here so the documentation is not published with the site.
 STATIC_PATHS = ["images", "data", "cargo-simulator/index.html"]
 THEME = "theme"
 THEME_STATIC_DIR = "static"

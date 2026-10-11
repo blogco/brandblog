@@ -1,91 +1,40 @@
-# ICHM Cargo Door-to-Door Simulator
+# Cargo Terminal Simulator
 
-An interactive, browser-based mini game that teaches the **end-to-end air cargo process**
-as defined by the **IATA Cargo Handling Manual (ICHM) Master Operating Plan (MOP)**.
+A browser-based command-line workflow simulation for practicing a simplified cargo
+schedule, booking, AWB, and tracking sequence. The terminal resembles a GDS console,
+but it is a fictional training aid: it does not connect to Amadeus, Korean Air, another
+airline, or any live inventory or tracking system.
 
-You follow a single shipment — **12 cartons of lithium-ion batteries (UN3480, Class 9)**
-moving **HAN → ICN → LAX** — from an origin-forwarder booking request to a signed
-**Proof of Delivery** in Los Angeles. Ten phases map to the five ICHM activity groups.
+## Try a shipment
 
-> Educational, non-commercial learning aid. Simplified for teaching. It is **not
-> affiliated with IATA, any airline, Siemens AG, or Sembcorp Industries**. Always follow your
-> carrier's current regulations and applicable national law.
-
----
-
-## Run it locally
-
-It is a single, self-contained file — no build step, no dependencies, no network calls.
-
-```bash
-# Option A — open it directly
-open content/cargo-simulator/index.html
-
-# Option B — serve it (so relative URLs behave like production)
-python3 -m http.server 8000
-# then visit http://localhost:8000/content/cargo-simulator/
+```text
+AN10NOVICNSEL
+FFR
+SB1G250
+NM1KIM/MINJUN
+FD3/250/1.2
+SR PER
+FWB
+ET
+FSU
+TRK TST-000001
 ```
 
-Or, from the BrandBlog Pelican build, run `make serve` and open
-`http://localhost:8000/cargo-simulator/`.
+`AN` accepts the sample routes `ICN-SEL`, `ICN-FRA`, `ICN-LAX`, `HAN-SIN`, and
+`SGN-ICN`. Availability is fictional. The terminal lists simulated line/class choices
+with Copy buttons. `FSU` advances through fixed training milestones; `HELP` or `?`
+shows syntax, `CLS` clears the transcript, and `NEW` starts a fresh shipment.
 
----
+AWB identifiers such as `TST-000001` are not valid transport documents. Do not use this
+simulator for real cargo operations.
 
-## How it plays
+## Preview
 
-- **Start screen** — introduces the shipment and the five activity groups.
-- **10 phases** — each presents a realistic operational situation with one or more
-  decision points (single choice, select-all-that-apply, or a sequencing task).
-- **Immediate feedback** — after every decision you get the *reasoning*: why an answer
-  is right, why another is a real-world risk, and the ICHM reference behind it.
-- **Progress** — a phase rail plus a progress bar ("Phase X of 10"), with
-  **Previous / Next** navigation. Next unlocks only when the phase is complete.
-- **Scoring** — each decision is worth 10 points; a wrong attempt costs 3 (a decision
-  never scores below 2). The results screen grades you and reviews every phase.
-- **Bilingual glosses** — key terms carry an English–Vietnamese subtitle
-  (e.g. *AWB — Vận đơn hàng không*, *POD — Biên bản giao hàng*).
+Run `make serve` from the repository root and open
+<http://localhost:8000/cargo-simulator/>. The live page is
+<https://blogco.github.io/brandblog/cargo-simulator/>.
 
-State is held in a single JavaScript object (`state`); there are no external APIs,
-CDNs, cookies or `localStorage` writes.
-
----
-
-## The 10 phases & learning objectives
-
-| # | Phase | Activity group | Learning objective |
-|---|-------|----------------|--------------------|
-| 1 | Booking & Planning | Origin Forwarder | Choose the right service level and handle dangerous-goods booking/notification lead time. |
-| 2 | Pick-up & Receiving | Origin Forwarder | Control the custody handover; verify cargo readiness and catch discrepancies at the dock. |
-| 3 | Export Preparation | Origin Forwarder | Assemble a complete, mutually consistent export document set (AWB, SLI, DGD, customs, security). |
-| 4 | Transfer & Acceptance | Origin Carrier | Apply ICHM acceptance standards: reconcile AWB vs. cargo, weigh/measure, screen, inspect. |
-| 5 | ULD Build-Up | Origin Carrier | Select ULD vs. loose loading; build up safely (heaviest at the base, secured, weighed, recorded). |
-| 6 | Flight Loading & Departure | Transport Carrier | Respect weight & balance, the LIR/loadsheet, LAT, and the dangerous-goods NOTOC. |
-| 7 | Arrival & Unload | Destination Carrier | Break down the ULD and record count and condition discrepancies at the point of discovery. |
-| 8 | Check-in & Warehouse | Destination Carrier | Store DG correctly and never release cargo before customs clearance. |
-| 9 | Transfer to Destination Forwarder | Destination Forwarder | Accept the handover with any known exception documented. |
-| 10 | Delivery & POD | Destination Forwarder | Produce a valid Proof of Delivery and handle a consignee damage refusal correctly. |
-
----
-
-## Tech
-
-- One file: `index.html` with inlined `<style>` and `<script>`.
-- **Vanilla JavaScript** (ES5-compatible syntax), no frameworks, no build tools.
-- Responsive for desktop and tablet; accessible focus states and ARIA live regions.
-- Uses the BrandBlog palette so it feels native to the blog, but ships its **own
-  scoped styles**, so it does not depend on or interfere with the blog's Tailwind CSS.
-
-## File map
-
-```
-cargo-simulator/
-├── index.html            # the entire game (HTML + CSS + JS)
-├── README.md             # this file
-└── integration-guide.md  # how it is wired into the BrandBlog site
-```
-
-## Blog integration
-
-The game is published at **https://blogco.github.io/brandblog/cargo-simulator/**.
-See [`integration-guide.md`](integration-guide.md) for exactly how it is included in the
-Pelican build and linked from the navigation, footer and home page.
+Pelican emits this page from `content/cargo-simulator/index.html`. The deployment
+workflow then copies the root `cargo-simulator/` directory over the same published
+route, so keep both `index.html` files identical. They load the shared CSS and
+JavaScript from `theme/static/`.
