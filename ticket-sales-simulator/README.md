@@ -27,6 +27,19 @@ cũng được mô phỏng theo chuẩn Amadeus.
 
 Toàn bộ HTML, CSS, JavaScript nằm trong một file `index.html` duy nhất.
 
+### Gợi ý quy trình bán vé
+
+Mở **[ BÁN VÉ ]** trên thanh công cụ để xem bảng lệnh được tạo từ hành khách và hành trình
+đang hiển thị. Sau khi chạy `AN`, chọn dòng chuyến bay và hạng đặt chỗ trong bảng để hoàn
+thiện lệnh `SS`; nhập email hoặc số điện thoại vào trường liên hệ. **Copy** sao chép từng
+lệnh; **Copy All** sao chép nhóm lệnh sẵn sàng tiếp theo theo đúng thứ tự thực thi. Dán nhóm
+lệnh vào ghi chú rồi chạy từng lệnh một trong terminal.
+
+Bảng dùng đúng cú pháp mà simulator chấp nhận: nhập `NM` và APIS trước khi tra cứu; APIS có
+thứ tự `<TYPE>/<ISSUE>/<DOCNO>/<NAT>/...`; lệnh bán chỗ có dạng `SS<QTY><CLASS><LINE>`.
+PTC (ADT/CHD/INF) được hiển thị riêng, không nối vào tên. `TTP` là bí danh phát hành vé của
+simulator. Thông tin liên hệ chỉ nằm trong trang hiện tại, không được gửi đi hay lưu lại.
+
 ## Cách chơi
 
 Khách hàng xuất hiện với một yêu cầu. Bạn phục vụ theo đúng quy trình nghiệp vụ, gõ lệnh
@@ -46,7 +59,7 @@ vào dấu nhắc `>`:
 | `SR <CODE>` | Yêu cầu dịch vụ đặc biệt (SSR) | `SR CHML` |
 | `FXP` | Tính giá vé, thuế, phí và dịch vụ | `FXP` |
 | `TQT` | Xem **chi tiết thuế & phí** (chưa gồm giá vé) | `TQT` |
-| `TKTL` | Phát hành vé điện tử | `TKTL` |
+| `TKTL` / `TTP` | Phát hành vé điện tử | `TKTL` |
 | `TTK` | **Danh sách số vé đã xuất** | `TTK` |
 | `RT` | Xem lại PNR đang mở (hoặc vé gần nhất) | `RT` |
 | `RD` | Hiển thị lại PNR (redisplay) | `RD` |
@@ -198,7 +211,7 @@ Sau khi chơi, bạn nên tự tin hơn với:
 
 ## Ghi chú kỹ thuật
 
-- File đơn, thuần JavaScript, không thư viện ngoài, không CDN, không gọi API, không build.
+- Ứng dụng nằm trong một file HTML, thuần JavaScript, không thư viện ngoài, CDN hay API bên ngoài.
 - Giao diện tái tạo màn hình Amadeus: nền xanh đen, chữ monospace, hiệu ứng CRT
   (scanlines, vignette, nhấp nháy nhẹ), màu vàng/cyan/magenta cho dữ liệu.
 - Responsive tới máy tính bảng và điện thoại; có lịch sử lệnh bằng phím ↑/↓.

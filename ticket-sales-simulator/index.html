@@ -214,6 +214,73 @@ body::after{
 .crisis__act button:hover{background:#fff;color:#000}
 .crisis__act button b{color:#7a0000}
 .crisis__warn{display:block;color:var(--red);font-weight:700;letter-spacing:.06em;animation:softblink 1.1s steps(1) infinite}
+
+/* ---- Command workflow assistant ---- */
+.workflow{
+  position:fixed;top:0;right:0;z-index:110;
+  display:flex;flex-direction:column;
+  width:min(460px,100vw);height:100%;height:100dvh;
+  overflow:hidden;background:var(--bg);color:var(--yellow);
+  border-left:2px solid var(--cyan);
+  box-shadow:-16px 0 48px rgba(0,0,0,.38);
+  transform:translateX(102%);transition:transform .2s ease-out;
+}
+.workflow.open{transform:translateX(0)}
+.workflow__head{flex:0 0 auto;padding:14px 16px 10px;background:var(--bg);border-bottom:1px solid rgba(0,255,255,.2)}
+.workflow__head-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.workflow__eyebrow{margin:0 0 4px;color:var(--cyan);font-size:.66rem;font-weight:700;letter-spacing:.12em}
+.workflow__head h2{margin:0;color:var(--white);font-size:1rem;line-height:1.4}
+.workflow__close,.workflow__copy-all,.workflow__copy{
+  font:inherit;cursor:pointer;
+}
+.workflow__close{flex:0 0 auto;padding:2px 8px;color:var(--cyan);background:none;border:1px solid rgba(0,255,255,.32)}
+.workflow__copy-all{margin-top:12px;padding:7px 12px;color:var(--bg);background:var(--cyan);border:1px solid var(--cyan);font-size:.78rem;font-weight:700}
+.workflow__copy-all:disabled,.workflow__copy:disabled{opacity:.4;cursor:not-allowed}
+.workflow__note,.workflow__syntax{margin:8px 0 0;color:var(--dim);font-size:.68rem;line-height:1.45}
+.workflow__body{flex:1 1 auto;overflow:auto;padding:12px 16px 24px}
+.workflow__contact-label{display:block;margin-bottom:5px;color:var(--white);font-size:.72rem;font-weight:700}
+.workflow__contact{
+  width:100%;padding:8px 9px;color:var(--yellow);background:#00001f;
+  border:1px solid rgba(0,255,255,.32);border-radius:0;font:inherit;font-size:.8rem;
+}
+.workflow__contact:focus{outline:2px solid var(--cyan);outline-offset:1px}
+.workflow__syntax{margin-bottom:14px}
+.workflow__route{
+  margin:10px 0;padding:10px;border:1px solid rgba(0,255,255,.2);background:var(--bg);
+}
+.workflow__route-head{display:flex;justify-content:space-between;gap:10px;color:var(--white);font-size:.73rem;font-weight:700}
+.workflow__route-status{color:var(--green);font-size:.65rem;font-weight:400}
+.workflow__route-controls{display:grid;grid-template-columns:minmax(0,1fr) 82px;gap:8px;margin-top:8px}
+.workflow__route select{
+  min-width:0;padding:6px;color:var(--yellow);background:var(--bg);
+  border:1px solid rgba(0,255,255,.32);border-radius:0;font:inherit;font-size:.68rem;
+}
+.workflow__route select:focus{outline:2px solid var(--cyan);outline-offset:1px}
+.workflow__route-hint{margin:7px 0 0;color:var(--dim);font-size:.65rem;line-height:1.4}
+.workflow__commands{display:grid;gap:7px;margin:14px 0 0;padding:0;list-style:none}
+.workflow__step{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;
+  padding:8px;border:1px solid rgba(0,255,255,.2);background:var(--bg);
+}
+.workflow__step.is-done{border-left:3px solid var(--green)}
+.workflow__step.is-ready{border-left:3px solid var(--cyan)}
+.workflow__step.is-pending{border-left:3px solid var(--dim)}
+.workflow__step-main{min-width:0}
+.workflow__step-label{display:flex;justify-content:space-between;gap:8px;margin-bottom:4px;color:var(--white);font-size:.67rem;font-weight:700}
+.workflow__step-status{font-size:.62rem;font-weight:400;text-transform:uppercase}
+.workflow__step.is-done .workflow__step-status{color:var(--green)}
+.workflow__step.is-ready .workflow__step-status{color:var(--cyan)}
+.workflow__step.is-pending .workflow__step-status{color:var(--dim)}
+.workflow__step code{display:block;overflow-wrap:anywhere;color:var(--yellow);font:inherit;font-size:.74rem}
+.workflow__step-note{margin:4px 0 0;color:var(--dim);font-size:.64rem;line-height:1.35}
+.workflow__copy{padding:5px 7px;color:var(--cyan);background:transparent;border:1px solid rgba(0,255,255,.32);font-size:.66rem}
+.workflow__copy:hover,.workflow__close:hover{color:var(--bg);background:var(--cyan)}
+.workflow__message{min-height:1em;margin:10px 0 0;color:var(--green);font-size:.7rem}
+.workflow__message.is-error{color:var(--red)}
+@media (max-width:480px){
+  .workflow__body{padding-inline:12px}
+  .workflow__route-controls{grid-template-columns:minmax(0,1fr) 74px}
+}
 </style>
 </head>
 <body>
@@ -233,9 +300,10 @@ body::after{
              placeholder="GÕ LỆNH + ENTER  (HELP)"
              aria-label="Nhập lệnh" autocapitalize="characters" autocomplete="off" spellcheck="false">
     </form>
-    <div class="hintbar" aria-hidden="true">
+    <div class="hintbar">
       <span class="hintbar__keys">ENTER=EXECUTE&nbsp;&nbsp;MD=MAIN MENU&nbsp;&nbsp;AN=AVAILABILITY&nbsp;&nbsp;TJQ=SALES&nbsp;&nbsp;TJD=DAILY&nbsp;&nbsp;HE=HELP</span>
       <span class="spacer"></span>
+      <button type="button" id="workflowToggle" aria-controls="workflowPanel" aria-expanded="false">[ BÁN VÉ ]</button>
       <button type="button" id="refToggle">[ LỆNH ]</button>
     </div>
   </header>
@@ -254,6 +322,31 @@ body::after{
   <p class="ref__note">Bấm một dòng để chèn vào ô nhập (không tự chạy). Gõ đúng cú pháp rồi nhấn Enter.</p>
 </aside>
 
+<aside class="workflow" id="workflowPanel" aria-label="Gợi ý quy trình bán vé" aria-hidden="true">
+  <div class="workflow__head">
+    <div class="workflow__head-top">
+      <div>
+        <p class="workflow__eyebrow">AMADEUS WORKFLOW</p>
+        <h2>Command suggestions</h2>
+      </div>
+      <button type="button" id="workflowClose" class="workflow__close" aria-label="Đóng gợi ý lệnh">×</button>
+    </div>
+    <button type="button" id="workflowCopyAll" class="workflow__copy-all">Copy All</button>
+    <p class="workflow__note">Copy All copies upcoming commands as lines. The list stops at the first selection or prerequisite; run each command separately in the terminal.</p>
+  </div>
+  <div class="workflow__body">
+    <label class="workflow__contact-label" for="workflowContact">Contact (email or phone)</label>
+    <input id="workflowContact" class="workflow__contact" type="text" autocomplete="off" placeholder="Required before pricing">
+    <p class="workflow__syntax">
+      Uses this simulator’s command syntax: passenger name/APIS first, APIS issue-document-nationality order,
+      and SS quantity-class-line. PTC is shown as passenger type, not appended to NM.
+    </p>
+    <div id="workflowRoutes" class="workflow__routes"></div>
+    <ol id="workflowCommands" class="workflow__commands"></ol>
+    <p id="workflowMessage" class="workflow__message" role="status" aria-live="polite"></p>
+  </div>
+</aside>
+
 <script>
 (function () {
   'use strict';
@@ -269,6 +362,16 @@ body::after{
   var refList = document.getElementById('refList');
   var msgbarText = document.getElementById('msgbarText');
   var statusTimeEl = document.getElementById('statusTime');
+  var workflowPanel = document.getElementById('workflowPanel');
+  var workflowContactInput = document.getElementById('workflowContact');
+  var workflowRoutesEl = document.getElementById('workflowRoutes');
+  var workflowCommandsEl = document.getElementById('workflowCommands');
+  var workflowMessageEl = document.getElementById('workflowMessage');
+  var workflowCopyAllButton = document.getElementById('workflowCopyAll');
+  var workflowSelections = {};
+  var workflowSteps = [];
+  var workflowCustomerId = null;
+  var workflowContactValue = '';
 
   function esc(s){
     return String(s).replace(/[&<>"']/g, function(c){
@@ -1454,6 +1557,366 @@ body::after{
     });
   }
 
+  function getWorkflowState(){
+    var ticket = G.awaitingNext && G.log.length ? G.log[G.log.length - 1] : null;
+    var activeSegments = pnr ? pnr.segs : (ticket ? ticket.segs : []);
+    return {
+      active: !!cust && !G.over,
+      blocked: !!G.issue || G.over,
+      ticketed: !!G.awaitingNext,
+      customerId: cust ? cust.uid : null,
+      passengers: cust ? cust.pax.map(function(p){
+        var fallbackTitle = p.sex === 'M' ? (p.type === 'ADT' ? 'MR' : 'MSTR') : (p.type === 'ADT' ? 'MS' : 'MISS');
+        return {
+          surname: p.surnameUp,
+          given: p.givenUp,
+          title: p.title || fallbackTitle,
+          type: p.type,
+          sex: p.sex,
+          entered: p.entered,
+          apisDone: p.apisDone,
+          docType: p.docType,
+          docIssue: p.docIssue,
+          docNo: p.docNo,
+          nationality: p.nationality,
+          dob: p.dob,
+          expiry: p.docExpiry
+        };
+      }) : [],
+      legs: cust ? cust.legs.map(function(leg){
+        var schedule = cust.sched[leg.from + '-' + leg.to + '-' + leg.date];
+        return {
+          from: leg.from,
+          to: leg.to,
+          date: leg.date,
+          flights: schedule ? schedule.flights.map(function(f){
+            return { line: f.line, number: f.no, dep: f.dep, arr: f.arr, availability: Object.assign({}, f.av) };
+          }) : []
+        };
+      }) : [],
+      seatCount: cust ? cust.party.adt + cust.party.chd : 0,
+      correctClass: cust ? cust.correctClass : '',
+      contact: pnr ? pnr.contact : (ticket ? ticket.contact : ''),
+      special: cust ? cust.special : null,
+      specialDone: pnr ? pnr.ssr.indexOf(cust.special) >= 0 : (ticket ? ticket.ssr.indexOf(cust.special) >= 0 : false),
+      segments: activeSegments.map(function(seg){
+        return { from: seg.from, to: seg.to, date: seg.date, line: seg.line, number: seg.no, classCode: seg.cls, quantity: seg.qty };
+      }),
+      priced: !!(pnr && pnr.priced) || !!ticket,
+      locator: pnr ? pnr.locator : (ticket ? ticket.locator : '')
+    };
+  }
+
+  function workflowNode(tag, className, text){
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function workflowRouteKey(leg){
+    return leg.from + '-' + leg.to + '-' + leg.date;
+  }
+
+  function workflowValidContact(value){
+    return value.indexOf('@') >= 0 || value.replace(/[^0-9]/g, '').length >= 8;
+  }
+
+  function workflowAddStep(steps, command, label, status, note, placeholder){
+    steps.push({
+      command: command,
+      label: label,
+      status: status,
+      note: note || '',
+      placeholder: !!placeholder
+    });
+  }
+
+  function workflowSelectedSegment(leg, state){
+    for (var i=0;i<state.segments.length;i++){
+      var seg = state.segments[i];
+      if (seg.from === leg.from && seg.to === leg.to && seg.date === leg.date) return seg;
+    }
+    return null;
+  }
+
+  function workflowChosenFlight(leg, seatCount){
+    var choice = workflowSelections[workflowRouteKey(leg)];
+    if (!choice || !choice.line || !choice.classCode) return null;
+    for (var i=0;i<leg.flights.length;i++){
+      if (leg.flights[i].line === Number(choice.line)){
+        var count = leg.flights[i].availability[choice.classCode] || 0;
+        if (count >= seatCount){
+          return { flight:leg.flights[i], classCode:choice.classCode };
+        }
+      }
+    }
+    return null;
+  }
+
+  function workflowBuildSteps(state){
+    var steps = [];
+    var passengerDataComplete = state.passengers.length > 0 && state.passengers.every(function(p){
+      return p.entered && p.apisDone;
+    });
+
+    state.passengers.forEach(function(p, index){
+      var nameCommand = 'NM1' + p.title + ' ' + p.surname + '/' + p.given;
+      workflowAddStep(steps, nameCommand, 'Name · ' + (index + 1) + ' (' + p.type + ')',
+        p.entered ? 'done' : (state.blocked ? 'pending' : 'ready'),
+        p.entered ? 'Name and title are already in the PNR.' : 'Use the simulator title; passenger type is shown for reference.');
+
+      var apisCommand = 'APIS ' + p.docType + '/' + p.docIssue + '/' + p.docNo + '/' +
+        p.nationality + '/' + p.dob + '/' + p.sex + '/' + p.expiry + '/' + p.surname + '/' + p.given;
+      workflowAddStep(steps, apisCommand, 'APIS · ' + (index + 1) + ' (' + p.type + ')',
+        p.apisDone ? 'done' : (!p.entered || state.blocked ? 'pending' : 'ready'),
+        p.apisDone ? 'APIS is already stored.' : 'Simulator order: document type / issue country / number / nationality / birth / gender / expiry / name.');
+    });
+
+    state.legs.forEach(function(leg, index){
+      var routeLabel = leg.from + ' → ' + leg.to + ' · ' + leg.date;
+      var existing = workflowSelectedSegment(leg, state);
+      if (existing){
+        workflowAddStep(steps, 'AN' + leg.date + leg.from + leg.to, 'Availability · ' + routeLabel, 'done',
+          'Availability was already used for the held segment.');
+        workflowAddStep(steps, 'SS' + existing.quantity + existing.classCode + existing.line,
+          'Sell segment · ' + routeLabel, 'done', existing.number + ' · class ' + existing.classCode + ' · line ' + existing.line + ' is held.');
+        return;
+      }
+
+      var availabilityStatus = state.blocked || !passengerDataComplete ? 'pending' : 'ready';
+      workflowAddStep(steps, 'AN' + leg.date + leg.from + leg.to, 'Availability · ' + routeLabel,
+        availabilityStatus, passengerDataComplete ? 'Run AN to load the available flight lines.' : 'Enter all passenger names and APIS first.');
+
+      var chosen = workflowChosenFlight(leg, state.seatCount);
+      if (chosen){
+        workflowAddStep(steps, 'SS' + state.seatCount + chosen.classCode + chosen.flight.line,
+          'Sell segment · ' + routeLabel, state.blocked ? 'pending' : 'ready',
+          chosen.flight.number + ' · class ' + chosen.classCode + ' · ' + state.seatCount + ' seat(s).');
+      } else {
+        workflowAddStep(steps, 'SS' + state.seatCount + '<CLASS><LINE>',
+          'Sell segment · ' + routeLabel, 'pending',
+          leg.flights.length ? 'Choose a flight line and a class with enough seats above.' : 'Run AN first, then choose a flight line and booking class.',
+          true);
+      }
+    });
+
+    var allSegmentsHeld = state.legs.length > 0 && state.legs.every(function(leg){
+      return !!workflowSelectedSegment(leg, state);
+    });
+    var contact = state.contact || workflowContactValue.trim();
+    var contactValid = workflowValidContact(contact);
+    var contactReady = allSegmentsHeld && contactValid && !state.blocked;
+    workflowAddStep(steps, state.contact ? 'AP ' + state.contact : ('AP ' + (contact || '<email or phone>')),
+      'Contact', state.contact ? 'done' : (contactReady ? 'ready' : 'pending'),
+      state.contact ? 'Contact is already attached to the PNR.' :
+        (contactValid ? 'Contact will be added after all segments are held.' : 'Enter a valid phone number (8+ digits) or email in the field above.'),
+      !state.contact && !contactValid);
+
+    var specialReady = !state.special || state.specialDone;
+    if (state.special){
+      workflowAddStep(steps, 'SR ' + state.special, 'Special service · ' + state.special,
+        state.specialDone ? 'done' : (allSegmentsHeld && !state.blocked ? 'ready' : 'pending'),
+        state.specialDone ? 'Required SSR is already attached.' : 'This customer request must be added before pricing.');
+    }
+
+    var canPrice = passengerDataComplete && allSegmentsHeld && contactValid && specialReady && !state.blocked;
+    workflowAddStep(steps, 'FXP', 'Price', state.ticketed || state.priced ? 'done' : (canPrice ? 'ready' : 'pending'),
+      state.ticketed || state.priced ? 'Fare is already priced.' : 'Complete passenger, segment, contact and required service steps first.');
+
+    var canIssue = state.priced && !state.blocked;
+    workflowAddStep(steps, 'TTP', 'Issue ticket', state.ticketed ? 'done' : (canIssue ? 'ready' : 'pending'),
+      state.ticketed ? 'Ticket has already been issued.' : 'TTP is accepted as the simulator ticketing command; price the PNR first.');
+    workflowAddStep(steps, 'RT#' + (state.locator || '<PNR>'), 'Retrieve PNR',
+      state.ticketed ? 'ready' : 'pending',
+      state.ticketed ? 'Use the locator issued for this ticket.' : 'The locator is assigned when a segment is sold; retrieve after ticketing.',
+      !state.ticketed || !state.locator);
+    workflowAddStep(steps, 'NEXT', 'Next customer', state.ticketed ? 'ready' : 'pending',
+      state.ticketed ? 'Finish this customer and continue to the next one.' : 'Available after ticketing.');
+
+    if (state.blocked){
+      steps.forEach(function(step){
+        if (step.status === 'ready') step.status = 'pending';
+        step.note = 'Resolve the pending alert before continuing. ' + step.note;
+      });
+    }
+    return steps;
+  }
+
+  function workflowStepNode(step, index){
+    var item = workflowNode('li', 'workflow__step is-' + step.status);
+    var main = workflowNode('div', 'workflow__step-main');
+    var label = workflowNode('div', 'workflow__step-label');
+    label.appendChild(workflowNode('span', '', (index + 1) + '. ' + step.label));
+    label.appendChild(workflowNode('span', 'workflow__step-status',
+      step.status === 'done' ? 'Done' : (step.status === 'ready' ? 'Ready' : 'Select')));
+    main.appendChild(label);
+    main.appendChild(workflowNode('code', '', step.command));
+    if (step.note) main.appendChild(workflowNode('p', 'workflow__step-note', step.note));
+    var copy = workflowNode('button', 'workflow__copy', 'Copy');
+    copy.type = 'button';
+    copy.disabled = step.status === 'pending' || step.placeholder;
+    copy.setAttribute('aria-label', 'Copy ' + step.label + ' command');
+    copy.addEventListener('click', function(){
+      copyWorkflowText(step.command, 'Copied: ' + step.command);
+    });
+    item.appendChild(main);
+    item.appendChild(copy);
+    return item;
+  }
+
+  function workflowRenderRoutes(state){
+    workflowRoutesEl.replaceChildren();
+    state.legs.forEach(function(leg){
+      var route = workflowNode('section', 'workflow__route');
+      var head = workflowNode('div', 'workflow__route-head');
+      head.appendChild(workflowNode('span', '', leg.from + ' → ' + leg.to + ' · ' + leg.date));
+      var held = workflowSelectedSegment(leg, state);
+      head.appendChild(workflowNode('span', 'workflow__route-status', held ? 'HELD' : 'SELECT'));
+      route.appendChild(head);
+
+      if (held){
+        route.appendChild(workflowNode('p', 'workflow__route-hint',
+          held.number + ' · ' + held.classCode + ' · ' + held.quantity + ' seat(s) held.'));
+        workflowRoutesEl.appendChild(route);
+        return;
+      }
+
+      if (!leg.flights.length){
+        route.appendChild(workflowNode('p', 'workflow__route-hint', 'Copy and run AN' + leg.date + leg.from + leg.to + ' to load flight options.'));
+        workflowRoutesEl.appendChild(route);
+        return;
+      }
+
+      var key = workflowRouteKey(leg);
+      var selection = workflowSelections[key] || { line:'', classCode:'' };
+      var controls = workflowNode('div', 'workflow__route-controls');
+      var flightSelect = workflowNode('select', '');
+      flightSelect.setAttribute('aria-label', 'Select flight for ' + leg.from + ' to ' + leg.to);
+      var flightPrompt = workflowNode('option', '', 'Select flight line');
+      flightPrompt.value = '';
+      flightSelect.appendChild(flightPrompt);
+      leg.flights.forEach(function(flight){
+        var av = CLASS_ORDER.map(function(code){
+          return code + (flight.availability[code] || 0);
+        }).join(' ');
+        var option = workflowNode('option', '',
+          'L' + flight.line + ' ' + flight.number + ' · ' + fmtClock(flight.dep) + '-' + fmtClock(flight.arr) + ' · ' + av);
+        option.value = String(flight.line);
+        flightSelect.appendChild(option);
+      });
+      flightSelect.value = selection.line || '';
+
+      var classSelect = workflowNode('select', '');
+      classSelect.setAttribute('aria-label', 'Select booking class for ' + leg.from + ' to ' + leg.to);
+      var classPrompt = workflowNode('option', '', 'Class');
+      classPrompt.value = '';
+      classSelect.appendChild(classPrompt);
+      CLASS_ORDER.forEach(function(code){
+        var option = workflowNode('option', '', code);
+        option.value = code;
+        classSelect.appendChild(option);
+      });
+      classSelect.value = selection.classCode || '';
+      controls.appendChild(flightSelect);
+      controls.appendChild(classSelect);
+      route.appendChild(controls);
+      route.appendChild(workflowNode('p', 'workflow__route-hint',
+        'Required seats: ' + state.seatCount + '. Choose a row and an open class with enough availability.'));
+
+      flightSelect.addEventListener('change', function(){
+        var current = workflowSelections[key] || { line:'', classCode:'' };
+        current.line = flightSelect.value;
+        if (current.classCode && current.line){
+          var selectedFlight = leg.flights.filter(function(f){ return f.line === Number(current.line); })[0];
+          if (!selectedFlight || (selectedFlight.availability[current.classCode] || 0) < state.seatCount){
+            current.classCode = '';
+          }
+        }
+        workflowSelections[key] = current;
+        workflowRenderCommands(getWorkflowState());
+      });
+      classSelect.addEventListener('change', function(){
+        var current = workflowSelections[key] || { line:'', classCode:'' };
+        current.classCode = classSelect.value;
+        workflowSelections[key] = current;
+        workflowRenderCommands(getWorkflowState());
+      });
+      workflowRoutesEl.appendChild(route);
+    });
+  }
+
+  function workflowRenderCommands(state){
+    workflowSteps = workflowBuildSteps(state);
+    workflowCommandsEl.replaceChildren();
+    workflowSteps.forEach(function(step, index){
+      workflowCommandsEl.appendChild(workflowStepNode(step, index));
+    });
+    var readyCount = 0;
+    for (var i=0;i<workflowSteps.length;i++){
+      if (workflowSteps[i].status === 'pending') break;
+      if (workflowSteps[i].status === 'ready') readyCount++;
+    }
+    workflowCopyAllButton.disabled = readyCount === 0;
+    workflowCopyAllButton.textContent = readyCount ? 'Copy All (' + readyCount + ')' : 'Copy All';
+    workflowMessageEl.classList.toggle('is-error', !!state.blocked);
+    if (!state.active){
+      workflowMessageEl.textContent = 'No active customer.';
+    } else if (state.blocked){
+      workflowMessageEl.textContent = 'Resolve the active alert before continuing.';
+    } else {
+      workflowMessageEl.textContent = 'Generated from the current customer and itinerary. Data stays in this browser.';
+    }
+  }
+
+  function renderWorkflowPanel(){
+    var state = getWorkflowState();
+    if (state.customerId !== workflowCustomerId){
+      workflowCustomerId = state.customerId;
+      workflowSelections = {};
+      workflowContactValue = state.contact || '';
+    } else if (state.contact){
+      workflowContactValue = state.contact;
+    }
+    workflowContactInput.value = workflowContactValue;
+    workflowRenderRoutes(state);
+    workflowRenderCommands(state);
+  }
+
+  function notifyWorkflowState(){
+    renderWorkflowPanel();
+  }
+
+  function copyWorkflowText(text, successMessage){
+    function fallbackCopy(){
+      var area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.position = 'fixed';
+      area.style.left = '-9999px';
+      document.body.appendChild(area);
+      area.select();
+      var copied = false;
+      try {
+        copied = document.execCommand('copy');
+      } catch (error) {
+        console.error('Clipboard fallback failed.', error);
+      }
+      document.body.removeChild(area);
+      workflowMessageEl.textContent = copied ? successMessage : 'Clipboard access failed. Select and copy the command manually.';
+      workflowMessageEl.classList.toggle('is-error', !copied);
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){
+        workflowMessageEl.textContent = successMessage;
+        workflowMessageEl.classList.remove('is-error');
+      }, fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+  }
+
   /* ==================================================================
      15. LỆNH: TKTL — phát hành vé
      ================================================================== */
@@ -2115,7 +2578,7 @@ body::after{
     cust = makeCustomer();
     pnr = null;
     lastAN = null;
-    setTimeout(function(){ renderCustomer(); input.focus(); }, 220);
+    setTimeout(function(){ renderCustomer(); input.focus(); notifyWorkflowState(); }, 220);
   }
 
   function doNEXT(){
@@ -2287,6 +2750,7 @@ body::after{
       history.push(v.trim());
       histIdx = history.length;
       runCommand(v);
+      notifyWorkflowState();
     }
     input.value = '';
     input.focus();
@@ -2313,8 +2777,51 @@ body::after{
     input.focus();
   });
 
+  var workflowToggle = document.getElementById('workflowToggle');
+  workflowToggle.addEventListener('click', function(){
+    var isOpen = workflowPanel.classList.toggle('open');
+    workflowPanel.setAttribute('aria-hidden', String(!isOpen));
+    workflowToggle.setAttribute('aria-expanded', String(isOpen));
+    if (isOpen) renderWorkflowPanel();
+  });
+  document.getElementById('workflowClose').addEventListener('click', function(){
+    workflowPanel.classList.remove('open');
+    workflowPanel.setAttribute('aria-hidden', 'true');
+    workflowToggle.setAttribute('aria-expanded', 'false');
+    workflowToggle.focus();
+  });
+  workflowPanel.addEventListener('click', function(e){ e.stopPropagation(); });
+  workflowContactInput.addEventListener('input', function(){
+    workflowContactValue = workflowContactInput.value;
+    workflowRenderCommands(getWorkflowState());
+  });
+  workflowCopyAllButton.addEventListener('click', function(){
+    var commands = [];
+    for (var i=0;i<workflowSteps.length;i++){
+      var step = workflowSteps[i];
+      if (step.status === 'pending') break;
+      if (step.status === 'ready' && !step.placeholder) commands.push(step.command);
+    }
+    if (commands.length) copyWorkflowText(commands.join('\n'), 'Copied ' + commands.length + ' command(s). Execute them one at a time.');
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && workflowPanel.classList.contains('open')){
+      workflowPanel.classList.remove('open');
+      workflowPanel.setAttribute('aria-hidden', 'true');
+      workflowToggle.setAttribute('aria-expanded', 'false');
+      workflowToggle.focus();
+    }
+  });
+
+  if (window.matchMedia && window.matchMedia('(min-width: 1100px)').matches){
+    workflowPanel.classList.add('open');
+    workflowPanel.setAttribute('aria-hidden', 'false');
+    workflowToggle.setAttribute('aria-expanded', 'true');
+  }
+
   boot();
   input.focus();
+  notifyWorkflowState();
 })();
 </script>
 </body>
