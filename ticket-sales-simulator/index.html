@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ticket Sales Simulator — Amadeus Terminal</title>
-<meta name="description" content="Game mô phỏng quầy vé máy bay trên giao diện terminal Amadeus: nhập tên + APIS (chuẩn IATA), gõ lệnh AN, SS, AP, SR, FXP, TKTL để tra cứu, bán chỗ, tạo PNR và xuất vé; tra lại vé bằng RT#PNR rồi NEXT sang khách kế tiếp.">
+<meta name="description" content="Game mô phỏng quầy vé máy bay trên giao diện terminal Amadeus: nhập tên + APIS, tra cứu TIM mô phỏng trước khi TTP/TKTL, bán chỗ, tạo PNR, tra lại vé và NEXT sang khách kế tiếp.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23000033'/%3E%3Ctext x='16' y='22' font-family='monospace' font-size='16' fill='%2300ffff' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -277,6 +277,23 @@ body::after{
 .workflow__copy:hover,.workflow__close:hover{color:var(--bg);background:var(--cyan)}
 .workflow__message{min-height:1em;margin:10px 0 0;color:var(--green);font-size:.7rem}
 .workflow__message.is-error{color:var(--red)}
+.workflow__tim{
+  margin-top:16px;padding:12px;border:1px solid rgba(0,255,255,.24);background:#00001f
+}
+.workflow__tim h3{margin:0 0 6px;color:var(--cyan);font-size:.78rem;letter-spacing:.06em}
+.workflow__tim-status{margin:0;color:var(--dim);font-size:.67rem;line-height:1.45}
+.workflow__tim-status.is-warning{color:var(--yellow)}
+.workflow__tim-status.is-error{color:var(--red)}
+.workflow__tim-points{margin:8px 0 0;padding-left:18px;color:var(--white);font-size:.66rem;line-height:1.5}
+.workflow__tim-actions{display:none;gap:8px;margin-top:10px}
+.workflow__tim-actions.is-visible{display:flex}
+.workflow__tim-actions button{
+  flex:1;padding:7px 10px;border:1px solid var(--cyan);background:var(--cyan);
+  color:var(--bg);font:inherit;font-size:.72rem;font-weight:700;cursor:pointer
+}
+.workflow__tim-actions button[data-answer="Y"]{border-color:var(--red);background:var(--red);color:var(--white)}
+.workflow__tim-actions button:hover{filter:brightness(1.15)}
+.workflow__tim-note{margin:8px 0 0;color:var(--dim);font-size:.62rem;line-height:1.4}
 .workflow__after-sales{
   margin-top:18px;padding-top:12px;border-top:1px dashed rgba(0,255,255,.35)
 }
@@ -369,6 +386,16 @@ body::after{
       Uses this simulator’s command syntax: passenger name/APIS first, APIS issue-document-nationality order,
       and SS quantity-class-line. PTC is shown as passenger type, not appended to NM.
     </p>
+    <section class="workflow__tim" aria-labelledby="workflowTimTitle">
+      <h3 id="workflowTimTitle">Pre-ticketing entry check · mock TIM/IATA</h3>
+      <p id="workflowTimStatus" class="workflow__tim-status" role="status" aria-live="polite">Run TIM to review the current itinerary; TTP checks automatically before issuing.</p>
+      <ul id="workflowTimPoints" class="workflow__tim-points" hidden></ul>
+      <div id="workflowTimActions" class="workflow__tim-actions" aria-label="Entry requirement decision">
+        <button type="button" data-answer="Y">Y · Cancel ticketing</button>
+        <button type="button" data-answer="N">N · Proceed with warning</button>
+      </div>
+      <p class="workflow__tim-note">Demo rules: VN passports to Japan/Korea need manual visa review; Singapore/Thailand/Malaysia are mock visa-free. APIS DOB is used for a demo minor-traveller review. Not an official TIM/IATA source.</p>
+    </section>
     <section class="workflow__after-sales" aria-labelledby="workflowAfterSalesTitle">
       <h3 id="workflowAfterSalesTitle">Post-issuance services</h3>
       <div class="workflow__after-sales-grid">
@@ -451,6 +478,9 @@ body::after{
   var workflowCommandsEl = document.getElementById('workflowCommands');
   var workflowMessageEl = document.getElementById('workflowMessage');
   var workflowCopyAllButton = document.getElementById('workflowCopyAll');
+  var workflowTimStatusEl = document.getElementById('workflowTimStatus');
+  var workflowTimPointsEl = document.getElementById('workflowTimPoints');
+  var workflowTimActionsEl = document.getElementById('workflowTimActions');
   var workflowSelections = {};
   var workflowSteps = [];
   var workflowCustomerId = null;
@@ -461,6 +491,8 @@ body::after{
   var workflowDocumentObserver = null;
   var workflowPassengerDetectionReady = false;
   var postIssueLocator = '';
+  var timResult = null;
+  var pendingTIMDecision = null;
   var postIssueFeeAmount = 150000;
   var postIssuePaymentDetails = 'CASH';
   var SALES_HISTORY_KEY = 'ticketSalesHistory';
@@ -1276,7 +1308,7 @@ body::after{
   }
 
   function blankPnr(){
-    return { locator:null, segs:[], contact:null, ssr:[], fees:[], fop:null, priced:null, ttl:null, ticketed:false };
+    return { locator:null, segs:[], contact:null, ssr:[], fees:[], fop:null, priced:null, ttl:null, ticketed:false, remarks:[] };
   }
 
   /* ==================================================================
@@ -1883,6 +1915,9 @@ body::after{
     });
     out('  <span class="dim">AP</span> ' + (pnr.contact ? '<span class="wh">' + pnr.contact + '</span>' : '<span class="rd">—</span>'), 'pre');
     if (pnr.ssr.length) out('  <span class="dim">SSR</span> <span class="wh">' + pnr.ssr.join(' · ') + '</span>', 'pre');
+    (pnr.remarks || []).forEach(function(remark){
+      out('  <span class="dim">RM</span> <span class="wh">' + esc(remark) + '</span>', 'pre');
+    });
     out('  <span class="dim">TTL</span> ' + (pnr.ttl ? '<span class="am">' + fmtClock(pnr.ttl) + '</span>' : '—'), 'pre');
     if (pnr.priced) out('  <span class="dim">TOTAL</span> <span class="gr">' + money(pnr.priced.total) + ' VND</span>', 'pre');
     blank();
@@ -1911,6 +1946,9 @@ body::after{
     });
     out('  ' + rule('-', 56), 'rule pre');
     out('   <span class="dim">LIÊN HỆ</span> ' + esc(t.contact) + '   <span class="dim">SSR</span> ' + (t.ssr.length ? esc(t.ssr.join(' · ')) : '—'), 'pre');
+    (t.remarks || []).forEach(function(remark){
+      out('   <span class="dim">RM</span> <span class="wh">' + esc(remark) + '</span>', 'pre');
+    });
     (t.afterSalesServices || []).forEach(function(service){
       out('   <span class="dim">AFTER-SALES</span> ' + esc(service.code) + ' · ' +
         (service.free ? 'NO FEE' : !service.feeRequested ? 'FEE NOT SET' :
@@ -2173,9 +2211,19 @@ body::after{
     workflowAddStep(steps, 'FXP', 'Price', state.ticketed || state.priced ? 'done' : (canPrice ? 'ready' : 'pending'),
       state.ticketed || state.priced ? 'Fare is already priced.' : 'Complete passenger, segment, contact and required service steps first.');
 
-    var canIssue = state.priced && !state.blocked;
+    var timCurrent = timResult && timResult.signature === timDataSignature() ? timResult : null;
+    var canCheckTIM = passengerDataComplete && state.legs.length > 0 && !state.blocked;
+    workflowAddStep(steps, pendingTIMDecision ? 'Y / N' : 'TIM',
+      pendingTIMDecision ? 'Resolve entry warning' : 'Entry requirements · mock TIM',
+      pendingTIMDecision ? 'pending' : (timCurrent && timCurrent.status === 'CLEAR' ? 'done' : (canCheckTIM ? 'ready' : 'pending')),
+      pendingTIMDecision ? 'Choose Y to cancel ticketing or N to proceed with the responsibility notice.' :
+        (timCurrent && timCurrent.status === 'CLEAR' ? 'Mock check is clear; TTP will recheck automatically.' :
+          'Optional manual review; TTP also performs this check automatically before issuing.'));
+
+    var canIssue = state.priced && !state.blocked && !pendingTIMDecision;
     workflowAddStep(steps, 'TTP', 'Issue ticket', state.ticketed ? 'done' : (canIssue ? 'ready' : 'pending'),
-      state.ticketed ? 'Ticket has already been issued.' : 'TTP is accepted as the simulator ticketing command; price the PNR first.');
+      state.ticketed ? 'Ticket has already been issued.' :
+        (pendingTIMDecision ? 'Resolve the TIM Y/N decision before ticketing.' : 'TTP runs the mock TIM check immediately before ticketing.'));
     workflowAddStep(steps, 'RT#' + (state.locator || '<PNR>'), 'Retrieve PNR',
       state.ticketed ? 'ready' : 'pending',
       state.ticketed ? 'Use the locator issued for this ticket.' : 'The locator is assigned when a segment is sold; retrieve after ticketing.',
@@ -2432,6 +2480,12 @@ body::after{
   function renderWorkflowPanel(){
     var state = getWorkflowState();
     if (state.customerId !== workflowCustomerId){
+      if (pendingTIMDecision && pendingTIMDecision.customerId !== state.customerId){
+        pendingTIMDecision = null;
+        timResult = null;
+      } else if (timResult && timResult.signature !== timDataSignature()){
+        timResult = null;
+      }
       workflowCustomerId = state.customerId;
       workflowSelections = {};
       workflowContactValue = state.contact || '';
@@ -2442,10 +2496,255 @@ body::after{
     workflowRenderRoutes(state);
     workflowRenderCommands(state);
     workflowRenderAfterSales();
+    renderTIMPanel();
   }
 
   function notifyWorkflowState(){
     if (workflowPassengerDetectionReady) renderWorkflowPanel();
+  }
+
+  var TIM_COUNTRY = {
+    HAN:{code:'VN',name:'Viet Nam'}, SGN:{code:'VN',name:'Viet Nam'},
+    DAD:{code:'VN',name:'Viet Nam'}, PQC:{code:'VN',name:'Viet Nam'},
+    CXR:{code:'VN',name:'Viet Nam'}, HPH:{code:'VN',name:'Viet Nam'},
+    SIN:{code:'SG',name:'Singapore'}, BKK:{code:'TH',name:'Thailand'},
+    ICN:{code:'KR',name:'Republic of Korea'}, KUL:{code:'MY',name:'Malaysia'},
+    NRT:{code:'JP',name:'Japan'}
+  };
+  var TIM_RULES = {
+    VN:{
+      visaRequired:['JP','KR'],
+      transitVisaRequired:['JP'],
+      visaFree:['VN','SG','TH','MY'],
+      minorReviewAge:18
+    }
+  };
+
+  function ageAtTravel(dob, travelDate){
+    var birth = String(dob || '').match(/^(\d{2})(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)(\d{4})$/);
+    var departure = String(travelDate || '').match(/^(\d{2})(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)$/);
+    if (!birth || !departure) return null;
+    var monthIndex = {JAN:0,FEB:1,MAR:2,APR:3,MAY:4,JUN:5,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11};
+    var born = new Date(Date.UTC(Number(birth[3]), monthIndex[birth[2]], Number(birth[1])));
+    var bornValid = born.getUTCFullYear() === Number(birth[3]) &&
+      born.getUTCMonth() === monthIndex[birth[2]] && born.getUTCDate() === Number(birth[1]);
+    if (!bornValid) return null;
+    var year = typeof TRAVEL_YEAR === 'number' ? TRAVEL_YEAR : new Date().getUTCFullYear();
+    var trip = new Date(Date.UTC(year, monthIndex[departure[2]], Number(departure[1])));
+    if (trip.getUTCMonth() !== monthIndex[departure[2]] || trip.getUTCDate() !== Number(departure[1])) return null;
+    var age = trip.getUTCFullYear() - born.getUTCFullYear();
+    if (trip.getUTCMonth() < born.getUTCMonth() ||
+        (trip.getUTCMonth() === born.getUTCMonth() && trip.getUTCDate() < born.getUTCDate())) age--;
+    return age >= 0 ? age : null;
+  }
+
+  function timDataSignature(){
+    if (!cust) return '';
+    return JSON.stringify({
+      customerId:cust.uid,
+      passengers:cust.pax.map(function(p){ return [p.nationality || '', p.dob || '', !!p.apisDone]; }),
+      legs:cust.legs.map(function(leg){ return [leg.from, leg.to]; })
+    });
+  }
+
+  function checkTIMEntryRequirements(){
+    var signature = timDataSignature();
+    var checks = [];
+    var incomplete = !cust || !cust.pax.length || !cust.legs.length;
+    if (cust){
+      cust.pax.forEach(function(passenger){
+        var age = ageAtTravel(passenger.dob, cust.legs[0] && cust.legs[0].date);
+        if (!passenger.apisDone || !passenger.nationality){
+          incomplete = true;
+          checks.push({
+            passenger:passenger.canon || passenger.display,
+            dob:passenger.dob || '',
+            age:age,
+            point:'—',
+            role:'APIS',
+            result:'INCOMPLETE',
+            detail:'Enter and validate APIS before checking nationality requirements.'
+          });
+          return;
+        }
+
+        var rule = TIM_RULES[passenger.nationality];
+        var minorNeedsReview = !!rule && (age === null || age < rule.minorReviewAge);
+        var routePoints = [];
+        cust.legs.forEach(function(leg){
+          var point = TIM_COUNTRY[leg.to];
+          if (!point) point = { code:'??', name:'Unknown location' };
+          if (point.code !== passenger.nationality &&
+              !routePoints.some(function(existing){ return existing.airport === leg.to; })){
+            routePoints.push({ airport:leg.to, country:point.code, countryName:point.name });
+          }
+        });
+        var finalDestination = routePoints.length ? routePoints[routePoints.length - 1].airport : '';
+
+        if (!routePoints.length){
+          checks.push({
+            passenger:passenger.canon,
+            dob:passenger.dob,
+            age:age,
+            point:'Domestic / home-country itinerary',
+            role:'DESTINATION',
+            result:'CLEAR',
+            detail:'No foreign entry point in the itinerary.'
+          });
+        }
+
+        routePoints.forEach(function(point){
+          var role = point.airport === finalDestination ? 'DESTINATION' : 'TRANSIT';
+          var result = 'REVIEW';
+          var detail = 'No mock rule for this nationality; verify current official entry and transit requirements.';
+          if (rule){
+            var requiresVisa = role === 'DESTINATION' ?
+              rule.visaRequired.indexOf(point.country) >= 0 :
+              rule.transitVisaRequired.indexOf(point.country) >= 0;
+            var isVisaFree = rule.visaFree.indexOf(point.country) >= 0;
+            if (requiresVisa){
+              result = 'WARNING';
+              detail = role === 'DESTINATION' ?
+                'Mock TIM: visa required; visa/document possession is not recorded in this simulator.' :
+                'Mock TIM: transit visa required; transit-document possession is not recorded in this simulator.';
+            } else if (isVisaFree){
+              if (minorNeedsReview){
+                result = 'REVIEW';
+                detail = age === null ?
+                  'Mock TIM: visa-free demo rule, but APIS DOB could not be used to check minor-traveller documentation.' :
+                  'Mock TIM: visa-free demo rule, but minor-traveller consent/document requirements need manual review (age ' + age + ').';
+              } else {
+                result = 'CLEAR';
+                detail = 'Mock TIM: no visa requirement in this demo rule set.';
+              }
+            } else {
+              result = 'REVIEW';
+            }
+          }
+          checks.push({
+            passenger:passenger.canon,
+            dob:passenger.dob,
+            age:age,
+            point:point.airport + ' · ' + point.countryName,
+            country:point.country,
+            role:role,
+            result:result,
+            detail:detail
+          });
+        });
+      });
+    }
+    var warning = checks.some(function(check){ return check.result === 'WARNING' || check.result === 'REVIEW'; });
+    return {
+      signature:signature,
+      checks:checks,
+      complete:!incomplete,
+      status:incomplete ? 'INCOMPLETE' : (warning ? 'REVIEW' : 'CLEAR')
+    };
+  }
+
+  function renderTIMPanel(){
+    if (timResult && !pendingTIMDecision && timResult.signature !== timDataSignature()){
+      timResult = null;
+    }
+    workflowTimPointsEl.replaceChildren();
+    workflowTimPointsEl.hidden = !timResult || !timResult.checks.length;
+    workflowTimActionsEl.classList.toggle('is-visible', !!pendingTIMDecision);
+    workflowTimStatusEl.classList.remove('is-warning', 'is-error');
+
+    if (pendingTIMDecision){
+      workflowTimStatusEl.textContent = 'TTP PAUSED: entry documents could not be confirmed under this mock rule set. Choose Y to cancel ticketing and return to the PNR, or N to proceed with the responsibility remark and simulated email.';
+      workflowTimStatusEl.classList.add('is-warning');
+    } else if (!timResult){
+      workflowTimStatusEl.textContent = 'Run TIM to review the current itinerary; TTP checks automatically before issuing.';
+    } else if (timResult.status === 'INCOMPLETE'){
+      workflowTimStatusEl.textContent = 'TIM CHECK INCOMPLETE — enter valid APIS and itinerary details first.';
+      workflowTimStatusEl.classList.add('is-error');
+    } else if (timResult.status === 'CLEAR'){
+      workflowTimStatusEl.textContent = 'MOCK TIM: requirements appear met under the limited demo rules. TTP may proceed.';
+    } else if (timResult.status === 'CANCELLED'){
+      workflowTimStatusEl.textContent = 'Ticketing cancelled by agent. PNR remains open; review the itinerary or entry documents, then retry TTP.';
+      workflowTimStatusEl.classList.add('is-warning');
+    } else if (timResult.status === 'OVERRIDDEN'){
+      workflowTimStatusEl.textContent = 'Agent proceeded after the warning. Responsibility remark was added and the notice was simulated to the passenger.';
+      workflowTimStatusEl.classList.add('is-warning');
+    } else {
+      workflowTimStatusEl.textContent = 'MOCK TIM WARNING — check the listed destination/transit requirements before ticketing.';
+      workflowTimStatusEl.classList.add('is-warning');
+    }
+
+    if (!timResult) return;
+    timResult.checks.forEach(function(check){
+      var item = document.createElement('li');
+      var ageText = check.dob ? ' · DOB ' + check.dob + (check.age === null ? '' : ' (age ' + check.age + ')') : '';
+      item.textContent = check.passenger + ageText + ' · ' + check.role + ' · ' + check.point + ' · ' + check.result + ' — ' + check.detail;
+      workflowTimPointsEl.appendChild(item);
+    });
+  }
+
+  function doTIM(){
+    if (!cust || G.awaitingNext){
+      err('TIM CHECK REQUIRES AN ACTIVE, UNTICKETED CUSTOMER');
+      blank();
+      return;
+    }
+    timResult = checkTIMEntryRequirements();
+    renderTIMPanel();
+    out('<span class="hl">TIM</span>');
+    if (!timResult.complete){
+      err('MOCK TIM CHECK INCOMPLETE — COMPLETE PASSENGER APIS FIRST');
+    } else if (timResult.status === 'CLEAR'){
+      ok('MOCK TIM CLEAR — LIMITED DEMO RULES SHOW NO VISA REQUIREMENT FOR THIS ITINERARY');
+    } else {
+      err('MOCK TIM WARNING — REVIEW DESTINATION / TRANSIT REQUIREMENTS BEFORE TTP');
+    }
+    timResult.checks.forEach(function(check){
+      var ageText = check.dob ? ' · DOB ' + check.dob + (check.age === null ? '' : ' (age ' + check.age + ')') : '';
+      var output = check.passenger + ageText + ' · ' + check.role + ' · ' + check.point + ' · ' + check.result + ' — ' + check.detail;
+      out('  <span class="' + (check.result === 'CLEAR' ? 'gr' : 'rd') + '">' + esc(output) + '</span>', 'pre');
+    });
+    out('  <span class="dim">TRAINING RULES ONLY — VERIFY CURRENT OFFICIAL REQUIREMENTS.</span>', 'pre');
+    blank();
+  }
+
+  function resolveTIMDecision(answer){
+    if (!pendingTIMDecision) return;
+    if (answer !== 'Y' && answer !== 'N'){
+      err('TIM DECISION REQUIRED — ENTER Y OR N');
+      return;
+    }
+    if (!cust || !pnr || pendingTIMDecision.customerId !== cust.uid ||
+        pendingTIMDecision.locator !== pnr.locator ||
+        pendingTIMDecision.signature !== timDataSignature()){
+      pendingTIMDecision = null;
+      timResult = null;
+      renderTIMPanel();
+      err('TIM DECISION EXPIRED — RUN TIM / RETRY TTP FOR THE CURRENT PNR');
+      return;
+    }
+
+    pendingTIMDecision = null;
+    out('<span class="hl">' + answer + '</span>');
+    if (answer === 'Y'){
+      timResult.status = 'CANCELLED';
+      renderTIMPanel();
+      err('TICKETING CANCELLED — NO TICKET ISSUED. RETURNING TO THE OPEN PNR.');
+      blank();
+      doRT();
+      return;
+    }
+
+    var notice = 'PAX RESPONSIBLE FOR VISA/ENTRY REQUIREMENTS';
+    if (!pnr.remarks) pnr.remarks = [];
+    if (pnr.remarks.indexOf(notice) < 0) pnr.remarks.push(notice);
+    timResult.status = 'OVERRIDDEN';
+    renderTIMPanel();
+    out('  <span class="am">RM ' + esc(notice) + '</span>', 'pre');
+    var recipient = pnr.contact || 'passenger contact not recorded';
+    out('  <span class="dim">SIMULATED EMAIL TO ' + esc(recipient) + ': ' + esc(notice) + '.</span>', 'pre');
+    out('  <span class="dim">No email was sent; this is an on-screen training simulation.</span>', 'pre');
+    blank();
+    doTicketing(true);
   }
 
   function observeWorkflowPassengerContainer(){
@@ -2511,7 +2810,7 @@ body::after{
   /* ==================================================================
      15. LỆNH: TKTL — phát hành vé
      ================================================================== */
-  function doTicketing(){
+  function doTicketing(skipTIMCheck){
     if (!pnr || !pnr.segs.length){ err('NO ACTIVE PNR — HÃY DÙNG AN + SS ĐỂ BÁN CHỖ'); return; }
     var missing = [];
     var needNames = cust.pax.filter(function(p){ return !p.entered; });
@@ -2532,6 +2831,35 @@ body::after{
       hint('Kiểm tra hồ sơ bằng lệnh RT');
       blank();
       return;
+    }
+
+    if (!skipTIMCheck){
+      timResult = checkTIMEntryRequirements();
+      renderTIMPanel();
+      if (!timResult.complete){
+        err('TICKETING PAUSED — COMPLETE APIS BEFORE THE MOCK TIM ENTRY CHECK');
+        blank();
+        return;
+      }
+      if (timResult.status !== 'CLEAR'){
+        pendingTIMDecision = {
+          customerId:cust.uid,
+          locator:pnr.locator,
+          signature:timResult.signature
+        };
+        renderTIMPanel();
+        out('<span class="hl">TIM / IATA ENTRY CHECK</span>');
+        err('ENTRY REQUIREMENT WARNING — TICKET NOT ISSUED. ENTER Y TO CANCEL AND RETURN TO PNR, OR N TO PROCEED WITH THE RESPONSIBILITY REMARK.');
+        timResult.checks.forEach(function(check){
+          var detail = check.passenger + ' · ' + check.role + ' · ' + check.point + ' · ' + check.result + ' — ' + check.detail;
+          out('  <span class="' + (check.result === 'CLEAR' ? 'gr' : 'rd') + '">' + esc(detail) + '</span>', 'pre');
+        });
+        out('  <span class="dim">Type Y or N, or choose an option in the AMADEUS WORKFLOW panel.</span>', 'pre');
+        blank();
+        hint('TIM WARNING — Y cancels ticketing; N proceeds with RM and simulated email');
+        return;
+      }
+      ok('MOCK TIM CLEAR — PROCEEDING WITH TICKETING');
     }
 
     var q = pnr.priced;
@@ -2581,6 +2909,7 @@ body::after{
       segs: pnr.segs.slice(),
       contact: pnr.contact,
       ssr: pnr.ssr.slice(),
+      remarks: (pnr.remarks || []).slice(),
       afterSalesServices: [],
       fees: pnr.fees.slice(),
       fop: pnr.fop ? { type:pnr.fop.type, raw:pnr.fop.raw, label:pnr.fop.label } : null,
@@ -3036,6 +3365,15 @@ body::after{
       showSalesHistoryInTerminal();
       return;
     }
+    if (pendingTIMDecision){
+      if (cmd === 'Y' || cmd === 'N'){
+        resolveTIMDecision(cmd);
+      } else {
+        err('TIM DECISION PENDING — ENTER Y TO CANCEL TICKETING OR N TO PROCEED WITH THE NOTICE');
+        blank();
+      }
+      return;
+    }
 
     // thời gian trôi theo thao tác (báo cáo chỉ để tra cứu — không tiêu tốn thời gian game)
     var isReport = /^(TJQ|TJD)/.test(cmd);
@@ -3087,6 +3425,8 @@ body::after{
       doFO(raw.replace(/^FO\s*/i, ''));
     } else if (/^APIS(\s|$)/.test(cmd)){
       doAPIS(raw.replace(/^APIS\s*/i, ''));
+    } else if (cmd === 'TIM'){
+      doTIM();
     } else if (/^AN\s*(\d{2})([A-Z]{3})([A-Z]{3})([A-Z]{3})(\/\w+)?$/.test(cmd)){
       var m = cmd.match(/^AN\s*(\d{2})([A-Z]{3})([A-Z]{3})([A-Z]{3})(\/\w+)?$/);
       doAN(m[1] + m[2], m[3], m[4]);
@@ -3257,8 +3597,10 @@ body::after{
     ['AP <PHONE>',           'Thêm liên hệ', 'AP 0912345678'],
     ['SR <CODE>',            'Yêu cầu dịch vụ đặc biệt (SSR)', 'SR CHML'],
     ['SR FEE',               'Ghi phí cho SSR hậu mãi sau khi xuất vé', 'SR FEE'],
+    ['TIM',                  'Kiểm tra mock yêu cầu nhập cảnh điểm đến / quá cảnh trước khi xuất vé', 'TIM'],
     ['FXP',                  'Tính giá vé, thuế, phí và d/vụ', 'FXP'],
     ['TQT',                  'Chỉ xem thuế & phí (chưa gồm giá vé)', 'TQT'],
+    ['TTP',                  'Kiểm tra TIM rồi phát hành vé; Y huỷ hoặc N tiếp tục có cảnh báo', 'TTP'],
     ['TKTL',                 'Phát hành vé điện tử', 'TKTL'],
     ['TTK',                  'Danh sách số vé đã xuất', 'TTK'],
     ['RT',                   'Xem lại PNR đang mở', 'RT'],
@@ -3290,7 +3632,8 @@ body::after{
     out('  <span class="dim">APIS: &lt;TYPE&gt;/&lt;ISSUE&gt;/&lt;DOCNO&gt;/&lt;NAT&gt;/&lt;DOB&gt;/&lt;SEX&gt;/&lt;EXP&gt;/&lt;SURNAME&gt;/&lt;GIVEN&gt;  (DOB/EXP = DDMMMYYYY)</span>', 'pre');
     out('  <span class="dim">Đổi tên: NACO&lt;LINE&gt;&lt;TÊN MỚI&gt; — đổi ≤3 ký tự miễn phí; &gt;3 ký tự thu phí (NACO).</span>', 'pre');
     out('  <span class="dim">Thông tin: EQ&lt;CODE&gt; tàu bay · WEA&lt;CITY&gt; thời tiết 5 ngày · DA&lt;CITY&gt; giải mã sân bay.</span>', 'pre');
-    out('  <span class="dim">Quy trình: NM → APIS → AN → SS → AP → (SO/SR/FO) → FXP → TKTL → (RT#PNR) → NEXT</span>', 'pre');
+    out('  <span class="dim">Quy trình: NM → APIS → AN → SS → AP → (SO/SR/FO) → FXP → TIM → TTP/TKTL. Cảnh báo TIM: Y huỷ xuất vé; N tiếp tục với RM + email mô phỏng.</span>', 'pre');
+    out('  <span class="dim">TIM là bộ quy tắc demo, không phải nguồn IATA/TIM chính thức; luôn xác minh yêu cầu hiện hành.</span>', 'pre');
     out('  <span class="dim">Hậu mãi: RT#PNR → SR WCHR/SPML → SR FEE → FP CASH (hoặc CK/CC...). Dùng bảng BÁN VÉ để chọn PNR, dịch vụ, phí và thanh toán.</span>', 'pre');
     out('  <span class="dim">Sự cố: sau giao dịch (TKTL/RF) có thể nổ ra TÌNH HUỐNG BẤT KHẢ KHÁNG — gõ số 1-3 để xử lý, ảnh hưởng DOANH THU / UY TÍN / CĂNG THẲNG.</span>', 'pre');
     out('  <span class="dim">Báo cáo: TJQ (agent) · TJQ/SOF (toàn VP) · TJD (ngày) · TJD/D-&lt;DDMMM&gt; (ngày cụ thể).</span>', 'pre');
@@ -3396,6 +3739,12 @@ body::after{
     workflowToggle.focus();
   });
   workflowPanel.addEventListener('click', function(e){ e.stopPropagation(); });
+  workflowTimActionsEl.addEventListener('click', function(e){
+    var button = e.target.closest('button[data-answer]');
+    if (!button || !pendingTIMDecision) return;
+    resolveTIMDecision(button.getAttribute('data-answer'));
+    notifyWorkflowState();
+  });
   workflowContactInput.addEventListener('input', function(){
     workflowContactValue = workflowContactInput.value;
     workflowRenderCommands(getWorkflowState());
