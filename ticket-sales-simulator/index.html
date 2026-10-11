@@ -2095,8 +2095,89 @@ body::after{
     out('  ' + rule('=', 56), 'rule pre');
     out('<button type="button" class="boarding-pass-trigger" data-print-boarding="' + esc(t.locator) + '">PRINT BOARDING PASSES · ' + esc(t.locator) + '</button>');
     blank();
-    if (G.awaitingNext) hint("GÕ 'NEXT' ĐỂ TIẾP NHẬN KHÁCH KẾ TIẾP");
+    if (G.awaitingNext){
+      hint("GÕ 'P' IN VÉ · 'NEXT' TIẾP NHẬN KHÁCH KẾ TIẾP");
+    }
     blank();
+  }
+
+  function printTicket(ticket){
+    if (!ticket){
+      err('NO ISSUED TICKET — ISSUE A TICKET OR USE P#<PNR>');
+      return;
+    }
+    var printWindow = window.open('', '_blank');
+    if (!printWindow){
+      err('POP-UP BỊ CHẶN — CHO PHÉP POP-UP RỒI THỬ LẠI LỆNH P');
+      return;
+    }
+    var passengers = ticket.pax.map(function(passenger){
+      return '<tr><td>' + esc((passenger.title ? passenger.title + ' ' : '') + passenger.canon) +
+        '</td><td>' + esc(passenger.type) + '</td></tr>';
+    }).join('');
+    var segments = ticket.segs.map(function(segment){
+      return '<tr><td>' + esc(segment.no) + '</td><td>' + esc(segment.from + ' – ' + segment.to) +
+        '</td><td>' + esc(segment.date) + '</td><td>' + esc(fmtTime(segment.dep) + '–' + fmtTime(segment.arr)) +
+        '</td><td>' + esc(segment.cls) + '</td><td>' + esc(String(segment.qty)) + '</td></tr>';
+    }).join('');
+    var feeRows = (ticket.fees || []).map(function(fee){
+      return '<tr><th>' + esc(fee.label) + '</th><td>' + esc(money(fee.amt)) + ' VND</td></tr>';
+    }).join('');
+    var remarks = (ticket.remarks || []).map(function(remark){
+      return '<p><strong>RM</strong> ' + esc(remark) + '</p>';
+    }).join('');
+    printWindow.document.write(
+      '<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>E-ticket ' +
+      esc(ticket.ticketNo) + '</title><style>' +
+      'body{font:14px/1.45 Arial,sans-serif;color:#17212b;max-width:850px;margin:32px auto;padding:0 24px}' +
+      'header{border-bottom:3px solid #008c95;padding-bottom:12px;margin-bottom:20px}' +
+      'h1{font-size:22px;margin:0 0 4px}h2{font-size:15px;margin:22px 0 8px;color:#006b73}' +
+      '.meta{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px}.meta strong{display:block;color:#53616d;font-size:11px;text-transform:uppercase}' +
+      'table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid #d8e0e5}' +
+      '.amounts{max-width:440px;margin:14px 0 0 auto}.total{font-size:17px;font-weight:bold}' +
+      'footer{margin-top:30px;padding-top:12px;border-top:1px solid #d8e0e5;color:#53616d;font-size:11px}' +
+      '@media print{body{margin:0 auto;padding:0}h2{break-after:avoid}tr{break-inside:avoid}}' +
+      '</style></head><body><header><h1>VÉ ĐIỆN TỬ · HUNG HA AIRWAYS</h1>' +
+      '<div>E-ticket receipt — bản mô phỏng</div></header>' +
+      '<section class="meta"><div><strong>PNR</strong>' + esc(ticket.locator) + '</div>' +
+      '<div><strong>Số vé</strong>' + esc(ticket.ticketNo) + '</div>' +
+      '<div><strong>Ngày / giờ xuất</strong>15NOV · ' + esc(ticket.time) + '</div>' +
+      '<div><strong>Liên hệ</strong>' + esc(ticket.contact || '—') + '</div></section>' +
+      '<h2>Hành khách</h2><table><thead><tr><th>Họ tên</th><th>PTC</th></tr></thead><tbody>' + passengers + '</tbody></table>' +
+      '<h2>Hành trình</h2><table><thead><tr><th>Chuyến bay</th><th>Tuyến</th><th>Ngày</th><th>Giờ</th><th>Hạng</th><th>SL</th></tr></thead><tbody>' + segments + '</tbody></table>' +
+      '<section class="amounts"><table><tbody>' +
+      '<tr><th>Giá vé</th><td>' + esc(money(ticket.priced.fare)) + ' VND</td></tr>' +
+      '<tr><th>VAT 8%</th><td>' + esc(money(ticket.priced.vat)) + ' VND</td></tr>' +
+      '<tr><th>Sân bay + an ninh</th><td>' + esc(money(ticket.priced.airport + ticket.priced.security)) + ' VND</td></tr>' +
+      '<tr><th>Phí xuất vé</th><td>' + esc(money(ticket.priced.ticketing)) + ' VND</td></tr>' +
+      feeRows + '<tr class="total"><th>Tổng cộng</th><td>' + esc(money(ticket.priced.total)) + ' VND</td></tr>' +
+      '</tbody></table></section>' +
+      (ticket.fop ? '<p><strong>Thanh toán:</strong> ' + esc(ticket.fop.label) + ' (' + esc(ticket.fop.raw) + ')</p>' : '') +
+      (ticket.ssr.length ? '<p><strong>Dịch vụ:</strong> ' + esc(ticket.ssr.join(' · ')) + '</p>' : '') +
+      remarks +
+      '<footer>Chứng từ mô phỏng phục vụ đào tạo. Không phải vé hợp lệ để đi lại.</footer>' +
+      '</body></html>'
+    );
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    ok('ĐÃ MỞ HỘP THOẠI IN VÉ ' + ticket.ticketNo + '.');
+  }
+
+  function doPrintTicket(locator){
+    var ticket = null;
+    if (!locator){
+      ticket = G.log.length ? G.log[G.log.length - 1] : null;
+    } else {
+      G.log.forEach(function(item){
+        if (item.locator === locator) ticket = item;
+      });
+    }
+    if (!ticket && locator){
+      err('PNR ' + locator + ' KHÔNG TÌM THẤY — KHÔNG CÓ VÉ ĐỂ IN');
+      return;
+    }
+    printTicket(ticket);
   }
 
   function boardingPassNode(tag, className, text){
@@ -3172,23 +3253,7 @@ body::after{
     var classLabel = pnr.segs.map(function(sg){ return sg.cls + ' (' + CLASS[sg.cls].label + ')'; }).join(' / ');
 
     out('<span class="hl">TKTL</span>');
-    blank();
-    out('  ' + rule('=', 56), 'rule pre');
-    out('   <span class="am bold">VÉ ĐIỆN TỬ ĐÃ PHÁT HÀNH  ·  HUNG HA AIRWAYS</span>', 'pre');
-    out('  ' + rule('-', 56), 'rule pre');
-    out('   <span class="dim">PNR</span>      <span class="hl bold">' + pnr.locator + '</span>', 'pre');
-    out('   <span class="dim">E-TICKET</span> <span class="wh">' + ticketNo + '</span>', 'pre');
-    pnr.segs.forEach(function(sg){
-      out('   <span class="wh">' + padR(sg.no,6) + ' ' + sg.cls + ' ' + sg.from + sg.to + ' ' + sg.date + '</span>  <span class="dim">' + fmtTime(sg.dep) + '-' + fmtTime(sg.arr) + '</span>', 'pre');
-    });
-    out('   <span class="dim">HÀNH KHÁCH</span> ' + paxCount + '  ·  <span class="dim">LIÊN HỆ</span> ' + esc(pnr.contact), 'pre');
-    if (pnr.ssr.length) out('   <span class="dim">DỊCH VỤ</span>   ' + pnr.ssr.join(' · '), 'pre');
-    if (pnr.fees.length) out('   <span class="dim">PHÍ DỊCH VỤ</span> ' + pnr.fees.map(function(f){ return f.label + ' ' + money(f.amt) + ' VND'; }).join(' + '), 'pre');
-    if (pnr.fop) out('   <span class="dim">THANH TOÁN</span>  ' + pnr.fop.label + ' (' + esc(pnr.fop.raw) + ')', 'pre');
-    out('  ' + rule('-', 56), 'rule pre');
-    out('   <span class="bold gr">ĐÃ THU: ' + money(q.total) + ' VND</span>', 'pre');
-    out('  ' + rule('=', 56), 'rule pre');
-    blank();
+    ok('VÉ ĐIỆN TỬ ĐÃ PHÁT HÀNH — ' + ticketNo);
     // đánh giá chất lượng phục vụ
     if (grade.delta > 0) out('   <span class="gr">' + esc(grade.msg) + '  (+' + grade.delta + ' uy tín)</span>', 'pre');
     else if (grade.delta < 0) out('   <span class="rd">' + esc(grade.msg) + '  (' + grade.delta + ' uy tín)</span>', 'pre');
@@ -3212,7 +3277,6 @@ body::after{
       classLabel: classLabel
     };
     G.log.push(issuedTicket);
-    renderBoardingPasses(issuedTicket);
     recordIssuedSale(ticketNo);
 
     // ghi chứng từ bán vé vào sổ sales reports (localStorage)
@@ -3233,16 +3297,12 @@ body::after{
       fee: q.ticketing + (q.fees || 0)
     });
 
-    out('   <span class="am bold">TÙY CHỌN TIẾP THEO</span>', 'pre');
-    out('   <span class="hl">RT#' + pnr.locator + '</span>  xem ruột vé, chi tiết &amp; thống kê doanh thu', 'pre');
-    out('   <span class="hl">NEXT</span>            tiếp nhận khách mua vé kế tiếp', 'pre');
-    blank();
-
     pnr = null;
     lastAN = null;
     if (cust) cust.served = true;
     G.awaitingNext = true;
     updateHUD();
+    renderTicket(issuedTicket);
     triggerIssue();
   }
 
@@ -3940,7 +4000,7 @@ body::after{
     }
 
     // Sau khi xuất vé: chỉ cho tra cứu lại, thông tin, báo cáo hoặc sang khách kế tiếp
-    if (G.awaitingNext && !/^(RT|RD|BP|BOARDING|TTK|EQ|WEA|DA|NEXT|N|HELP|HE|\?|CLS|CLEAR|RF|TJQ|TJD|SR)/.test(cmd) &&
+    if (G.awaitingNext && !/^(RT|RD|BP|BOARDING|TTK|P(?:#|$)|EQ|WEA|DA|NEXT|N|HELP|HE|\?|CLS|CLEAR|RF|TJQ|TJD|SR)/.test(cmd) &&
         fpPayment === null){
       err("VÉ ĐÃ XUẤT — GÕ 'RT#<PNR>' ĐỂ XEM LẠI HOẶC 'NEXT' ĐỂ SANG KHÁCH KẾ TIẾP");
       blank();
@@ -3995,6 +4055,9 @@ body::after{
       doTicketing();
     } else if (cmd === 'TTK'){
       doTTK();
+    } else if (/^P(?:#([A-Z0-9]{4,8}))?$/.test(cmd)){
+      var printMatch = cmd.match(/^P(?:#([A-Z0-9]{4,8}))?$/);
+      doPrintTicket(printMatch[1] || null);
     } else if (/^BP(?:\s|#|$)/.test(cmd) || /^BOARDING PASS(?:\s|$)/.test(cmd)){
       var boarding = cmd.match(/^BP(?:\s*#?\s*([A-Z0-9-]+))?$|^BOARDING PASS(?:\s+#?\s*([A-Z0-9-]+))?$/);
       if (boarding) showBoardingPass(boarding[1] || boarding[2] || null);
@@ -4150,7 +4213,8 @@ body::after{
     ['FXP',                  'Tính giá vé, thuế, phí và d/vụ', 'FXP'],
     ['TQT',                  'Chỉ xem thuế & phí (chưa gồm giá vé)', 'TQT'],
     ['TTP',                  'Kiểm tra TIM rồi phát hành vé; Y huỷ hoặc N tiếp tục có cảnh báo', 'TTP'],
-    ['TKTL',                 'Phát hành vé điện tử', 'TKTL'],
+    ['TKTL / TKOK',          'Phát hành vé; hiển thị vé trong terminal', 'TKTL'],
+    ['P [#PNR]',             'In vé mới nhất hoặc vé theo PNR', 'P'],
     ['TTK',                  'Danh sách số vé đã xuất', 'TTK'],
     ['BP#<PNR>',             'Hiển thị và in boarding pass cho vé đã xuất', 'BP#ABC123'],
     ['BOARDING PASS [PNR]',  'Hiển thị boarding pass gần nhất hoặc theo PNR', 'BOARDING PASS ABC123'],
