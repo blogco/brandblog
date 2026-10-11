@@ -19,19 +19,19 @@
   --green:#33ff66;
   --white:#e6f0ff;
   --dim:#7a86b8;
-  --mono:"Courier New", Courier, monospace;
+  --mono:"Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
 }
-*,*::before,*::after{box-sizing:border-box}
+*,*::before,*::after{box-sizing:border-box;font-family:var(--mono)!important}
 html,body{height:100%}
 body{
   margin:0;
   background:var(--bg);
   color:var(--yellow);
-  font-family:var(--mono);
   font-size:14px;
   line-height:1.35;
   overflow:hidden;
-  -webkit-font-smoothing:none;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
 }
 /* CRT scanlines — light, non-interactive */
 body::after{
