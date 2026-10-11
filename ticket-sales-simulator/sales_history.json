@@ -1,4 +1,10 @@
 {
   "version": 1,
-  "sales": []
+  "sales": [
+    {
+      "id": "1e7f0891-d660-43d3-afd9-8e932a8f8e32",
+      "timestamp": "2026-10-11T02:18:15.548Z",
+      "status": "ISSUED"
+    }
+  ]
 }
