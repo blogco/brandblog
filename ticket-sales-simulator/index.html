@@ -277,6 +277,22 @@ body::after{
 .workflow__copy:hover,.workflow__close:hover{color:var(--bg);background:var(--cyan)}
 .workflow__message{min-height:1em;margin:10px 0 0;color:var(--green);font-size:.7rem}
 .workflow__message.is-error{color:var(--red)}
+.workflow__after-sales{
+  margin-top:18px;padding-top:12px;border-top:1px dashed rgba(0,255,255,.35)
+}
+.workflow__after-sales h3{margin:0 0 8px;color:var(--cyan);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase}
+.workflow__after-sales-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.workflow__field{display:block;min-width:0;color:var(--white);font-size:.66rem;font-weight:700}
+.workflow__field--wide{grid-column:1/-1}
+.workflow__field input,.workflow__field select{
+  display:block;width:100%;min-width:0;margin-top:4px;padding:7px;
+  color:var(--yellow);background:var(--bg);border:1px solid rgba(0,255,255,.32);
+  border-radius:0;font:inherit;font-size:.72rem
+}
+.workflow__field input:focus,.workflow__field select:focus{outline:2px solid var(--cyan);outline-offset:1px}
+.workflow__after-sales-note{margin:8px 0;color:var(--dim);font-size:.64rem;line-height:1.4}
+.workflow__after-sales-copy{margin:2px 0 8px;padding:6px 10px;color:var(--bg);background:var(--cyan);border:1px solid var(--cyan);font:inherit;font-size:.7rem;font-weight:700;cursor:pointer}
+.workflow__after-sales-copy:disabled{opacity:.4;cursor:not-allowed}
 @media (max-width:480px){
   .workflow__body{padding-inline:12px}
   .workflow__route-controls{grid-template-columns:minmax(0,1fr) 74px}
@@ -341,6 +357,39 @@ body::after{
       Uses this simulator’s command syntax: passenger name/APIS first, APIS issue-document-nationality order,
       and SS quantity-class-line. PTC is shown as passenger type, not appended to NM.
     </p>
+    <section class="workflow__after-sales" aria-labelledby="workflowAfterSalesTitle">
+      <h3 id="workflowAfterSalesTitle">Post-issuance services</h3>
+      <div class="workflow__after-sales-grid">
+        <label class="workflow__field workflow__field--wide" for="workflowIssuedPnr">Issued PNR
+          <select id="workflowIssuedPnr"><option value="">No issued PNRs yet</option></select>
+        </label>
+        <label class="workflow__field" for="workflowService">Special service
+          <select id="workflowService">
+            <option value="WCHR">WCHR · Wheelchair</option>
+            <option value="WCHS">WCHS · Wheelchair / stairs</option>
+            <option value="SPML">SPML · Special meal</option>
+            <option value="AVML">AVML · Asian vegetarian meal</option>
+            <option value="VGML">VGML · Vegetarian meal</option>
+            <option value="CHML">CHML · Child meal</option>
+            <option value="DBML">DBML · Diabetic meal</option>
+            <option value="GFML">GFML · Gluten-free meal</option>
+            <option value="PETC">PETC · Pet in cabin</option>
+            <option value="BSCT">BSCT · Bassinet</option>
+            <option value="UMNR">UMNR · Unaccompanied minor</option>
+            <option value="XBAG">XBAG · Extra baggage</option>
+          </select>
+        </label>
+        <label class="workflow__field" for="workflowServiceFee">Service fee (VND)
+          <input id="workflowServiceFee" type="number" min="0" max="5000000" step="1000" value="150000">
+        </label>
+        <label class="workflow__field workflow__field--wide" for="workflowPayment">Payment details
+          <input id="workflowPayment" type="text" value="CASH" autocomplete="off" placeholder="CASH, CK, or CC number/expiry">
+        </label>
+      </div>
+      <p class="workflow__after-sales-note">Add a service to an issued ticket and collect its fee without repricing or reissuing the ticket. Payment accepts CASH, CK, or CC&lt;number&gt;/&lt;YYMM&gt;.</p>
+      <button type="button" id="workflowAfterSalesCopyAll" class="workflow__after-sales-copy" disabled>Copy SSR steps</button>
+      <ol id="workflowAfterSalesCommands" class="workflow__commands"></ol>
+    </section>
     <div id="workflowRoutes" class="workflow__routes"></div>
     <ol id="workflowCommands" class="workflow__commands"></ol>
     <p id="workflowMessage" class="workflow__message" role="status" aria-live="polite"></p>
@@ -364,6 +413,12 @@ body::after{
   var statusTimeEl = document.getElementById('statusTime');
   var workflowPanel = document.getElementById('workflowPanel');
   var workflowContactInput = document.getElementById('workflowContact');
+  var workflowIssuedPnrInput = document.getElementById('workflowIssuedPnr');
+  var workflowServiceInput = document.getElementById('workflowService');
+  var workflowServiceFeeInput = document.getElementById('workflowServiceFee');
+  var workflowPaymentInput = document.getElementById('workflowPayment');
+  var workflowAfterSalesCommandsEl = document.getElementById('workflowAfterSalesCommands');
+  var workflowAfterSalesCopyAllButton = document.getElementById('workflowAfterSalesCopyAll');
   var workflowRoutesEl = document.getElementById('workflowRoutes');
   var workflowCommandsEl = document.getElementById('workflowCommands');
   var workflowMessageEl = document.getElementById('workflowMessage');
@@ -372,6 +427,10 @@ body::after{
   var workflowSteps = [];
   var workflowCustomerId = null;
   var workflowContactValue = '';
+  var workflowIssuedPnr = '';
+  var postIssueLocator = '';
+  var postIssueFeeAmount = 150000;
+  var postIssuePaymentDetails = 'CASH';
 
   function esc(s){
     return String(s).replace(/[&<>"']/g, function(c){
@@ -1340,8 +1399,107 @@ body::after{
   /* ==================================================================
      12. LỆNH: SR — dịch vụ đặc biệt
      ================================================================== */
-  var SSR_NAME = { CHML:'Child Meal', WCHR:'Wheelchair', WCHS:'Wheelchair (stairs)', PETC:'Pet in cabin', BSCT:'Bassinet', UMNR:'Unaccompanied minor', SPML:'Special meal', XBAG:'Extra baggage' };
+  var SSR_NAME = {
+    CHML:'Child meal', WCHR:'Wheelchair', WCHS:'Wheelchair (stairs)', PETC:'Pet in cabin',
+    BSCT:'Bassinet', UMNR:'Unaccompanied minor', SPML:'Special meal', AVML:'Asian vegetarian meal',
+    VGML:'Vegetarian meal', DBML:'Diabetic meal', GFML:'Gluten-free meal', XBAG:'Extra baggage'
+  };
+  function postIssueTicket(){
+    if (!postIssueLocator) return null;
+    for (var i=0;i<G.log.length;i++){
+      if (G.log[i].locator === postIssueLocator) return G.log[i];
+    }
+    return null;
+  }
+  function postIssueServices(ticket){
+    if (!ticket.afterSalesServices) ticket.afterSalesServices = [];
+    return ticket.afterSalesServices;
+  }
+  function doPostIssueSR(code){
+    var ticket = postIssueTicket();
+    if (!ticket){ err('AFTER-SALES: RETRIEVE AN ISSUED PNR FIRST WITH RT#<PNR>'); return; }
+    if (!SSR_NAME[code]){ err('UNKNOWN SSR — CHOOSE A SUPPORTED 4-LETTER SERVICE CODE'); return; }
+    if (ticket.ssr.indexOf(code) > -1){ err('SSR ' + code + ' ALREADY EXISTS ON PNR ' + ticket.locator); return; }
+    var services = postIssueServices(ticket);
+    if (services.some(function(service){ return !service.paid && !service.free; })){
+      err('COLLECT OR CLEAR THE PREVIOUS SERVICE FEE BEFORE ADDING ANOTHER SERVICE'); return;
+    }
+    var fee = Number(postIssueFeeAmount);
+    if (!Number.isInteger(fee) || fee < 0 || fee > 5000000 || (fee > 0 && fee < 1000)){
+      err('SERVICE FEE MUST BE 0 OR 1,000–5,000,000 VND'); return;
+    }
+    var service = { code:code, fee:0, feeRequested:false, paid:false, free:fee === 0, payment:null };
+    if (service.free) service.paid = true;
+    services.push(service);
+    ticket.ssr.push(code);
+    out('<span class="hl">SR ' + code + '</span>');
+    ok('SSR ' + code + ' (' + SSR_NAME[code] + ') ADDED TO ISSUED PNR ' + ticket.locator +
+      (service.free ? ' · NO FEE' : ' · RUN SR FEE, THEN FP TO COLLECT ' + money(fee) + ' VND'));
+    blank();
+  }
+  function doPostIssueFee(){
+    var ticket = postIssueTicket();
+    if (!ticket){ err('AFTER-SALES: RETRIEVE AN ISSUED PNR FIRST WITH RT#<PNR>'); return; }
+    var services = postIssueServices(ticket);
+    var service = null;
+    for (var i=services.length-1;i>=0;i--){
+      if (!services[i].feeRequested && !services[i].free && !services[i].paid){ service = services[i]; break; }
+    }
+    if (!service){ err('NO UNPRICED AFTER-SALES SERVICE — ADD AN SSR FIRST'); return; }
+    var amount = Number(postIssueFeeAmount);
+    if (!Number.isInteger(amount) || amount < 1000 || amount > 5000000){
+      err('SERVICE FEE MUST BE 1,000–5,000,000 VND; SET 0 FOR A FREE SERVICE'); return;
+    }
+    service.fee = amount;
+    service.feeRequested = true;
+    out('<span class="hl">SR FEE</span>');
+    ok('SERVICE FEE SET: ' + money(amount) + ' VND FOR ' + service.code + ' · ENTER FP TO COLLECT');
+    blank();
+  }
+  function parseAfterSalesPayment(raw){
+    var value = String(raw).trim().toUpperCase();
+    if (value === 'CASH') return { type:'CASH', raw:value, label:FOP_LABEL.CASH };
+    if (value === 'CK' || value === 'CHEQUE') return { type:'CHEQUE', raw:value, label:FOP_LABEL.CHEQUE };
+    if (/^CC\d{11,19}(\/\d{4})?$/.test(value)) return { type:'CARD', raw:value, label:FOP_LABEL.CARD };
+    return null;
+  }
+  function doPostIssueFP(raw){
+    var ticket = postIssueTicket();
+    if (!ticket){ err('AFTER-SALES: RETRIEVE AN ISSUED PNR FIRST WITH RT#<PNR>'); return; }
+    var services = postIssueServices(ticket);
+    var service = null;
+    for (var i=services.length-1;i>=0;i--){
+      if (services[i].feeRequested && !services[i].paid){ service = services[i]; break; }
+    }
+    if (!service){ err('NO SERVICE FEE TO COLLECT — RUN SR <CODE>, THEN SR FEE FIRST'); return; }
+    var payment = parseAfterSalesPayment(raw);
+    if (!payment){ err('FP INVALID — USE FP CASH, FP CK, OR FP CC<11–19 DIGITS>/<YYMM>'); return; }
+    service.payment = payment;
+    service.paid = true;
+    G.cash += service.fee;
+    addSalesRecord({
+      airline:'HH',
+      docNumber:'SVC-' + ticket.ticketNo + '-' + String(services.length).padStart(2,'0'),
+      total:service.fee,
+      tax:0,
+      commission:0,
+      formOfPayment:fpOf({ fop:payment }),
+      paxName:ticket.pax[0] ? ticket.pax[0].canon : '',
+      rloc:ticket.locator,
+      transactionType:'EMDS',
+      date:TODAY,
+      agentSign:AGENT.sign,
+      status:'confirmed',
+      fare:0,
+      fee:service.fee
+    });
+    out('<span class="hl">FP ' + esc(payment.raw) + '</span>');
+    ok('COLLECTED ' + money(service.fee) + ' VND FOR ' + service.code + ' · PNR ' + ticket.locator + ' · ' + payment.label);
+    blank();
+  }
   function doSR(code){
+    if (code === 'FEE'){ doPostIssueFee(); return; }
+    if (postIssueTicket()){ doPostIssueSR(code); return; }
     if (!pnr){ err('NO ACTIVE PNR'); return; }
     if (!/^[A-Z]{4}$/.test(code)){ err('INVALID SSR CODE — DÙNG 4 KÝ TỰ, VÍ DỤ: CHML'); return; }
     if (pnr.ssr.indexOf(code) > -1){ err('SSR ' + code + ' ĐÃ CÓ TRONG HỒ SƠ'); return; }
@@ -1424,6 +1582,8 @@ body::after{
       var t = null;
       G.log.forEach(function(x){ if (x.locator === locator) t = x; });
       if (!t){ err('PNR ' + locator + ' KHÔNG TÌM THẤY — KIỂM TRA LẠI SỐ PNR'); return; }
+      postIssueLocator = locator;
+      workflowIssuedPnr = locator;
       out('<span class="hl">RT#' + locator + '</span>');
       renderTicket(t);
       return;
@@ -1474,6 +1634,12 @@ body::after{
     });
     out('  ' + rule('-', 56), 'rule pre');
     out('   <span class="dim">LIÊN HỆ</span> ' + esc(t.contact) + '   <span class="dim">SSR</span> ' + (t.ssr.length ? esc(t.ssr.join(' · ')) : '—'), 'pre');
+    (t.afterSalesServices || []).forEach(function(service){
+      out('   <span class="dim">AFTER-SALES</span> ' + esc(service.code) + ' · ' +
+        (service.free ? 'NO FEE' : !service.feeRequested ? 'FEE NOT SET' :
+          money(service.fee) + ' VND · ' + (service.paid ? 'PAID (' + esc(service.payment.raw) + ')' : 'PAYMENT DUE')),
+        'pre');
+    });
     out('   <span class="dim">HẠNG VÉ</span> ' + esc(t.classLabel), 'pre');
     out('  ' + rule('-', 56), 'rule pre');
     out('   <span class="dim">GIÁ VÉ</span>          <span class="tm">' + padL(money(t.priced.fare), 14) + '</span>', 'pre');
@@ -1485,6 +1651,12 @@ body::after{
     });
     if (t.fop) out('   <span class="dim">THANH TOÁN</span>   <span class="wh">' + padR(t.fop.label, 11) + '</span> <span class="dim">(' + esc(t.fop.raw) + ')</span>', 'pre');
     out('   <span class="bold gr">TỔNG CỘNG</span>      <span class="bold gr">' + padL(money(t.priced.total), 14) + ' VND</span>', 'pre');
+    var afterSalesTotal = (t.afterSalesServices || []).reduce(function(total, service){
+      return total + (service.paid && !service.free ? service.fee : 0);
+    }, 0);
+    if (afterSalesTotal){
+      out('   <span class="bold gr">AFTER-SALES FEES</span> <span class="bold gr">' + padL(money(afterSalesTotal), 14) + ' VND</span>', 'pre');
+    }
     out('  ' + rule('=', 56), 'rule pre');
     blank();
     out('   <span class="am bold">THỐNG KÊ DOANH THU</span>', 'pre');
@@ -1765,6 +1937,117 @@ body::after{
     return item;
   }
 
+  function workflowAfterSalesPaymentValid(value){
+    return !!parseAfterSalesPayment(value);
+  }
+
+  function workflowBuildAfterSalesSteps(){
+    var steps = [];
+    var locatorValue = workflowIssuedPnr;
+    var ticket = null;
+    G.log.forEach(function(item){
+      if (item.locator === locatorValue) ticket = item;
+    });
+    if (!ticket){
+      workflowAddStep(steps, 'RT#<PNR>', 'Retrieve an issued PNR', 'pending',
+        'Issue a ticket first; issued PNRs from this session appear in the selector.', true);
+      workflowAddStep(steps, 'SR ' + workflowServiceInput.value, 'Add special service', 'pending',
+        'Select an issued PNR before adding an SSR.', true);
+      workflowAfterSalesCommandsEl.replaceChildren();
+      steps.forEach(function(step, index){ workflowAfterSalesCommandsEl.appendChild(workflowStepNode(step, index)); });
+      workflowAfterSalesCopyAllButton.disabled = true;
+      return;
+    }
+
+    var code = workflowServiceInput.value;
+    var fee = Number(workflowServiceFeeInput.value);
+    var paymentText = workflowPaymentInput.value.trim().toUpperCase();
+    var validFee = workflowServiceFeeInput.value !== '' && Number.isInteger(fee) &&
+      fee >= 0 && fee <= 5000000 && (fee === 0 || fee >= 1000);
+    var existing = (ticket.afterSalesServices || []).filter(function(item){ return item.code === code; })[0];
+    var pending = (ticket.afterSalesServices || []).filter(function(item){ return !item.free && !item.paid; })[0];
+    var hasSSR = ticket.ssr.indexOf(code) >= 0;
+    var selectedPending = existing && !existing.free && !existing.paid;
+
+    workflowAddStep(steps, 'RT#' + ticket.locator, 'Retrieve PNR · ' + ticket.locator,
+      postIssueLocator === ticket.locator ? 'done' : 'ready',
+      postIssueLocator === ticket.locator ? 'Issued ticket is selected in the terminal.' : 'Run this first to set the after-sales PNR context.');
+
+    workflowAddStep(steps, 'SR ' + code, 'Special service · ' + code,
+      hasSSR ? 'done' : (pending || !validFee ? 'pending' : 'ready'),
+      hasSSR ? 'This SSR is already attached to the issued PNR.' :
+        (pending ? 'Collect the outstanding service fee before adding another SSR.' :
+          (!validFee ? 'Enter 0 or a fee from 1,000 to 5,000,000 VND before adding the SSR.' :
+            'Add ' + (SSR_NAME[code] || 'special service') + ' to this issued PNR.')));
+
+    if (existing && existing.free){
+      workflowAddStep(steps, 'SR FEE', 'Service fee', 'done', 'This service was marked as free; no fee collection is needed.');
+      workflowAddStep(steps, 'FP ' + paymentText, 'Collect payment', 'done', 'No fee is due for this service.');
+    } else if (hasSSR && !existing){
+      workflowAddStep(steps, 'SR FEE', 'Service fee', 'done', 'This SSR is already on the PNR; no duplicate fee is added.');
+      workflowAddStep(steps, 'FP ' + paymentText, 'Collect payment', 'done', 'No after-sales fee is due for this existing SSR.');
+    } else if (existing && existing.paid){
+      workflowAddStep(steps, 'SR FEE', 'Service fee', 'done', 'The configured service fee has already been collected.');
+      workflowAddStep(steps, 'FP ' + paymentText, 'Collect payment', 'done', 'Payment for this service has been recorded.');
+    } else if (validFee && fee === 0 && !selectedPending){
+      workflowAddStep(steps, 'SR FEE', 'Service fee', 'done', 'Fee is zero; this service is free.');
+      workflowAddStep(steps, 'FP ' + paymentText, 'Collect payment', 'done', 'No fee is due for this service.');
+    } else {
+      var feeReady = (!pending || selectedPending) && validFee && fee >= 1000;
+      workflowAddStep(steps, 'SR FEE', 'Service fee · ' + (validFee ? money(selectedPending ? existing.fee : fee) + ' VND' : 'invalid amount'),
+        selectedPending && existing.feeRequested ? 'done' : (feeReady ? 'ready' : 'pending'),
+        selectedPending && existing.feeRequested ? 'Fee is attached; collect it with FP.' :
+          (validFee && fee >= 1000 ? 'Attach the configured service fee before taking payment.' : 'Enter 0 for a free service, or 1,000–5,000,000 VND.'));
+      var paymentReady = ((selectedPending && existing.feeRequested) || (!hasSSR && !pending && validFee && fee >= 1000)) &&
+        workflowAfterSalesPaymentValid(paymentText);
+      workflowAddStep(steps, 'FP ' + (paymentText || '<payment details>'), 'Collect payment',
+        existing && existing.paid ? 'done' : (paymentReady ? 'ready' : 'pending'),
+        existing && existing.paid ? 'Payment for this service has been recorded.' :
+          (workflowAfterSalesPaymentValid(paymentText) ? 'Payment is recorded against this PNR’s service fee.' : 'Use CASH, CK, or CC<11–19 digits>/<YYMM>.'),
+        !workflowAfterSalesPaymentValid(paymentText));
+    }
+
+    if (pending && !selectedPending){
+      steps[1].status = 'pending';
+      steps[1].note = 'An outstanding fee for ' + pending.code + ' must be collected first.';
+    }
+    workflowAfterSalesCommandsEl.replaceChildren();
+    steps.forEach(function(step, index){ workflowAfterSalesCommandsEl.appendChild(workflowStepNode(step, index)); });
+    var readyCount = 0;
+    for (var i=0;i<steps.length;i++){
+      if (steps[i].status === 'pending') break;
+      if (steps[i].status === 'ready') readyCount++;
+    }
+    workflowAfterSalesCopyAllButton.disabled = readyCount === 0;
+    workflowAfterSalesCopyAllButton.textContent = readyCount ? 'Copy SSR steps (' + readyCount + ')' : 'Copy SSR steps';
+  }
+
+  function workflowRenderIssuedPnrOptions(){
+    var current = workflowIssuedPnr;
+    workflowIssuedPnrInput.replaceChildren();
+    var placeholder = workflowNode('option', '', G.log.length ? 'Select issued PNR' : 'No issued PNRs yet');
+    placeholder.value = '';
+    workflowIssuedPnrInput.appendChild(placeholder);
+    G.log.slice().reverse().forEach(function(ticket){
+      var pax = ticket.pax[0] ? ' · ' + ticket.pax[0].canon : '';
+      var option = workflowNode('option', '', ticket.locator + pax + ' · ' + ticket.ticketNo);
+      option.value = ticket.locator;
+      workflowIssuedPnrInput.appendChild(option);
+    });
+    if (!current || !G.log.some(function(ticket){ return ticket.locator === current; })){
+      current = G.log.length ? G.log[G.log.length - 1].locator : '';
+    }
+    workflowIssuedPnr = current;
+    workflowIssuedPnrInput.value = current;
+  }
+
+  function workflowRenderAfterSales(){
+    workflowRenderIssuedPnrOptions();
+    workflowServiceFeeInput.value = Number.isNaN(postIssueFeeAmount) ? '' : String(postIssueFeeAmount);
+    workflowPaymentInput.value = postIssuePaymentDetails;
+    workflowBuildAfterSalesSteps();
+  }
+
   function workflowRenderRoutes(state){
     workflowRoutesEl.replaceChildren();
     state.legs.forEach(function(leg){
@@ -1881,6 +2164,7 @@ body::after{
     workflowContactInput.value = workflowContactValue;
     workflowRenderRoutes(state);
     workflowRenderCommands(state);
+    workflowRenderAfterSales();
   }
 
   function notifyWorkflowState(){
@@ -1990,6 +2274,7 @@ body::after{
       segs: pnr.segs.slice(),
       contact: pnr.contact,
       ssr: pnr.ssr.slice(),
+      afterSalesServices: [],
       fees: pnr.fees.slice(),
       fop: pnr.fop ? { type:pnr.fop.type, raw:pnr.fop.raw, label:pnr.fop.label } : null,
       priced: pnr.priced,
@@ -2459,7 +2744,7 @@ body::after{
     }
 
     // Sau khi xuất vé: chỉ cho tra cứu lại, thông tin, báo cáo hoặc sang khách kế tiếp
-    if (G.awaitingNext && !/^(RT|RD|TTK|EQ|WEA|DA|NEXT|N|HELP|HE|\?|CLS|CLEAR|RF|TJQ|TJD)/.test(cmd)){
+    if (G.awaitingNext && !/^(RT|RD|TTK|EQ|WEA|DA|NEXT|N|HELP|HE|\?|CLS|CLEAR|RF|TJQ|TJD|SR|FP)/.test(cmd)){
       err("VÉ ĐÃ XUẤT — GÕ 'RT#<PNR>' ĐỂ XEM LẠI HOẶC 'NEXT' ĐỂ SANG KHÁCH KẾ TIẾP");
       blank();
       return;
@@ -2501,6 +2786,8 @@ body::after{
       doAP(raw.replace(/^AP\s*/i, ''));
     } else if (/^SR\s*([A-Z]{3,4})$/.test(cmd)){
       doSR(cmd.match(/^SR\s*([A-Z]{3,4})$/)[1]);
+    } else if (/^FP\s+(.+)$/.test(cmd)){
+      doPostIssueFP(raw.replace(/^FP\s*/i, ''));
     } else if (cmd === 'FXP'){
       doFXP();
     } else if (cmd === 'TQT'){
@@ -2589,6 +2876,7 @@ body::after{
       return;
     }
     out('<span class="hl">NEXT</span>');
+    postIssueLocator = '';
     G.awaitingNext = false;
     G.served++;
     nextCustomerOrShift();
@@ -2651,8 +2939,10 @@ body::after{
     ['XK<LINE> / XE<LINE>',  'Huỷ / xoá một chặng đã giữ', 'XK1'],
     ['SO <AMOUNT>',          'Thu phí dịch vụ (gộp vào tổng khi tính giá)', 'SO150000'],
     ['FO <FORM>',            'Hình thức thanh toán', 'FO CASH'],
+    ['FP <FORM>',            'Thu phí dịch vụ hậu mãi cho vé đã xuất', 'FP CASH'],
     ['AP <PHONE>',           'Thêm liên hệ', 'AP 0912345678'],
     ['SR <CODE>',            'Yêu cầu dịch vụ đặc biệt (SSR)', 'SR CHML'],
+    ['SR FEE',               'Ghi phí cho SSR hậu mãi sau khi xuất vé', 'SR FEE'],
     ['FXP',                  'Tính giá vé, thuế, phí và d/vụ', 'FXP'],
     ['TQT',                  'Chỉ xem thuế & phí (chưa gồm giá vé)', 'TQT'],
     ['TKTL',                 'Phát hành vé điện tử', 'TKTL'],
@@ -2687,6 +2977,7 @@ body::after{
     out('  <span class="dim">Đổi tên: NACO&lt;LINE&gt;&lt;TÊN MỚI&gt; — đổi ≤3 ký tự miễn phí; &gt;3 ký tự thu phí (NACO).</span>', 'pre');
     out('  <span class="dim">Thông tin: EQ&lt;CODE&gt; tàu bay · WEA&lt;CITY&gt; thời tiết 5 ngày · DA&lt;CITY&gt; giải mã sân bay.</span>', 'pre');
     out('  <span class="dim">Quy trình: NM → APIS → AN → SS → AP → (SO/SR/FO) → FXP → TKTL → (RT#PNR) → NEXT</span>', 'pre');
+    out('  <span class="dim">Hậu mãi: RT#PNR → SR WCHR/SPML → SR FEE → FP CASH (hoặc CK/CC...). Dùng bảng BÁN VÉ để chọn PNR, dịch vụ, phí và thanh toán.</span>', 'pre');
     out('  <span class="dim">Sự cố: sau giao dịch (TKTL/RF) có thể nổ ra TÌNH HUỐNG BẤT KHẢ KHÁNG — gõ số 1-3 để xử lý, ảnh hưởng DOANH THU / UY TÍN / CĂNG THẲNG.</span>', 'pre');
     out('  <span class="dim">Báo cáo: TJQ (agent) · TJQ/SOF (toàn VP) · TJD (ngày) · TJD/D-&lt;DDMMM&gt; (ngày cụ thể).</span>', 'pre');
     blank();
@@ -2795,6 +3086,19 @@ body::after{
     workflowContactValue = workflowContactInput.value;
     workflowRenderCommands(getWorkflowState());
   });
+  workflowIssuedPnrInput.addEventListener('change', function(){
+    workflowIssuedPnr = workflowIssuedPnrInput.value;
+    workflowBuildAfterSalesSteps();
+  });
+  workflowServiceInput.addEventListener('change', workflowBuildAfterSalesSteps);
+  workflowServiceFeeInput.addEventListener('input', function(){
+    postIssueFeeAmount = workflowServiceFeeInput.value === '' ? NaN : Number(workflowServiceFeeInput.value);
+    workflowBuildAfterSalesSteps();
+  });
+  workflowPaymentInput.addEventListener('input', function(){
+    postIssuePaymentDetails = workflowPaymentInput.value;
+    workflowBuildAfterSalesSteps();
+  });
   workflowCopyAllButton.addEventListener('click', function(){
     var commands = [];
     for (var i=0;i<workflowSteps.length;i++){
@@ -2803,6 +3107,17 @@ body::after{
       if (step.status === 'ready' && !step.placeholder) commands.push(step.command);
     }
     if (commands.length) copyWorkflowText(commands.join('\n'), 'Copied ' + commands.length + ' command(s). Execute them one at a time.');
+  });
+  workflowAfterSalesCopyAllButton.addEventListener('click', function(){
+    var commands = [];
+    var steps = workflowAfterSalesCommandsEl.querySelectorAll('.workflow__step');
+    for (var i=0;i<steps.length;i++){
+      var status = steps[i].querySelector('.workflow__step-status');
+      var command = steps[i].querySelector('code');
+      if (status && status.textContent === 'Select') break;
+      if (status && status.textContent === 'Ready' && command) commands.push(command.textContent);
+    }
+    if (commands.length) copyWorkflowText(commands.join('\n'), 'Copied ' + commands.length + ' SSR command(s). Execute them one at a time.');
   });
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape' && workflowPanel.classList.contains('open')){
