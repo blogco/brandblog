@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js" defer></script>
 <style>
 /* =======================================================================
    Ticket Sales Simulator — Amadeus terminal (fixed vertical layout)
@@ -322,9 +323,102 @@ body::after{
 .workflow__history-item strong{display:block;overflow-wrap:anywhere;color:var(--white);font-size:.69rem}
 .workflow__history-item span{display:block;margin-top:3px;color:var(--dim);font-size:.62rem}
 .workflow__history-empty{color:var(--dim);font-size:.66rem}
+.boarding-pass-area{
+  position:fixed;inset:8px;z-index:120;overflow:auto;
+  padding:10px;background:rgba(0,0,24,.98);border:2px solid var(--cyan);
+}
+.boarding-pass-area[hidden]{display:none}
+.boarding-pass-area__toolbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  max-width:900px;margin:0 auto 12px;color:var(--cyan);font-weight:700;font-size:.72rem
+}
+.boarding-pass-area__toolbar div{display:flex;gap:8px}
+.boarding-pass-area__toolbar button,.boarding-pass__print,.boarding-pass-trigger{
+  padding:6px 9px;color:var(--cyan);background:transparent;border:1px solid rgba(0,255,255,.45);
+  font:inherit;font-size:.64rem;cursor:pointer
+}
+.boarding-pass-area__toolbar button:hover,.boarding-pass__print:hover,.boarding-pass-trigger:hover{
+  color:var(--bg);background:var(--cyan)
+}
+.boarding-pass-list{display:grid;gap:14px;justify-items:center}
+.boarding-pass{
+  width:min(100%,900px);padding:18px;background:#fff;color:#101820;
+  border:1px solid #8d98a2;border-radius:5px;font-family:Arial,sans-serif;
+  box-shadow:0 12px 32px rgba(0,0,0,.3)
+}
+.boarding-pass__top{
+  display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+  padding-bottom:10px;border-bottom:2px solid #003b71
+}
+.boarding-pass__airline{margin:0;color:#006b68;font:700 .64rem/1.4 var(--mono);letter-spacing:.08em}
+.boarding-pass__title{margin:3px 0;color:#003b71;font:bold 1.35rem/1.2 Arial,sans-serif}
+.boarding-pass__warning{margin:0;color:#9a3d12;font:700 .55rem/1.4 var(--mono)}
+.boarding-pass__ticket{text-align:right}
+.boarding-pass__ticket span,.boarding-pass__label{
+  display:block;color:#626b74;font:700 .54rem/1.35 var(--mono);letter-spacing:.04em;text-transform:uppercase
+}
+.boarding-pass__ticket strong{display:block;margin-top:4px;color:#003b71;font:700 .78rem/1.3 var(--mono)}
+.boarding-pass__main{
+  display:grid;grid-template-columns:minmax(0,1fr) 185px;gap:14px;padding:12px 0
+}
+.boarding-pass__route{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.boarding-pass__airport span{display:block;color:#626b74;font:700 .54rem/1.35 var(--mono);letter-spacing:.05em}
+.boarding-pass__airport strong{display:block;margin-top:3px;color:#003b71;font:800 2rem/1.1 var(--mono)}
+.boarding-pass__arrow{color:#00a5a5;font-size:1.3rem}
+.boarding-pass__pax{margin:12px 0 0;color:#111;font:bold .95rem/1.35 Arial,sans-serif;overflow-wrap:anywhere}
+.boarding-pass__pax-type{margin:2px 0;color:#626b74;font:600 .55rem/1.4 var(--mono)}
+.boarding-pass__details{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px
+}
+.boarding-pass__detail{min-width:0;padding:7px;border:1px solid #c8cfd5}
+.boarding-pass__detail strong{
+  display:block;margin-top:4px;color:#003b71;font:700 .72rem/1.3 var(--mono);
+  overflow-wrap:anywhere
+}
+.boarding-pass__stub{
+  display:flex;flex-direction:column;justify-content:space-between;gap:8px;
+  padding:10px;border-left:1px dashed #737d86;background:#f3f6f8
+}
+.boarding-pass__stub-title{margin:0;color:#003b71;font:700 .63rem/1.3 var(--mono);letter-spacing:.05em}
+.boarding-pass__barcode{width:100%;min-height:58px}
+.boarding-pass__barcode svg{display:block;width:100%;max-height:54px}
+.boarding-pass__barcode-text{margin:0;color:#424a51;font: .48rem/1.3 var(--mono);overflow-wrap:anywhere}
+.boarding-pass__disclaimer{
+  margin:8px 0 0;padding-top:7px;border-top:1px solid #d5dbe0;
+  color:#5e666d;font: .53rem/1.4 var(--mono)
+}
+.boarding-pass__actions{display:flex;justify-content:flex-end;margin-top:8px}
+.boarding-pass__print{color:#003b71;border-color:#74808b;font-family:var(--mono)}
+.boarding-pass-area[data-print-one-pass] .boarding-pass:not(.is-print-target){display:none!important}
+.ln .boarding-pass-trigger{margin:4px 0}
 @media (max-width:480px){
   .workflow__body{padding-inline:12px}
   .workflow__route-controls{grid-template-columns:minmax(0,1fr) 74px}
+  .boarding-pass{padding:12px}
+  .boarding-pass__main{grid-template-columns:minmax(0,1fr) 125px;gap:8px}
+  .boarding-pass__details{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .boarding-pass__airport strong{font-size:1.5rem}
+}
+@media print{
+  @page{size:A5 landscape;margin:8mm}
+  html,body{width:auto;height:auto;min-height:0;overflow:visible;background:#fff}
+  body::after{display:none!important}
+  body *{visibility:hidden!important}
+  #boardingPassArea,#boardingPassArea *{visibility:visible!important}
+  #boardingPassArea[hidden]{display:block!important}
+  #boardingPassArea{
+    position:absolute;inset:0;display:block;width:100%;height:auto;overflow:visible;
+    margin:0;padding:0;background:#fff;border:0
+  }
+  .boarding-pass-area__toolbar,.boarding-pass__actions{display:none!important}
+  .boarding-pass-list{display:block}
+  .boarding-pass{
+    display:block;width:100%;max-width:none;margin:0;padding:5mm;border:1px solid #888;
+    border-radius:0;box-shadow:none;break-after:page;break-inside:avoid;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact
+  }
+  .boarding-pass:last-child{break-after:auto}
+  .boarding-pass__stub{background:#f3f6f8}
 }
 </style>
 </head>
@@ -360,6 +454,17 @@ body::after{
     <span class="msgbar__meta" title="Sản phẩm học tập, phi thương mại. Hãng hàng không, số hiệu chuyến, giá vé và nhân vật đều hư cấu; không liên kết với bất kỳ hãng hàng không hay hệ thống GDS nào.">HƯ CẤU · PHI THƯƠNG MẠI · <a href="./../">← VỀ BRANDBLOG</a></span>
   </footer>
 </div>
+
+<section id="boardingPassArea" class="boarding-pass-area" aria-label="Boarding pass preview" aria-live="polite" tabindex="-1" hidden>
+  <div class="boarding-pass-area__toolbar">
+    <span>BOARDING PASS · SIMULATED</span>
+    <div>
+      <button type="button" id="printAllBoardingPasses">PRINT ALL</button>
+      <button type="button" id="closeBoardingPasses">CLOSE</button>
+    </div>
+  </div>
+  <div id="boardingPassList" class="boarding-pass-list"></div>
+</section>
 
 <aside class="ref" id="ref" aria-label="Danh sách lệnh">
   <p class="ref__title">Danh sách lệnh</p>
@@ -457,6 +562,9 @@ body::after{
   var log   = document.getElementById('log');
   var input = document.getElementById('input');
   var form  = document.getElementById('form');
+  var boardingPassArea = document.getElementById('boardingPassArea');
+  var boardingPassList = document.getElementById('boardingPassList');
+  var currentBoardingPasses = [];
   var hudEl = document.getElementById('hud');
   var refEl = document.getElementById('ref');
   var refList = document.getElementById('refList');
@@ -1688,7 +1796,7 @@ body::after{
 
   function nextStepHint(){
     if (!cust) return 'CHỜ KHÁCH TIẾP THEO';
-    if (G.awaitingNext) return "GÕ 'RT#<PNR>' ĐỂ XEM LẠI VÉ HOẶC 'NEXT' ĐỂ SANG KHÁCH KẾ TIẾP";
+    if (G.awaitingNext) return "GÕ 'RT#<PNR>' / 'BP#<PNR>' ĐỂ XEM VÉ / BOARDING PASS HOẶC 'NEXT'";
     var noName = cust.pax.filter(function(p){ return !p.entered; });
     if (noName.length) return "NHẬP TÊN + DANH XƯNG: 'NM1MR <HỌ>/<TÊN>' (còn " + noName.length + ' khách)';
     var noApis = cust.pax.filter(function(p){ return !p.apisDone; });
@@ -1895,10 +2003,16 @@ body::after{
       workflowIssuedPnr = locator;
       out('<span class="hl">RT#' + locator + '</span>');
       renderTicket(t);
+      showBoardingPass(locator);
       return;
     }
     if (!pnr){
-      if (G.log.length){ out('<span class="hl">RT</span>'); renderTicket(G.log[G.log.length-1]); return; }
+      if (G.log.length){
+        out('<span class="hl">RT</span>');
+        renderTicket(G.log[G.log.length-1]);
+        showBoardingPass();
+        return;
+      }
       err('NO ACTIVE PNR'); return;
     }
     out('<span class="hl">RT</span>');
@@ -1979,9 +2093,190 @@ body::after{
     out('   VÉ ĐÃ XUẤT      : ' + G.tickets + '   ·   CHẶNG: ' + G.legCount, 'pre');
     out('   KHÁCH ĐÃ PHỤC VỤ : ' + G.served + ' · CA ' + G.shift + '   ·   UY TÍN: ' + G.rep + '/100', 'pre');
     out('  ' + rule('=', 56), 'rule pre');
+    out('<button type="button" class="boarding-pass-trigger" data-print-boarding="' + esc(t.locator) + '">PRINT BOARDING PASSES · ' + esc(t.locator) + '</button>');
     blank();
     if (G.awaitingNext) hint("GÕ 'NEXT' ĐỂ TIẾP NHẬN KHÁCH KẾ TIẾP");
     blank();
+  }
+
+  function boardingPassNode(tag, className, text){
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function boardingDetail(parent, label, value){
+    var item = boardingPassNode('div', 'boarding-pass__detail');
+    item.appendChild(boardingPassNode('span', 'boarding-pass__label', label));
+    item.appendChild(boardingPassNode('strong', '', value || '—'));
+    parent.appendChild(item);
+  }
+
+  function boardingBarcodePayload(ticket, passenger, segment, passengerIndex){
+    return [
+      'ETKT:' + ticket.ticketNo,
+      'PNR:' + ticket.locator,
+      'PAX:' + String(passengerIndex + 1).padStart(2, '0'),
+      'NAME:' + passenger.canon,
+      'FLT:' + segment.no,
+      'DATE:' + segment.date,
+      'ROUTE:' + segment.from + '-' + segment.to
+    ].join('|').toUpperCase();
+  }
+
+  function renderBoardingPasses(ticket){
+    if (!ticket || !ticket.ticketNo || !ticket.locator || !Array.isArray(ticket.pax) || !Array.isArray(ticket.segs)){
+      err('BOARDING PASS DATA IS INCOMPLETE FOR THIS ISSUED TICKET');
+      return false;
+    }
+    var passes = [];
+    ticket.pax.forEach(function(passenger, passengerIndex){
+      ticket.segs.forEach(function(segment, segmentIndex){
+        passes.push({
+          ticket:ticket,
+          passenger:passenger,
+          passengerIndex:passengerIndex,
+          segment:segment,
+          segmentIndex:segmentIndex
+        });
+      });
+    });
+    if (!passes.length){
+      err('NO PASSENGER OR FLIGHT SEGMENT FOUND FOR THIS ISSUED TICKET');
+      return false;
+    }
+
+    currentBoardingPasses = passes;
+    boardingPassList.replaceChildren();
+    passes.forEach(function(item, passIndex){
+      var ticketData = item.ticket;
+      var passenger = item.passenger;
+      var segment = item.segment;
+      var routeFrom = CITY[segment.from];
+      var routeTo = CITY[segment.to];
+      var baggage = CLASS[segment.cls] ? CLASS[segment.cls].bag : 'CHECK WITH AIRLINE';
+      var boardingTime = fmtClock(segment.dep - 30);
+      var payload = boardingBarcodePayload(ticketData, passenger, segment, item.passengerIndex);
+      var card = boardingPassNode('article', 'boarding-pass');
+      card.dataset.passIndex = String(passIndex);
+
+      var header = boardingPassNode('header', 'boarding-pass__top');
+      var carrier = boardingPassNode('div', '');
+      carrier.appendChild(boardingPassNode('p', 'boarding-pass__airline', 'HUNG HA AIRWAYS · HH'));
+      carrier.appendChild(boardingPassNode('h2', 'boarding-pass__title', 'Boarding pass'));
+      carrier.appendChild(boardingPassNode('p', 'boarding-pass__warning', 'SIMULATED PASS · NOT VALID FOR TRAVEL'));
+      var ticketDetails = boardingPassNode('div', 'boarding-pass__ticket');
+      ticketDetails.appendChild(boardingPassNode('span', '', 'E-ticket / PNR'));
+      ticketDetails.appendChild(boardingPassNode('strong', '', ticketData.ticketNo + ' / ' + ticketData.locator));
+      header.append(carrier, ticketDetails);
+      card.appendChild(header);
+
+      var main = boardingPassNode('div', 'boarding-pass__main');
+      var mainInfo = boardingPassNode('div', '');
+      var route = boardingPassNode('div', 'boarding-pass__route');
+      var departure = boardingPassNode('div', 'boarding-pass__airport');
+      departure.appendChild(boardingPassNode('span', '', 'FROM'));
+      departure.appendChild(boardingPassNode('strong', '', segment.from));
+      departure.appendChild(boardingPassNode('span', '', routeFrom ? routeFrom.short : 'AIRPORT'));
+      var arrow = boardingPassNode('span', 'boarding-pass__arrow', '→');
+      arrow.setAttribute('aria-hidden', 'true');
+      var arrival = boardingPassNode('div', 'boarding-pass__airport');
+      arrival.appendChild(boardingPassNode('span', '', 'TO'));
+      arrival.appendChild(boardingPassNode('strong', '', segment.to));
+      arrival.appendChild(boardingPassNode('span', '', routeTo ? routeTo.short : 'AIRPORT'));
+      route.append(departure, arrow, arrival);
+      mainInfo.appendChild(route);
+      mainInfo.appendChild(boardingPassNode('p', 'boarding-pass__pax', (passenger.title ? passenger.title + ' ' : '') + passenger.canon));
+      mainInfo.appendChild(boardingPassNode('p', 'boarding-pass__pax-type', passenger.type + ' · PASSENGER ' + (item.passengerIndex + 1)));
+      var details = boardingPassNode('div', 'boarding-pass__details');
+      boardingDetail(details, 'Flight', segment.no);
+      boardingDetail(details, 'Date', segment.date);
+      boardingDetail(details, 'Boarding', boardingTime);
+      boardingDetail(details, 'Class', segment.cls + (CLASS[segment.cls] ? ' · ' + CLASS[segment.cls].label : ''));
+      boardingDetail(details, 'Seat', 'ASSIGNED AT CHECK-IN');
+      boardingDetail(details, 'Gate', 'CHECK-IN DESK');
+      boardingDetail(details, 'Baggage', baggage);
+      boardingDetail(details, 'Segment', (item.segmentIndex + 1) + ' / ' + ticketData.segs.length);
+      mainInfo.appendChild(details);
+      var stub = boardingPassNode('aside', 'boarding-pass__stub');
+      stub.appendChild(boardingPassNode('p', 'boarding-pass__stub-title', 'BOARDING · ' + segment.date));
+      var barcode = boardingPassNode('div', 'boarding-pass__barcode');
+      var barcodeSvg = boardingPassNode('svg', '');
+      barcodeSvg.setAttribute('role', 'img');
+      barcodeSvg.setAttribute('aria-label', 'Barcode for ticket ' + ticketData.ticketNo);
+      barcode.appendChild(barcodeSvg);
+      barcode.appendChild(boardingPassNode('p', 'boarding-pass__barcode-text', payload));
+      stub.appendChild(barcode);
+      stub.appendChild(boardingPassNode('p', 'boarding-pass__stub-title', 'BOARDING ' + boardingTime + ' · VERIFY FLIGHT DETAILS'));
+      main.append(mainInfo, stub);
+      card.appendChild(main);
+      card.appendChild(boardingPassNode('p', 'boarding-pass__disclaimer',
+        'TRAINING SIMULATION ONLY · Seat and gate are not assigned. Confirm real travel details with the operating airline.'));
+      var actions = boardingPassNode('div', 'boarding-pass__actions');
+      var printButton = boardingPassNode('button', 'boarding-pass__print', 'PRINT THIS PASS');
+      printButton.type = 'button';
+      printButton.dataset.printPassIndex = String(passIndex);
+      actions.appendChild(printButton);
+      card.appendChild(actions);
+      boardingPassList.appendChild(card);
+
+      try {
+        if (typeof window.JsBarcode !== 'function') throw new Error('barcode library is unavailable');
+        window.JsBarcode(barcodeSvg, payload, {
+          format:'CODE128',
+          displayValue:false,
+          height:42,
+          width:1.25,
+          margin:2,
+          lineColor:'#000000',
+          background:'#ffffff'
+        });
+      } catch (error) {
+        out('<span class="am">BARCODE UNAVAILABLE — PASS DETAILS CAN STILL BE PRINTED.</span>');
+      }
+    });
+    boardingPassArea.hidden = false;
+    boardingPassArea.scrollTop = 0;
+    return true;
+  }
+
+  function showBoardingPass(locator){
+    var value = String(locator || '').toUpperCase().replace(/^#/, '');
+    var ticket = null;
+    if (!value) ticket = G.log.length ? G.log[G.log.length - 1] : null;
+    else {
+      G.log.forEach(function(item){
+        if (item.locator === value || item.ticketNo.toUpperCase() === value) ticket = item;
+      });
+    }
+    if (!ticket){
+      err(value ? 'ISSUED TICKET ' + value + ' NOT FOUND — USE RT#<PNR> TO CHECK THE LOCATOR' : 'NO ISSUED TICKET FOUND');
+      return;
+    }
+    out('<span class="hl">BP#' + esc(ticket.locator) + '</span>');
+    if (renderBoardingPasses(ticket)){
+      ok('BOARDING PASS READY · ' + ticket.pax.length + ' PASSENGER(S) · ' + ticket.segs.length + ' SEGMENT(S)');
+      hint('USE PRINT ALL OR PRINT AN INDIVIDUAL PASS · BOARDING DETAILS ARE SIMULATED');
+      blank();
+    }
+  }
+
+  function printBoardingPass(index){
+    if (!currentBoardingPasses.length){
+      err('NO BOARDING PASS TO PRINT — RETRIEVE AN ISSUED TICKET FIRST');
+      return;
+    }
+    if (typeof index === 'number'){
+      var target = boardingPassList.querySelector('[data-pass-index="' + index + '"]');
+      if (!target){ err('BOARDING PASS NOT FOUND'); return; }
+      boardingPassList.querySelectorAll('.boarding-pass').forEach(function(card){ card.classList.remove('is-print-target'); });
+      target.classList.add('is-print-target');
+      boardingPassArea.setAttribute('data-print-one-pass', '');
+    } else {
+      boardingPassArea.removeAttribute('data-print-one-pass');
+    }
+    window.print();
   }
 
   function doXE(n){
@@ -2901,7 +3196,7 @@ body::after{
     blank();
 
     // lưu nhật ký vé để tra cứu lại bằng RT#<PNR>
-    G.log.push({
+    var issuedTicket = {
       locator: pnr.locator,
       ticketNo: ticketNo,
       time: fmtClock(G.clock),
@@ -2915,7 +3210,9 @@ body::after{
       fop: pnr.fop ? { type:pnr.fop.type, raw:pnr.fop.raw, label:pnr.fop.label } : null,
       priced: pnr.priced,
       classLabel: classLabel
-    });
+    };
+    G.log.push(issuedTicket);
+    renderBoardingPasses(issuedTicket);
     recordIssuedSale(ticketNo);
 
     // ghi chứng từ bán vé vào sổ sales reports (localStorage)
@@ -3395,7 +3692,7 @@ body::after{
     }
 
     // Sau khi xuất vé: chỉ cho tra cứu lại, thông tin, báo cáo hoặc sang khách kế tiếp
-    if (G.awaitingNext && !/^(RT|RD|TTK|EQ|WEA|DA|NEXT|N|HELP|HE|\?|CLS|CLEAR|RF|TJQ|TJD|SR)/.test(cmd) &&
+    if (G.awaitingNext && !/^(RT|RD|BP|BOARDING|TTK|EQ|WEA|DA|NEXT|N|HELP|HE|\?|CLS|CLEAR|RF|TJQ|TJD|SR)/.test(cmd) &&
         fpPayment === null){
       err("VÉ ĐÃ XUẤT — GÕ 'RT#<PNR>' ĐỂ XEM LẠI HOẶC 'NEXT' ĐỂ SANG KHÁCH KẾ TIẾP");
       blank();
@@ -3450,6 +3747,10 @@ body::after{
       doTicketing();
     } else if (cmd === 'TTK'){
       doTTK();
+    } else if (/^BP(?:\s|#|$)/.test(cmd) || /^BOARDING PASS(?:\s|$)/.test(cmd)){
+      var boarding = cmd.match(/^BP(?:\s*#?\s*([A-Z0-9-]+))?$|^BOARDING PASS(?:\s+#?\s*([A-Z0-9-]+))?$/);
+      if (boarding) showBoardingPass(boarding[1] || boarding[2] || null);
+      else err('FORMAT: BP#<PNR> / BP <TICKET NUMBER> / BOARDING PASS [PNR]');
     } else if (/^EQ\s*(\d{3})?$/.test(cmd)){
       doEQ(cmd.match(/^EQ\s*(\d{3})?$/)[1] || null);
     } else if (/^WEA\s*([A-Z]{3})?$/.test(cmd)){
@@ -3603,6 +3904,8 @@ body::after{
     ['TTP',                  'Kiểm tra TIM rồi phát hành vé; Y huỷ hoặc N tiếp tục có cảnh báo', 'TTP'],
     ['TKTL',                 'Phát hành vé điện tử', 'TKTL'],
     ['TTK',                  'Danh sách số vé đã xuất', 'TTK'],
+    ['BP#<PNR>',             'Hiển thị và in boarding pass cho vé đã xuất', 'BP#ABC123'],
+    ['BOARDING PASS [PNR]',  'Hiển thị boarding pass gần nhất hoặc theo PNR', 'BOARDING PASS ABC123'],
     ['RT',                   'Xem lại PNR đang mở', 'RT'],
     ['RD',                   'Hiển thị lại PNR (redisplay)', 'RD'],
     ['RT#<PNR>',             'Tra ruột vé đã xuất + thống kê doanh thu', 'RT#ABC123'],
@@ -3720,9 +4023,32 @@ body::after{
   });
 
   document.addEventListener('click', function(e){
+    var passButton = e.target.closest && e.target.closest('[data-print-boarding]');
+    if (passButton){
+      showBoardingPass(passButton.getAttribute('data-print-boarding'));
+      return;
+    }
+    var printButton = e.target.closest && e.target.closest('[data-print-pass-index]');
+    if (printButton){
+      printBoardingPass(Number(printButton.getAttribute('data-print-pass-index')));
+      return;
+    }
     if (window.getSelection && String(window.getSelection()).length) return;
     if (e.target && e.target.closest && e.target.closest('a')) return;
     input.focus();
+  });
+
+  document.getElementById('printAllBoardingPasses').addEventListener('click', function(){
+    printBoardingPass();
+  });
+  document.getElementById('closeBoardingPasses').addEventListener('click', function(){
+    boardingPassArea.hidden = true;
+    boardingPassArea.removeAttribute('data-print-one-pass');
+    boardingPassArea.focus();
+  });
+  window.addEventListener('afterprint', function(){
+    boardingPassArea.removeAttribute('data-print-one-pass');
+    boardingPassList.querySelectorAll('.boarding-pass').forEach(function(card){ card.classList.remove('is-print-target'); });
   });
 
   var workflowToggle = document.getElementById('workflowToggle');
