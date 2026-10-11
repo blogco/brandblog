@@ -158,12 +158,12 @@ FOOTER_COLUMNS = [
 # Brand data consumed by the Branding page
 # ---------------------------------------------------------------------------
 BRAND_COLORS = [
-    {"hex": "#006C53", "name": "Tropical Rain Forest", "role": "Primary / accent", "text": "light"},
-    {"hex": "#0095FF", "name": "Azure Radiance", "role": "Secondary accent", "text": "light"},
-    {"hex": "#FF6400", "name": "Blaze Orange", "role": "Tertiary accent", "text": "light"},
-    {"hex": "#FFFFFF", "name": "White", "role": "Surface / reversed text", "text": "dark"},
-    {"hex": "#464646", "name": "Tundora", "role": "Body text", "text": "light"},
-    {"hex": "#1A1A1A", "name": "Ink", "role": "Headings", "text": "light"},
+    {"hex": "#009999", "name": "Siemens Petrol", "role": "Primary accent", "text": "light"},
+    {"hex": "#000028", "name": "Deep Blue", "role": "Primary background", "text": "light"},
+    {"hex": "#FFFFFF", "name": "White", "role": "Light surface", "text": "dark"},
+    {"hex": "#1A1A1A", "name": "Standard text", "role": "Body copy", "text": "light"},
+    {"hex": "#666666", "name": "Muted text", "role": "Secondary copy", "text": "light"},
+    {"hex": "#F5F7F8", "name": "Soft neutral", "role": "Subtle surface", "text": "dark"},
 ]
 
 BRAND_VALUES = [

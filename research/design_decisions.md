@@ -146,6 +146,25 @@ A public notice board at `/pastenote/` where pasted links, images and text becom
   committed back via the GitHub Contents API with a Personal Access Token typed at
   runtime (never committed). See `wireframes/pastenote.md`.
 
+## 13. Branding page — Siemens-inspired visual study
+
+- **Page scope:** Siemens-inspired tokens and typography are scoped to `/branding/`; the
+  rest of BrandBlog keeps its existing Sembcorp-inspired visual system.
+- **Palette:** Petrol `#009999`, Deep Blue `#000028`, white `#FFFFFF`, body ink `#1A1A1A`,
+  muted text `#666666`, a Petrol hover shade `#007F7F`, and a soft neutral surface
+  `#F5F7F8`. Hairlines and shadows use low-opacity Deep Blue for restrained contrast.
+- **Typography:** The page requests `"Siemens Sans", Arial, sans-serif` and uses 30/36px
+  bold H1, 20/24px semibold H2, and 16/20px regular body copy. Siemens Sans is not
+  redistributed or remotely loaded; the browser uses the system fallback when unavailable.
+- **Components:** A responsive editorial grid, fine borders, understated shadows, a Petrol
+  primary action, and a text-only Siemens wordmark keep the treatment lightweight. The
+  wordmark and “Ingenuity for life” appear only as a clearly labelled independent study.
+- **Editorial source:** The Physical AI feature summarizes the Siemens press release about
+  testing Humanoid’s HMND 01 wheeled Alpha at Siemens’ Erlangen electronics factory for
+  autonomous logistics. It links to the source and does not imply BrandBlog affiliation.
+- **Disclosure:** The page and footer explicitly state that the study is unofficial and
+  not affiliated with or endorsed by Siemens AG.
+
 ## Open questions / future work
 
 - Optional: add Pelican `sitemap` + `feed` plugins for richer SEO.

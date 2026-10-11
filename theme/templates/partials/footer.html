@@ -10,7 +10,12 @@
         <img src="{{ SITEURL }}/static/images/logo-white.svg" alt="" class="h-9 w-9" width="36" height="36">
         <span class="text-lg font-bold tracking-tight text-white">{{ SITENAME }}</span>
       </a>
+      {% if page is defined and page and page.url.startswith('branding') %}
+      <p class="mt-4 max-w-xs text-sm leading-relaxed text-white/70">An independent, educational Siemens-inspired visual design study.</p>
+      {% else %}
       <p class="mt-4 max-w-xs text-sm leading-relaxed text-white/70">{{ SITEDESCRIPTION }}</p>
+      {% endif %}
+      {% if not (page is defined and page and page.url.startswith('branding')) %}
       <div class="mt-6">
         <p class="text-xs font-semibold uppercase tracking-[0.16em] text-white/50">Follow us on</p>
         <div class="mt-3 flex gap-3">
@@ -27,6 +32,7 @@
           {% endfor %}
         </div>
       </div>
+      {% endif %}
     </div>
 
     <!-- Link columns -->
@@ -46,7 +52,11 @@
   <div class="border-t border-white/15">
     <div class="container flex flex-col gap-3 py-5 text-xs text-white/60 md:flex-row md:items-center md:justify-between">
       <p>Copyright &copy; {{ COPYRIGHT_YEAR }} {{ SITENAME }}. All rights reserved.</p>
+      {% if page is defined and page and page.url.startswith('branding') %}
+      <p>Independent Siemens-inspired design study. Not affiliated with Siemens AG.</p>
+      {% else %}
       <p>Educational demo design system inspired by Sembcorp. Not affiliated with Sembcorp Industries.</p>
+      {% endif %}
     </div>
   </div>
 </footer>

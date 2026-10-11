@@ -3,11 +3,12 @@
   Mirrors the reference site's slim utility strip above the main navigation.
 #}
 {% set page_url = page.url if (page is defined and page) else (article.url if (article is defined and article) else '') %}
+{% set is_branding = page_url.startswith('branding') %}
 <header class="sticky top-0 z-50 bg-white/95 shadow-[0_1px_0_rgba(0,0,0,0.06)] backdrop-blur">
   <!-- Utility bar -->
   <div class="bg-sembcorp-green-darker text-white">
     <div class="container flex h-9 items-center justify-between text-[11px] font-medium tracking-wide">
-      <span class="hidden sm:inline text-white/70">A publication inspired by the energy transition</span>
+      <span class="hidden sm:inline text-white/70">{% if is_branding %}Independent Siemens-inspired design study{% else %}A publication inspired by the energy transition{% endif %}</span>
       <nav class="flex items-center gap-5" aria-label="Utility">
         {% for label, url in NAV_UTILITY %}
           <a class="hover:text-white/80" href="{{ SITEURL }}/{{ url }}">{{ label }}</a>
@@ -19,11 +20,18 @@
   <!-- Main bar -->
   <div class="container flex items-center justify-between py-3">
     <a href="{{ SITEURL }}/" class="flex items-center gap-2.5" aria-label="{{ SITENAME }} home">
+      {% if is_branding %}
+      <span class="flex flex-col leading-none">
+        <span class="siemens-wordmark" aria-hidden="true">SIEMENS</span>
+        <span class="siemens-tagline">Ingenuity for life · independent study</span>
+      </span>
+      {% else %}
       <img src="{{ SITEURL }}/static/images/logo.svg" alt="" class="h-9 w-9" width="36" height="36">
       <span class="flex flex-col leading-none">
         <span class="text-lg font-bold tracking-tight text-sembcorp-ink">{{ SITENAME }}</span>
         <span class="mt-0.5 hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-sembcorp-green sm:block">Energy &amp; Sustainability</span>
       </span>
+      {% endif %}
     </a>
 
     <nav class="hidden items-center gap-7 md:flex" aria-label="Primary">

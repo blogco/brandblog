@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="{{ SITEURL }}/static/css/style.css">
   {% block head %}{% endblock %}
 </head>
-<body class="flex min-h-screen flex-col">
+<body class="flex min-h-screen flex-col {% block body_class %}{% endblock %}">
   <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-sm focus:bg-sembcorp-green focus:px-4 focus:py-2 focus:text-white">Skip to content</a>
 
   {% include "partials/nav.html" %}
