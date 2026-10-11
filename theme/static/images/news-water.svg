@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Water">
   <defs>
     <linearGradient id="wa1" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0E846D"/>
-      <stop offset="1" stop-color="#003429"/>
+      <stop offset="0" stop-color="#009999"/>
+      <stop offset="1" stop-color="#000028"/>
     </linearGradient>
   </defs>
   <rect width="800" height="500" fill="url(#wa1)"/>

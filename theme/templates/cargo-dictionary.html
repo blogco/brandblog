@@ -121,7 +121,7 @@
     </div>
 
     <!-- Loading skeleton -->
-    <div id="dict-skeleton" class="mt-8 grid gap-6 md:grid-cols-2" aria-hidden="true">
+    <div id="dict-skeleton" class="brand-card-grid mt-8" aria-hidden="true">
       {% for _ in range(4) %}
         <div class="animate-pulse rounded-xl border border-sembcorp-line bg-white p-6">
           <div class="h-5 w-1/3 rounded bg-sembcorp-line"></div>
@@ -137,7 +137,7 @@
     </div>
 
     <!-- Card grid (rendered by dictionary.js) -->
-    <div id="dict-grid" class="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3" role="list" aria-live="polite" aria-busy="true"></div>
+    <div id="dict-grid" class="brand-card-grid mt-8" role="list" aria-live="polite" aria-busy="true"></div>
 
     <!-- Empty state -->
     <div id="dict-empty" class="mt-8 hidden rounded-xl border border-dashed border-sembcorp-line bg-white p-12 text-center">

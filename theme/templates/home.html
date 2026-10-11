@@ -52,7 +52,7 @@
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
     </div>
-    <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="brand-card-grid mt-10">
       {% for a in articles[:3] %}
         {{ m.article_card(a) }}
       {% endfor %}
@@ -95,7 +95,7 @@
       <p class="eyebrow">What guides us</p>
       <h2 class="mt-2 text-3xl font-bold text-sembcorp-ink md:text-4xl">Insight. Integrity. Integral.</h2>
     </div>
-    <div class="mt-10 grid gap-6 md:grid-cols-3">
+    <div class="brand-card-grid mt-10">
       {% for name, desc in BRAND_VALUES %}
         <div class="rounded-sm border border-sembcorp-line p-8">
           <span class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-sembcorp-green-wash text-lg font-bold text-sembcorp-green">{{ loop.index }}</span>

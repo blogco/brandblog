@@ -19,7 +19,7 @@
 <section class="section">
   <div class="container">
     <h2 class="text-3xl font-bold text-sembcorp-ink">Latest news</h2>
-    <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="brand-card-grid mt-10">
       {% for a in articles[:6] %}
         {{ m.article_card(a) }}
       {% endfor %}

@@ -29,28 +29,30 @@ poorer fit for an article/card layout.
 
 ## 3. Colours
 
-Centralised in `tailwind.config.js` as a `sembcorp-*` scale:
+The shared site palette is Siemens-inspired and defined as `--brand-*` custom properties in
+`src/input.css`; matching utility aliases remain in `tailwind.config.js` for existing
+templates:
 
 | Token | Hex | Use |
 |-------|-----|-----|
-| `sembcorp-green` | `#006C53` | Primary actions, links, accents |
-| `sembcorp-green-dark/darker` | `#005B48` / `#004E3E` | Hover, footer, overlays |
-| `sembcorp-green-wash` | `#E6F1EE` | Light surfaces, chips |
-| `sembcorp-blue` | `#0095FF` | Secondary accent (sparingly) |
-| `sembcorp-orange` | `#FF6400` | Tertiary accent (sparingly) |
-| `sembcorp-ink` | `#1A1A1A` | Headings |
-| `sembcorp-gray` | `#464646` | Body text |
-| `sembcorp-mist` | `#F5F6F5` | Section backgrounds |
-| `sembcorp-line` | `#E5E7E6` | Hairlines, borders |
+| Petrol | `#009999` | Primary actions, links, accents |
+| Deep Blue | `#000028` | Header, footer, dark surfaces |
+| White | `#FFFFFF` | Light surfaces |
+| Ink | `#1A1A1A` | Body text and headings |
+| Muted | `#666666` | Secondary text |
+| Line | `#DFE4E8` | Hairlines and borders |
+| Surface | `#F5F7F8` | Soft neutral sections |
 
-Green `#006C53` on white ≈ 5.7:1 contrast (WCAG AA). Body text uses the darker ink/gray to
-stay comfortably compliant.
+Cards use the shared Deep Blue shadow `0 12px 32px rgba(0,0,40,.08)`. The Petrol hover
+shade is `#007F7F`; state colours remain distinct where needed to communicate success,
+warning, or error.
 
 ## 4. Typography
 
-The brand typeface is **Frutiger**, which is licensed and cannot be redistributed. The web
-stack is therefore `Frutiger, "Helvetica Neue", Helvetica, Arial, sans-serif` — matching the
-brief's guidance. System fonts avoid a network request and layout shift (no web-font FOUT).
+The site-wide stack is `"Siemens Sans", Arial, sans-serif`. Siemens Sans is not redistributed
+or remotely loaded; the browser uses the system fallback when unavailable. Shared CSS fixes
+H1 at 30/36px bold, H2 at 20/24px semibold, H3–H6 at 18/24px semibold, and body copy at
+16/20px regular. System fonts avoid network requests and layout shifts.
 
 ## 5. Artwork
 
@@ -130,17 +132,11 @@ small adapter so it can move to an API later.
 A public notice board at `/pastenote/` where pasted links, images and text become
 3M Post-it style sticky notes.
 
-- **Page-scoped styling.** The Post-it look lives in `theme/static/css/pastenote.css`,
-  linked only from `theme/templates/pastenote.html` — *not* in `src/input.css`. This keeps
-  the paper texture, tilt and handwriting out of the shared design system.
-- **New font (documented here as required).** Notes use the Google Font **Caveat** for
-  the handwriting feel, with `Kalam, "Segoe Print", "Comic Sans MS", cursive` fallbacks.
-  Page chrome keeps the site UI font stack.
-- **Two palettes, on purpose.** The *paper* colours are 3M-inspired
-  (Canary yellow `#FFE066` default, plus blue / pink / green / orange / purple) and are
-  independent of the brand palette. The *page chrome* (hero, buttons, focus rings) uses
-  the Sembcorp green tokens only (`#006C53` / `#005B48` / `#E6F1EE`) so the page matches
-  the rest of the site.
+- **Page-specific behavior, shared identity.** Note-board interactions and optional paper
+  colors remain in `theme/static/css/pastenote.css`, while its typography, chrome, board
+  surface, buttons, and cards use the shared BrandBlog tokens.
+- The editable notes use the shared font stack; the page no longer loads a separate Google
+  handwriting font. Optional note-paper colors remain a product feature.
 - **Data & sync.** `content/data/pastenote.json` is embedded at build time into
   `PASTENOTE_NOTES`; live edits auto-save to `localStorage` (`pastenote_notes`) and can be
   committed back via the GitHub Contents API with a Personal Access Token typed at
@@ -148,8 +144,9 @@ A public notice board at `/pastenote/` where pasted links, images and text becom
 
 ## 13. Branding page — Siemens-inspired visual study
 
-- **Page scope:** Siemens-inspired tokens and typography are scoped to `/branding/`; the
-  rest of BrandBlog keeps its existing Sembcorp-inspired visual system.
+- **Page scope:** `/branding/` introduced the Siemens-inspired system; its Petrol/Deep Blue
+  tokens and typography now also define the shared identity across the public site. The
+  standalone Amadeus Ticket Sales Simulator is intentionally excluded.
 - **Palette:** Petrol `#009999`, Deep Blue `#000028`, white `#FFFFFF`, body ink `#1A1A1A`,
   muted text `#666666`, a Petrol hover shade `#007F7F`, and a soft neutral surface
   `#F5F7F8`. Hairlines and shadows use low-opacity Deep Blue for restrained contrast.

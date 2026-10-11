@@ -172,7 +172,7 @@
   }
 
   .dict-card:hover {
-    @apply -translate-y-0.5 border-l-sembcorp-green shadow-[0_8px_24px_rgba(0,108,83,0.16)];
+    @apply -translate-y-0.5 border-l-sembcorp-green shadow-[0_12px_32px_rgba(0,0,40,0.14)];
   }
 
   .dict-card:focus-within {
@@ -204,7 +204,7 @@
   }
 
   .dict-fab {
-    @apply fixed bottom-6 right-6 z-50 inline-flex h-14 w-14 items-center justify-center rounded-full bg-sembcorp-green text-white shadow-[0_8px_24px_rgba(0,108,83,0.4)] transition-transform duration-200 hover:scale-110 hover:bg-sembcorp-green-dark focus:outline-none focus-visible:ring-4 focus-visible:ring-sembcorp-green/30;
+    @apply fixed bottom-6 right-6 z-50 inline-flex h-14 w-14 items-center justify-center rounded-full bg-sembcorp-green text-white shadow-[0_12px_32px_rgba(0,0,40,0.16)] transition-transform duration-200 hover:scale-110 hover:bg-sembcorp-green-dark focus:outline-none focus-visible:ring-4 focus-visible:ring-sembcorp-green/30;
   }
 
   .dict-label {
@@ -296,9 +296,146 @@ input[type="search"]::-webkit-search-cancel-button {
   .bg-hero-overlay {
     background-image: linear-gradient(
       90deg,
-      rgba(0, 78, 62, 0.92) 0%,
-      rgba(0, 108, 83, 0.72) 48%,
-      rgba(0, 108, 83, 0.15) 100%
+      rgba(0, 0, 40, 0.92) 0%,
+      rgba(0, 0, 40, 0.72) 48%,
+      rgba(0, 153, 153, 0.15) 100%
     );
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Shared Siemens-inspired BrandBlog visual system
+   --------------------------------------------------------------------------- */
+:root {
+  --brand-petrol: #009999;
+  --brand-deep-blue: #000028;
+  --brand-white: #ffffff;
+  --brand-ink: #1a1a1a;
+  --brand-muted: #666666;
+  --brand-line: #dfe4e8;
+  --brand-surface: #f5f7f8;
+  --brand-shadow: 0 12px 32px rgba(0, 0, 40, .08);
+  --brand-font-sans: "Siemens Sans", Arial, sans-serif;
+  --brand-font-size-h1: 30px;
+  --brand-line-height-h1: 36px;
+  --brand-font-size-h2: 20px;
+  --brand-line-height-h2: 24px;
+  --brand-font-size-h3: 18px;
+  --brand-line-height-h3: 24px;
+  --brand-font-size-body: 16px;
+  --brand-line-height-body: 20px;
+  --brand-radius: 2px;
+  --brand-grid-gap: 20px;
+}
+
+body.site-shell {
+  background-color: var(--brand-white);
+  color: var(--brand-ink);
+  font-family: var(--brand-font-sans) !important;
+  font-size: var(--brand-font-size-body);
+  line-height: var(--brand-line-height-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body.site-shell *,
+body.site-shell *::before,
+body.site-shell *::after {
+  font-family: var(--brand-font-sans) !important;
+}
+
+body.site-shell h1 {
+  font-size: var(--brand-font-size-h1) !important;
+  font-weight: 700 !important;
+  line-height: var(--brand-line-height-h1) !important;
+}
+
+body.site-shell h2 {
+  font-size: var(--brand-font-size-h2) !important;
+  font-weight: 600 !important;
+  line-height: var(--brand-line-height-h2) !important;
+}
+
+body.site-shell h3,
+body.site-shell h4,
+body.site-shell h5,
+body.site-shell h6 {
+  font-size: var(--brand-font-size-h3) !important;
+  font-weight: 600 !important;
+  line-height: var(--brand-line-height-h3) !important;
+}
+
+body.site-shell p {
+  font-size: var(--brand-font-size-body) !important;
+  font-weight: 400 !important;
+  line-height: var(--brand-line-height-body) !important;
+}
+
+body.site-shell button,
+body.site-shell input,
+body.site-shell select,
+body.site-shell textarea,
+body.site-shell table {
+  font-family: var(--brand-font-sans) !important;
+}
+
+body.site-shell button,
+body.site-shell input,
+body.site-shell select,
+body.site-shell textarea {
+  border-radius: var(--brand-radius);
+}
+
+body.site-shell .btn-primary,
+body.site-shell .pn-btn-primary {
+  border-color: var(--brand-petrol) !important;
+  background-color: var(--brand-petrol) !important;
+  color: var(--brand-white) !important;
+}
+
+body.site-shell .btn-primary:hover,
+body.site-shell .pn-btn-primary:hover {
+  border-color: #007f7f !important;
+  background-color: #007f7f !important;
+}
+
+body.site-shell .btn-outline,
+body.site-shell .pn-btn-ghost {
+  border: 1px solid var(--brand-petrol) !important;
+  background: transparent !important;
+  color: var(--brand-petrol) !important;
+}
+
+body.site-shell .btn-outline:hover,
+body.site-shell .pn-btn-ghost:hover {
+  background: var(--brand-petrol) !important;
+  color: var(--brand-white) !important;
+}
+
+body.site-shell .card,
+body.site-shell article[data-article-card],
+body.site-shell .dict-card,
+body.site-shell .pn-compose,
+body.site-shell .pn-modal-panel {
+  border-color: var(--brand-line);
+  border-radius: var(--brand-radius);
+  box-shadow: var(--brand-shadow);
+}
+
+.brand-card-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: var(--brand-grid-gap) !important;
+}
+
+@media (max-width: 900px) {
+  .brand-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .brand-card-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
   }
 }

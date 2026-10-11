@@ -11,7 +11,7 @@ notes. Everything is auto-saved to the browser; an admin can sync the board to G
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ HEADER  (same as Home — utility bar + sticky main nav; "Pastenote" active)     │
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ HERO (deep Sembcorp-green gradient)                                            │
+│ HERO (Deep Blue / Petrol gradient)                                             │
 │   Home / Pastenote                              (breadcrumb)                   │
 │   Post-it board · dán là xong                   (eyebrow)                      │
 │   Pastenote                                     (H1, white)                    │
@@ -24,10 +24,10 @@ notes. Everything is auto-saved to the browser; an admin can sync the board to G
 │   │ ──────────────────────────────────────────────────────────────────── │    │
 │   │ (●)(●)(●)(●)(●)(●)                    [ ＋ Thêm note mới ] [ 📋 Dán ] │    │
 │   └──────────────────────────────────────────────────────────────────────┘    │
-│   dashed 2px border, radius 12px · focus → solid green ring                    │
+│   dashed 1px border, radius 2px · focus → solid Petrol ring                   │
 │   Hỗ trợ Cmd/⌃+V, kéo-thả ảnh · URL→link · Ảnh→thumbnail · Text→note           │
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ NOTES BOARD  (grid auto-fill, minmax(240px, 1fr), dotted paper background)     │
+│ NOTES BOARD  (3/2/1-column responsive grid, 20px gaps, dotted surface)         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
 │  │ 📌           │  │ 📌           │  │ 📌           │  │ 📌           │        │
 │  │ example.com  │  │ [ ảnh ]      │  │ Nhớ gọi khách│  │ Ghi chú màu  │        │
@@ -37,7 +37,7 @@ notes. Everything is auto-saved to the browser; an admin can sync the board to G
 │  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘        │
 │  Canary yellow #FFE066 default · radius 2px 2px 8px 8px · shadow 0 2px 8px      │
 │  tilt −1° / +1° alternating · hover scale(1.02) + stronger shadow              │
-│  font Caveat 19px #2D2A26 · actions appear on hover / focus                    │
+│  font Siemens Sans 19px #1A1A1A · actions appear on hover / focus              │
 │                                                                                │
 │ EMPTY STATE: 📝 "Chưa có ghi chú nào" + paste hint                             │
 ├──────────────────────────────────────────────────────────────────────────────┤

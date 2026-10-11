@@ -21,32 +21,28 @@ module.exports = {
     },
     extend: {
       colors: {
-        // Primary brand — "Tropical Rain Forest"
+        // Siemens-inspired site palette; legacy class names remain for templates.
         "sembcorp-green": {
-          DEFAULT: "#006C53",
-          light: "#0E846D",
-          mid: "#20937C",
-          dark: "#005B48",
-          darker: "#004E3E",
-          wash: "#E6F1EE",
+          DEFAULT: "#009999",
+          light: "#009999",
+          mid: "#009999",
+          dark: "#007F7F",
+          darker: "#000028",
+          wash: "#F5F7F8",
         },
-        // Secondary / tertiary brand accents
-        "sembcorp-blue": "#0095FF",
-        "sembcorp-orange": "#FF6400",
+        // Retained semantic aliases for existing utility classes.
+        "sembcorp-blue": "#009999",
+        "sembcorp-orange": "#B42318",
         // Neutrals
-        "sembcorp-gray": "#464646",
+        "sembcorp-gray": "#666666",
         "sembcorp-ink": "#1A1A1A",
-        "sembcorp-mist": "#F5F6F5",
-        "sembcorp-line": "#E5E7E6",
+        "sembcorp-mist": "#F5F7F8",
+        "sembcorp-line": "#DFE4E8",
       },
       fontFamily: {
         sans: [
-          "Frutiger",
-          "Helvetica Neue",
-          "Helvetica",
+          "Siemens Sans",
           "Arial",
-          "ui-sans-serif",
-          "system-ui",
           "sans-serif",
         ],
       },
@@ -54,7 +50,7 @@ module.exports = {
         content: "1280px",
       },
       boxShadow: {
-        card: "0 1px 2px rgba(26,26,26,0.04), 0 12px 32px -12px rgba(0,108,83,0.18)",
+        card: "0 12px 32px rgba(0,0,40,.08)",
       },
       keyframes: {
         "fade-up": {

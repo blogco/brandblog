@@ -4,13 +4,14 @@ A static brand blog with **Home**, **News** and **Branding** sections, built wit
 **Pelican** (Python) + **Jinja2**, styled with **Tailwind CSS**, and deployed to
 **GitHub Pages** via **GitHub Actions**.
 
-The visual language is inspired by [Sembcorp](https://www.sembcorp.com/news-and-insights/)'s
-news experience: a deep-green brand palette (`#006C53`), a slim utility bar, a sticky
-primary nav, full-bleed hero banners with breadcrumbs, filterable news cards, and a
-multi-column footer.
+The public site uses a Siemens-inspired BrandBlog visual system: Petrol (`#009999`),
+Deep Blue (`#000028`), Siemens Sans with system fallbacks, responsive editorial cards,
+full-bleed hero banners, filterable news and a multi-column footer. The standalone
+Ticket Sales Simulator keeps its own terminal design.
 
 > This is an educational, non-commercial design demo. It is **not affiliated with or
-> endorsed by Sembcorp Industries**. All imagery is original SVG; no assets were scraped.
+> endorsed by Sembcorp Industries or Siemens AG**. All imagery is original SVG; no assets
+> were scraped.
 
 ## ✨ Features
 

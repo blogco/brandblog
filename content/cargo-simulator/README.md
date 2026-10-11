@@ -8,7 +8,7 @@ moving **HAN → ICN → LAX** — from an origin-forwarder booking request to a
 **Proof of Delivery** in Los Angeles. Ten phases map to the five ICHM activity groups.
 
 > Educational, non-commercial learning aid. Simplified for teaching. It is **not
-> affiliated with IATA, any airline, or Sembcorp Industries**. Always follow your
+> affiliated with IATA, any airline, Siemens AG, or Sembcorp Industries**. Always follow your
 > carrier's current regulations and applicable national law.
 
 ---

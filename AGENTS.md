@@ -5,7 +5,7 @@
 
 ## Role
 
-Static blog generator agent for a Sembcorp-inspired brand blog. The site is built with
+Static blog generator agent for a Siemens-inspired BrandBlog visual system. The site is built with
 **Pelican** (Python) + **Jinja2** templates, styled with **Tailwind CSS**, and deployed to
 **GitHub Pages** via GitHub Actions.
 
@@ -31,16 +31,16 @@ Static blog generator agent for a Sembcorp-inspired brand blog. The site is buil
 - Avoid jargon and hype. Prefer evidence-led statements.
 - Editorial themes follow the values **Insight, Integrity, Integral**.
 - Always keep the demo disclaimer in mind: this is an educational, non-commercial site
-  and is **not affiliated with Sembcorp Industries**.
+  and is **not affiliated with Siemens AG or Sembcorp Industries**.
 
 ## UI/UX Rules
 
 - Follow the wireframes in `wireframes/`.
-- Colour palette (see `tailwind.config.js`):
-  - Primary green `#006C53` (Tropical Rain Forest), dark `#005B48`, wash `#E6F1EE`
-  - Blue `#0095FF`, orange `#FF6400` (accents only — use sparingly)
-  - Ink `#1A1A1A`, body `#464646`, surface `#FFFFFF`, mist `#F5F6F5`
-- Font stack: `Frutiger, "Helvetica Neue", Helvetica, Arial, sans-serif`.
+- Shared colour palette (see `src/input.css` and `tailwind.config.js`):
+  - Petrol `#009999`, Deep Blue `#000028`, White `#FFFFFF`
+  - Ink `#1A1A1A`, Muted `#666666`, Line `#DFE4E8`, Surface `#F5F7F8`
+- Font stack: `"Siemens Sans", Arial, sans-serif`; H1 30/36px, H2 20/24px,
+  H3–H6 18/24px, and body 16/20px.
 - Layout: grid-based, responsive, mobile-first, with card components.
 - Motion: subtle only (hover ~150–300ms, hero fade-up ~600ms). Respect focus states.
 - Never introduce a new colour or font without documenting it in `research/design_decisions.md`.
@@ -86,5 +86,6 @@ to preview. The News page and filters update automatically — no template edits
 1. Keep changes consistent with the surrounding code and naming.
 2. Prefer editing `src/input.css` + `tailwind.config.js` over ad-hoc inline styles.
 3. After template or class changes, regenerate the CSS before committing.
-4. Run the internal link check after structural changes.
-5. Never commit secrets, tokens, or the `output/` directory (git-ignored).
+4. Keep the standalone `ticket-sales-simulator/` page and assets outside shared theme edits.
+5. Run the internal link check after structural changes.
+6. Never commit secrets, tokens, or the `output/` directory (git-ignored).

@@ -20,7 +20,7 @@ SITESUBTITLE = "Energy, Sustainability & Innovation Insights"
 SITEDESCRIPTION = (
     "BrandBlog is a static publication covering the energy transition, "
     "sustainability and the people driving a more sustainable future — "
-    "with a design system inspired by Sembcorp."
+    "with a Siemens-inspired design system. It is an independent educational demo."
 )
 COPYRIGHT_YEAR = datetime.now().year
 

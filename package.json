@@ -2,7 +2,7 @@
   "name": "brandblog",
   "version": "1.0.0",
   "private": true,
-  "description": "Static brand blog (Home / News / Branding) built with Pelican + Tailwind CSS, inspired by Sembcorp's UI/UX.",
+  "description": "Static BrandBlog built with Pelican and Tailwind CSS using a Siemens-inspired visual identity.",
   "scripts": {
     "build:css": "tailwindcss -i ./src/input.css -o ./theme/static/css/style.css --minify",
     "build:cms-css": "tailwindcss -i ./cms/static/css/cms.src.css -o ./cms/static/css/cms.css --minify",

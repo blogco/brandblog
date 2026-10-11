@@ -5,34 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ICHM Cargo Door-to-Door Simulator</title>
 <meta name="description" content="An interactive learning game that walks one shipment through the IATA Cargo Handling Manual (ICHM) Master Operating Plan — door-to-door, 10 phases.">
-<meta name="theme-color" content="#004E3E">
+<meta name="theme-color" content="#000028">
 <!-- Self-contained: all CSS and JS are inlined. No CDNs, no build step, no network calls. -->
 <style>
   :root{
-    --green:#006C53; --green-dark:#005B48; --green-darker:#004E3E; --green-light:#0E846D;
-    --wash:#E6F1EE; --blue:#0095FF; --orange:#FF6400;
-    --ink:#1A1A1A; --body:#464646; --mist:#F5F6F5; --line:#E5E7E6; --white:#fff;
-    --ok:#0E846D; --ok-bg:#E6F1EE; --bad:#B91C1C; --bad-bg:#FDECEC; --warn:#B45309; --warn-bg:#FEF4E6;
-    --radius:12px; --radius-sm:8px;
-    --shadow:0 1px 2px rgba(26,26,26,.06), 0 16px 40px -18px rgba(0,108,83,.32);
-    --font:Frutiger,"Helvetica Neue",Helvetica,Arial,ui-sans-serif,system-ui,sans-serif;
+    --brand-petrol:#009999; --brand-deep-blue:#000028; --brand-white:#ffffff;
+    --brand-ink:#1a1a1a; --brand-muted:#666666; --brand-line:#dfe4e8;
+    --brand-surface:#f5f7f8; --brand-shadow:0 12px 32px rgba(0,0,40,.08);
+    --brand-font-sans:"Siemens Sans",Arial,sans-serif;
+    --green:var(--brand-petrol); --green-dark:#007F7F; --green-darker:var(--brand-deep-blue); --green-light:var(--brand-petrol);
+    --wash:var(--brand-surface); --blue:var(--brand-petrol); --orange:var(--brand-petrol);
+    --ink:var(--brand-ink); --body:var(--brand-muted); --mist:var(--brand-surface);
+    --line:var(--brand-line); --white:var(--brand-white);
+    --ok:var(--brand-petrol); --ok-bg:var(--brand-surface); --bad:#B91C1C; --bad-bg:#FDECEC; --warn:#B45309; --warn-bg:#FEF4E6;
+    --radius:2px; --radius-sm:2px;
+    --shadow:var(--brand-shadow);
+    --font:var(--brand-font-sans);
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{
     margin:0; font-family:var(--font); color:var(--ink); background:var(--mist);
-    line-height:1.55; -webkit-font-smoothing:antialiased;
+    line-height:20px; font-size:16px; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
   }
-  h1,h2,h3,h4{margin:0; line-height:1.22; letter-spacing:-.01em}
+  h1,h2,h3,h4,h5,h6{margin:0; letter-spacing:-.01em}
+  h1{font-size:30px;font-weight:700;line-height:36px}
+  h2{font-size:20px;font-weight:600;line-height:24px}
+  h3,h4,h5,h6{font-size:18px;font-weight:600;line-height:24px}
   p{margin:0}
-  button{font-family:inherit; font-size:inherit; cursor:pointer}
+  button,input,select,textarea,table{font-family:var(--font)}
+  button,input,select,textarea{border-radius:2px!important}
+  button{font-size:inherit; cursor:pointer}
   a{color:var(--green)}
   .muted{color:var(--body)}
   .small{font-size:.82rem}
   .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
   /* ---------- Layout ---------- */
-  .topbar{position:sticky;top:0;z-index:40;background:var(--green-darker);color:#fff;box-shadow:0 1px 0 rgba(0,0,0,.12)}
+  .topbar{position:sticky;top:0;z-index:40;background:var(--green-darker);color:#fff;box-shadow:var(--brand-shadow)}
   .topbar-inner{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px}
   .brand{display:flex;align-items:center;gap:12px;min-width:0}
   .brand-mark{width:38px;height:38px;flex:0 0 auto;border-radius:10px;background:var(--green);display:grid;place-items:center;font-weight:800;font-size:.7rem;letter-spacing:.04em;color:#fff;border:1px solid rgba(255,255,255,.18)}
@@ -99,7 +109,7 @@
   .opts{display:flex;flex-direction:column;gap:10px;margin-top:14px}
   .opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;background:#fff;border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:13px 15px;color:var(--body);transition:border-color .15s ease,background .15s ease,transform .12s ease}
   .opt:hover{border-color:var(--green-light);background:#FBFDFC}
-  .opt:focus-visible{outline:3px solid rgba(0,149,255,.45);outline-offset:2px}
+  .opt:focus-visible{outline:3px solid rgba(0,153,153,.45);outline-offset:2px}
   .opt .mark{flex:0 0 auto;width:26px;height:26px;border-radius:7px;border:1.5px solid #C6CFCB;display:grid;place-items:center;font-weight:800;font-size:.78rem;color:transparent;background:#fff}
   .opt[aria-pressed="true"]{border-color:var(--green);background:var(--wash);color:var(--ink)}
   .opt[aria-pressed="true"] .mark{background:var(--green);border-color:var(--green);color:#fff}
@@ -143,7 +153,7 @@
 
   /* ---------- Buttons ---------- */
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:8px;border:1.5px solid transparent;padding:11px 20px;font-weight:700;font-size:.92rem;transition:all .15s ease}
-  .btn:focus-visible{outline:3px solid rgba(0,149,255,.45);outline-offset:2px}
+  .btn:focus-visible{outline:3px solid rgba(0,153,153,.45);outline-offset:2px}
   .btn-primary{background:var(--green);color:#fff}
   .btn-primary:hover:not(:disabled){background:var(--green-dark)}
   .btn-primary:disabled{background:#AEB9B4;cursor:not-allowed}
@@ -163,8 +173,9 @@
   .hero p{margin-top:12px;color:rgba(255,255,255,.86);max-width:62ch}
   @media(min-width:768px){.hero{padding:44px}.hero h1{font-size:2.5rem}}
   .hero-actions{margin-top:22px;display:flex;gap:12px;flex-wrap:wrap}
-  .grid-3{display:grid;gap:14px;margin-top:18px}
-  @media(min-width:640px){.grid-3{grid-template-columns:repeat(3,1fr)}}
+  .grid-3{display:grid;gap:20px;margin-top:18px}
+  @media(min-width:601px) and (max-width:900px){.grid-3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(min-width:901px){.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}}
   .mini{border:1px solid var(--line);border-radius:var(--radius-sm);padding:16px;background:#fff}
   .mini h3{font-size:.95rem;font-weight:800}
   .mini p{margin-top:6px;font-size:.85rem;color:var(--body)}
@@ -197,6 +208,14 @@
   @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
   .fade-in{animation:fade .4s ease-out both}
   @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  *,*::before,*::after{font-family:var(--brand-font-sans)!important}
+  h1{font-size:30px!important;font-weight:700!important;line-height:36px!important}
+  h2{font-size:20px!important;font-weight:600!important;line-height:24px!important}
+  h3,h4,h5,h6{font-size:18px!important;font-weight:600!important;line-height:24px!important}
+  p{font-size:16px!important;font-weight:400!important;line-height:20px!important}
+  button,input,select,textarea,table{font-family:var(--brand-font-sans)!important}
+  button,input,select,textarea{border-radius:2px!important}
+  body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 </style>
 </head>
 <body>

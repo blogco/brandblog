@@ -98,7 +98,7 @@
         {% endif %}
 
         <!-- Grid -->
-        <div id="article-grid" class="mt-8 grid gap-6 sm:grid-cols-2">
+        <div id="article-grid" class="brand-card-grid mt-8">
           {% for a in articles[1:] %}
             <div data-article-card data-category="{{ a.category|lower }}" data-tags="{% for t in a.tags %}{{ t|lower }} {% endfor %}">
               {{ m.article_card(a) }}

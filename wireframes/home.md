@@ -4,7 +4,7 @@ Route: `/` · Template: `theme/templates/home.html` · Content: `content/pages/h
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ UTILITY BAR  (deep green)                                            [bg #004E3E]│
+│ UTILITY BAR  (Deep Blue)                                            [bg #000028]│
 │ "A publication inspired by the energy transition"   News & Insights · Contact  │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ MAIN NAV  (white, sticky)                                                       │
@@ -20,7 +20,7 @@ Route: `/` · Template: `theme/templates/home.html` · Content: `content/pages/h
 │     [ Explore the newsroom ]  [ View brand system ]                            │
 │                                                                                │
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ STATS STRIP (mist bg #F5F6F5)                                                  │
+│ STATS STRIP (surface bg #F5F7F8)                                              │
 │   2,000+   │   1H2026   │   4   │   100%                                       │
 │   Solar …  │  Results…  │ Pillars│ Purpose-led …                                │
 ├──────────────────────────────────────────────────────────────────────────────┤
@@ -52,14 +52,14 @@ Route: `/` · Template: `theme/templates/home.html` · Content: `content/pages/h
 │  │ Insight │   │Integrity│   │Integral │                                       │
 │  └─────────┘   └─────────┘   └─────────┘                                       │
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ CTA BAND (solid green #006C53)                                                 │
+│ CTA BAND (Petrol #009999)                                                     │
 │ Explore the complete brand system          [ Go to Branding ]                  │
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ FOOTER (deep green #004E3E)                                                    │
+│ FOOTER (Deep Blue #000028)                                                     │
 │ [◉] BrandBlog      Explore │ Topics │ Resources │ Legal                        │
 │ Follow us on  (in)(x)(▶)                                                       │
 │ ─────────────────────────────────────────────────────────────────────────────  │
-│ © 2026 BrandBlog. All rights reserved.   · not affiliated with Sembcorp        │
+│ © 2026 BrandBlog. All rights reserved.   · not affiliated with Siemens/Sembcorp │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 

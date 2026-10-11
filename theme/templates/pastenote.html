@@ -7,9 +7,6 @@
 {% block canonical %}{{ SITEURL }}/{{ page.url }}{% endblock %}
 
 {% block head %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="{{ SITEURL }}/static/css/pastenote.css">
 {% endblock %}
 
@@ -92,7 +89,7 @@
         <p class="pn-board-count"><span id="pn-count">0</span> ghi chú · công khai cho mọi người</p>
       </div>
 
-      <div id="pn-board" class="pn-board" role="list" aria-live="polite"></div>
+      <div id="pn-board" class="pn-board brand-card-grid" role="list" aria-live="polite"></div>
 
       <div id="pn-empty" class="pn-empty">
         <div class="pn-empty-emoji" aria-hidden="true">📝</div>
