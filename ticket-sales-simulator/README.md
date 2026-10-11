@@ -80,6 +80,9 @@ vào dấu nhắc `>`:
 | `RT` | Xem lại PNR đang mở (hoặc vé gần nhất) | `RT` |
 | `RD` | Hiển thị lại PNR (redisplay) | `RD` |
 | `RT#<PNR>` | Tra **ruột vé đã xuất** + chi tiết + **thống kê doanh thu** | `RT#YF4AJ6` |
+| `BP#<PNR>` | Hiển thị boarding pass mô phỏng cho từng hành khách/chặng của vé đã xuất | `BP#YF4AJ6` |
+| `BP <ticket number>` | Tra boarding pass bằng số vé đã xuất | `BP 781-1234567890` |
+| `BOARDING PASS [PNR]` | Hiển thị pass của vé gần nhất hoặc theo PNR; có thể in từng pass hoặc tất cả | `BOARDING PASS YF4AJ6` |
 | `EQ<CODE>` | **Thông tin tàu bay** (equipment): tầm bay, sức chứa, động cơ… (`EQ` không mã = danh sách đội tàu) | `EQ320` |
 | `WEA <CITY>` | **Thời tiết 5 ngày** tại điểm đến | `WEA SGN` |
 | `DA <CITY>` | Giải mã mã sân bay (decode) | `DA SIN` |
@@ -186,6 +189,8 @@ Xuất vé xong hệ thống **không tự chuyển khách**. Bạn có hai lự
 
 - `RT#<PNR>` — in lại **ruột vé** (hành khách, hành trình, giá/thuế/phí) kèm **thống kê
   doanh thu** (doanh thu ca, số vé, số chặng, khách đã phục vụ, điểm uy tín).
+- `BP#<PNR>` — hiển thị boarding pass theo từng hành khách và chặng; in từng pass hoặc
+  toàn bộ nhóm từ nút **PRINT ALL**. `RT#<PNR>` cũng hiển thị pass sau phần ruột vé.
 - `NEXT` — nhả quầy, **tiếp nhận khách mua vé kế tiếp**.
 
 - Sau mỗi lệnh, một dòng **gợi ý theo ngữ cảnh** in ra bước tiếp theo (giống dòng gợi ý
@@ -245,7 +250,8 @@ Sau khi chơi, bạn nên tự tin hơn với:
 
 ## Ghi chú kỹ thuật
 
-- Ứng dụng nằm trong một file HTML, thuần JavaScript, không thư viện ngoài, CDN hay API bên ngoài.
+- Ứng dụng nằm trong một file HTML, thuần JavaScript; JsBarcode tải từ CDN để tạo mã Code 128
+  trên boarding pass. Không gọi API dịch vụ ngoài.
 - Giao diện tái tạo màn hình Amadeus: nền xanh đen, chữ monospace, hiệu ứng CRT
   (scanlines, vignette, nhấp nháy nhẹ), màu vàng/cyan/magenta cho dữ liệu.
 - Responsive tới máy tính bảng và điện thoại; có lịch sử lệnh bằng phím ↑/↓.
