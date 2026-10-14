@@ -34,7 +34,7 @@
       {% endif %}
     </a>
 
-    <nav class="hidden items-center gap-7 md:flex" aria-label="Primary">
+    <nav class="hidden items-center gap-5 xl:flex" aria-label="Primary">
       {% for label, url in MENUITEMS %}
         {% set is_current = (url == '' and (page_url == '' or page_url == '/')) or (url != '' and page_url.startswith(url)) %}
         <a href="{{ SITEURL }}/{{ url }}" class="nav-link" {% if is_current %}aria-current="page"{% endif %}>{{ label }}</a>
@@ -42,14 +42,14 @@
       <a href="{{ SITEURL }}/news/" class="btn-primary !py-2.5 !text-[13px]">Subscribe</a>
     </nav>
 
-    <button id="menu-toggle" type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-sembcorp-line text-sembcorp-ink md:hidden" aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation">
+    <button id="menu-toggle" type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-sm border border-sembcorp-line text-sembcorp-ink xl:hidden" aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation">
       <svg id="menu-icon-open" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       <svg id="menu-icon-close" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
   </div>
 
   <!-- Mobile drawer -->
-  <div id="mobile-menu" class="hidden border-t border-sembcorp-line bg-white md:hidden">
+  <div id="mobile-menu" class="hidden border-t border-sembcorp-line bg-white xl:hidden">
     <nav class="container flex flex-col py-3" aria-label="Mobile">
       {% for label, url in MENUITEMS %}
         {% set is_current = (url == '' and (page_url == '' or page_url == '/')) or (url != '' and page_url.startswith(url)) %}
